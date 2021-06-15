@@ -1,8 +1,5 @@
 # Avoid importing "expensive" modules here (e.g. scipy), since this code is
 # executed on PyMOL's startup. Only import such modules inside functions.
-import sys
-from pprint import pprint
-
 from pymol.cgo import *
 
 intTypeMap = {
@@ -21,7 +18,7 @@ def __init_plugin__(app=None):
     Add an entry to the PyMOL "Plugin" menu
     """
     from pymol.plugins import addmenuitemqt
-    addmenuitemqt('Ring Pymol visualizer', run_plugin_gui)
+    addmenuitemqt('Ring plugin', run_plugin_gui)
 
 
 def draw_links(interactions, color, object_name, coords, state):
@@ -126,8 +123,6 @@ correlations = dict()
 
 
 def run_plugin_gui():
-    from pymol.Qt import QtCore
-
     """
     Open our custom dialog
     """
@@ -139,11 +134,9 @@ def run_plugin_gui():
 
 
 def make_dialog():
-    # entry point to PyMOL's API
     from pymol import cmd
+    from os import environ
 
-    # pymol.Qt provides the PyQt5 interface, but may support PyQt4
-    # and/or PySide as well
     from pymol.Qt import QtWidgets
     from pymol.Qt import QtCore
     from pymol.Qt.utils import loadUi
@@ -154,10 +147,9 @@ def make_dialog():
     dialog = QtWidgets.QDialog()
 
     # populate the Window from our *.ui file which was created with the Qt Designer
-    uifile = os.path.join(os.path.dirname(__file__), 'demowidget.ui')
+    uifile = os.path.join(os.path.dirname(__file__), 'plugin.ui')
     form = loadUi(uifile, dialog)
 
-    # callback for the "Ray" button
     def run():
         from pymol import stored
 
@@ -219,7 +211,7 @@ def make_dialog():
             if line != "":
                 if "model" in line:
                     nModel = int(line.split("model ")[1].strip())
-                    form.button_start.setText("Running on model {} | {:.2%}".format(nModel, nModel/nStates))
+                    form.button_start.setText("Running on model {} | {:.2%}".format(nModel, nModel / nStates))
             app.processEvents()
 
         form.button_start.setText("Start Ring")
@@ -624,6 +616,8 @@ def make_dialog():
     def tab_click_update():
         refresh_obj()
         refresh_sele()
+
+    form.ring_path.setText("{}/.ring/bin/Ring".format(environ['HOME']))
 
     # Execute Ring
     form.button_start.clicked.connect(run)

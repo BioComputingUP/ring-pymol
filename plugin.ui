@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>590</width>
-    <height>635</height>
+    <width>664</width>
+    <height>749</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string notr="true">Ring pymol plugin</string>
+   <string notr="true">Ring plugin</string>
   </property>
   <property name="windowOpacity">
    <double>1.000000000000000</double>
@@ -45,7 +45,7 @@
        </sizepolicy>
       </property>
       <attribute name="title">
-       <string>Exectute Ring</string>
+       <string>Run</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
        <property name="sizeConstraint">
@@ -113,7 +113,7 @@
          <item>
           <widget class="QLineEdit" name="ring_path">
            <property name="text">
-            <string>/home/alessio/.ring/bin/Ring</string>
+            <string/>
            </property>
           </widget>
          </item>
@@ -151,7 +151,7 @@
           <bool>true</bool>
          </property>
          <property name="styleSheet">
-          <string notr="true">:disabled{ color: red}</string>
+          <string notr="true">:disabled{ color: white}</string>
          </property>
          <property name="text">
           <string notr="true">Start Ring</string>
@@ -260,7 +260,7 @@
        </sizepolicy>
       </property>
       <attribute name="title">
-       <string>Update view</string>
+       <string>Filter view</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
        <property name="verticalSpacing">
@@ -487,7 +487,7 @@
      </widget>
      <widget class="QWidget" name="tab_3">
       <attribute name="title">
-       <string>Interaction probability</string>
+       <string>Residue based analysis</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="1" column="0" colspan="2">
@@ -784,7 +784,7 @@
      </widget>
      <widget class="QWidget" name="tab_4">
       <attribute name="title">
-       <string>Correlation</string>
+       <string>Interaction based analysis</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="0" column="0" colspan="2">
@@ -1126,6 +1126,13 @@
        </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListView" name="console_log">
+     <property name="viewMode">
+      <enum>QListView::ListMode</enum>
+     </property>
     </widget>
    </item>
   </layout>
