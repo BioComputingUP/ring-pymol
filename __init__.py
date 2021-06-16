@@ -1,5 +1,6 @@
 # Avoid importing "expensive" modules here (e.g. scipy), since this code is
 # executed on PyMOL's startup. Only import such modules inside functions.
+
 from pymol.cgo import *
 
 intTypeMap = {
@@ -78,7 +79,7 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
             print("Run ring on all the states first!")
             return
         names = df[0]
-        names = [x.split('_')[0][:-1] for x in names]
+        names = [x.replace(':_:', ':') for x in names]
         df = df.iloc[:, 1:]
         matrix = df.values
         matrix[np.triu_indices(matrix.shape[0])] = 0
@@ -119,6 +120,7 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
 
 # global reference to avoid garbage collection of our dialog
 dialog = None
+dialog_corr = None
 correlations = dict()
 
 
@@ -127,10 +129,30 @@ def run_plugin_gui():
     Open our custom dialog
     """
     global dialog
+    global dialog_corr
 
     if dialog is None:
+        dialog_corr = open_correlated_window()
         dialog = make_dialog()
+    dialog.adjustSize()
     dialog.show()
+
+
+def open_correlated_window(show=False):
+    from pymol.Qt import QtWidgets
+    from pymol.Qt import QtCore
+    from pymol.Qt.utils import loadUi
+
+    dialog_corr = QtWidgets.QDialog()
+
+    dialog_corr.setWindowFlags(dialog_corr.windowFlags() & QtCore.Qt.WindowMinimizeButtonHint)
+
+    # populate the Window from our *.ui file which was created with the Qt Designer
+    uifile = os.path.join(os.path.dirname(__file__), 'correlated.ui')
+    form = loadUi(uifile, dialog_corr)
+    if show:
+        dialog_corr.show()
+    return dialog_corr
 
 
 def make_dialog():
@@ -141,14 +163,34 @@ def make_dialog():
     from pymol.Qt import QtCore
     from pymol.Qt.utils import loadUi
 
+    import datetime
+
     app = QtWidgets.QApplication([])
 
     # create a new Window
     dialog = QtWidgets.QDialog()
 
+    dialog.setWindowFlags(dialog.windowFlags() & QtCore.Qt.WindowMinimizeButtonHint)
+
     # populate the Window from our *.ui file which was created with the Qt Designer
     uifile = os.path.join(os.path.dirname(__file__), 'plugin.ui')
     form = loadUi(uifile, dialog)
+
+    def log(s: str, timed=True):
+        now = datetime.datetime.now()
+        now = "{}:{}:{:02}".format(now.hour, now.minute, now.second)
+        if timed:
+            s = "{}  -  {}".format(now, s)
+        form.console_log.insertItem(0, s)
+        app.processEvents()
+
+    def disable_window():
+        dialog.main.setEnabled(False)
+        app.processEvents()
+
+    def enable_window():
+        dialog.main.setEnabled(True)
+        app.processEvents()
 
     def run():
         from pymol import stored
@@ -157,7 +199,7 @@ def make_dialog():
 
         obj_name = form.pymol_obj.currentText()
         if not obj_name:
-            print("Please select a Pymol object first!")
+            log("Please select a Pymol object first!")
             return
         if not os.path.exists('/tmp/ring'):
             os.mkdir('/tmp/ring')
@@ -169,7 +211,7 @@ def make_dialog():
         else:
             state = -1
 
-        form.setEnabled(False)
+        form.main.setEnabled(False)
         form.button_start.setText("Running...")
         app.processEvents()
 
@@ -199,11 +241,11 @@ def make_dialog():
         try:
             p = subprocess.Popen(
                     [form.ring_path.text(), "-i", file_pth, "--out_dir", "/tmp/ring/", "-g", seq_sep,
-                     "--write_all", "--md", "--all_chains", edge_policy, all_states] + model, stdout=subprocess.DEVNULL,
+                     "--md", "--all_chains", edge_policy, all_states] + model, stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE, universal_newlines=True)
         except FileNotFoundError:
-            print("Ring path is not correct!")
-            form.setEnabled(True)
+            log("Ring path is not correct!")
+            form.main.setEnabled(True)
             return
 
         while p.poll() is None:
@@ -215,9 +257,7 @@ def make_dialog():
             app.processEvents()
 
         form.button_start.setText("Start Ring")
-        form.setEnabled(True)
-        app.processEvents()
-        visualize(first=True)
+        visualize(first=True, log_iter=True)
 
     def browse_ring_exe():
         filename = QtWidgets.QFileDialog.getOpenFileNames(dialog, "Select Ring executable")[0][0]
@@ -263,7 +303,7 @@ def make_dialog():
                         edge2 = edge2.rsplit(':', 2)[0]
                         conn_freq[inter].setdefault((edge1, edge2), float(perc))
             except FileNotFoundError:
-                print("Please run Ring on the selected object first!")
+                log("Please run Ring on the selected object first!")
                 return None
         return conn_freq
 
@@ -285,17 +325,19 @@ def make_dialog():
                         continue
                     conn_freq[edge1].append(float(perc))
         except FileNotFoundError:
-            print("Please run Ring on the selected object first!")
+            log("Please run Ring on the selected object first!")
             return None
         for k, v in conn_freq.items():
             conn_freq[k] = 1 - math.prod([(1 - x) for x in v])
 
         return conn_freq
 
-    def visualize(first=False, selection=None, color=None, int_type=None, pair_set=None):
+    def visualize(first=False, selection=None, color=None, int_type=None, pair_set=None, block=True, log_iter=False):
         from pymol import stored
-        form.setEnabled(False)
-        app.processEvents()
+
+        if block:
+            form.main.setEnabled(False)
+            app.processEvents()
         if selection:
             obj = selection
         else:
@@ -305,7 +347,8 @@ def make_dialog():
                 obj = form.sele_names.currentText()
 
         if obj == '':
-            print("Please provide a selection")
+            log("Please provide a selection")
+            form.main.setEnabled(True)
             return
 
         cmd.delete(obj + "_interact")
@@ -323,7 +366,7 @@ def make_dialog():
             conn_freq = get_freq(stored.model)
 
             if conn_freq is None:
-                form.setEnabled(True)
+                form.main.setEnabled(True)
                 app.processEvents()
                 return
 
@@ -337,7 +380,7 @@ def make_dialog():
             interactions_per_type = dict()
 
             if not os.path.exists(file_pth):
-                print("Please run Ring on the selected object first!")
+                log("Please run Ring on the selected object first!")
                 return
 
             with open(file_pth, 'r') as f:
@@ -394,8 +437,14 @@ def make_dialog():
                                           color=intTypeMap[intType] if not color else color, coords=stored.coords,
                                           state=state)
 
+            if log_iter:
+                log_s = "Interactions state {}:".format(state)
+                for intType in sorted(interactions_per_type.keys()):
+                    log_s += "{} {}, ".format(intType, len(interactions_per_type[intType]))
+                log(log_s[:-2], timed=False)
+
             if not_present > 0:
-                print("{} connections not displayed because atoms not present".format(not_present))
+                log("{} connections not displayed because atoms not present".format(not_present))
 
         if not selection:
             if form.check_hide_others.isChecked():
@@ -408,14 +457,17 @@ def make_dialog():
         else:
             cmd.hide(selection="*_interact")
 
-        form.setEnabled(True)
-        app.processEvents()
+        if block:
+            form.main.setEnabled(True)
+            app.processEvents()
 
-    def inter_proba_colors():
+    def inter_freq_analysis():
         obj = form.sele_obj.currentText()
         if obj == '':
-            print("Please provide a selection")
+            log("Please provide a selection")
             return
+
+        disable_window()
 
         inter = ""
         if form.hbond.isChecked():
@@ -439,21 +491,24 @@ def make_dialog():
             express = "b=dict_freq['{}:{}'.format(chain,resi)] if '{}:{}'.format(chain,resi) in dict_freq.keys() else 0.001"
             cmd.alter_state(-1, obj, expression=express, space=myspace)
             cmd.spectrum("b", "white yellow orange red", obj, minimum=0.001, maximum=1.0)
+        enable_window()
 
     def slider_radius_change():
-        value = form.radius_slider.value() * 0.3
+        value = form.radius_value.value()
         cmd.set("cgo_line_width", value)
 
     def slider_transp_change():
-        value = form.transp_slider.value() * 0.08
+        value = form.transp_value.value()
         cmd.set("cgo_transparency", value)
 
     def correlation_obj():
         import numpy as np
         obj = form.sele_obj_2.currentText()
         if obj == '':
-            print("Please select an object first!")
+            log("Please select an object first!")
             return
+        disable_window()
+        log("Calculation of correlated interactions started")
 
         inter = ""
         if form.hbond_2.isChecked():
@@ -484,9 +539,8 @@ def make_dialog():
 
         states = cmd.count_states(obj)
         if states < 2:
-            print("Correlation cannot be calculated if the number of states is {}".format(states))
+            log("Correlation cannot be calculated if the number of states is {}".format(states))
             return
-
         try:
             selections, matrix = calculate_correlation(obj, states, int_type=inter,
                                                        coeff_thresh=coeff_thr,
@@ -517,14 +571,27 @@ def make_dialog():
         form.contact_anti_list.setEnabled(len(anti_items) > 1)
         form.Correlate.setEnabled(len(corr_items) > 1)
         form.anticorrelate.setEnabled(len(anti_items) > 1)
+        log("Calculation of correlated interactions completed")
+        if len(corr_items) > 1:
+            log("{} interactions have at least one correlated interaction".format(len(corr_items) - 1))
+        if len(anti_items) > 1:
+            log("{} interactions have at least one anti-correlated interaction".format(len(anti_items) - 1))
+
+        dialog_corr.show()
+        listWidgetItem = QtWidgets.QListWidgetItem("GeeksForGeeks")
+        dialog_corr.correlated_list.addItem(listWidgetItem)
+
+
+        enable_window()
 
     def correlates(anti=False):
         import numpy as np
 
         obj = form.sele_obj_2.currentText()
         if obj == '':
-            print("Please select an object first!")
+            log("Please select an object first!")
             return
+        disable_window()
 
         if not anti:
             contact = form.contact_corr_list.currentText()
@@ -532,8 +599,12 @@ def make_dialog():
             contact = form.contact_anti_list.currentText()
 
         if contact == '':
-            print("Please select a contact")
+            log("Please select a contact")
             return
+
+        open_correlated_window()
+        form.correlated_resi.setHidden(False)
+        app.processEvents()
 
         cmd.color('green', selection=obj)
         cmd.delete("selected or selected_inter or corr_inter or anti-corr_inter or corr or anti-corr")
@@ -560,7 +631,7 @@ def make_dialog():
         try:
             selections, matrix = correlations[obj][inter]
         except KeyError:
-            print("Run ring on all states of the object first!")
+            log("Run ring on all states of the object first!")
             return
 
         with np.errstate(divide='ignore', invalid='ignore'):
@@ -570,6 +641,7 @@ def make_dialog():
             request_index = np.argwhere(selections == contact)
 
             resi1, resi2 = contact.split('_')
+            resi1, resi2 = resi1[:-4], resi2[:-4]
             resi1_c, resi1_n = resi1.split(':')
             resi2_c, resi2_n = resi2.split(':')
             cmd.select("selected", "/{}//{}/{} or /{}//{}/{}".format(obj, resi1_c, resi1_n,
@@ -589,6 +661,7 @@ def make_dialog():
                     index_corr = index[0]
             if index_corr:
                 resi1, resi2 = selections[index_corr].split('_')
+                resi1, resi2 = resi1[:-4], resi2[:-4]
                 resi1_c, resi1_n = resi1.split(':')
                 resi2_c, resi2_n = resi2.split(':')
                 if matrix[index[0], index[1]] > 0 and not anti:
@@ -603,15 +676,21 @@ def make_dialog():
                     anticorr_set.add((resi1, resi2))
 
         if contact != "ALL":
-            visualize(selection="selected", color="blue", int_type=inter, pair_set=sele_set)
+            visualize(selection="selected", color="blue", int_type=inter, pair_set=sele_set, block=False)
             cmd.color(selection="selected", color="blue")
 
         if not anti:
-            visualize(selection="corr", color="yellow", int_type=inter, pair_set=corr_set)
+            visualize(selection="corr", color="yellow", int_type=inter, pair_set=corr_set, block=False)
             cmd.color(selection="corr", color="yellow")
         if anti:
-            visualize(selection="anti-corr", color="red", int_type=inter, pair_set=anticorr_set)
+            visualize(selection="anti-corr", color="red", int_type=inter, pair_set=anticorr_set, block=False)
             cmd.color(selection="anti-corr", color="red")
+
+        enable_window()
+
+    def close_corr_window():
+        form.correlated_resi.setHidden(True)
+        dialog.adjustSize()
 
     def tab_click_update():
         refresh_obj()
@@ -624,12 +703,12 @@ def make_dialog():
     form.ring_exec_button.clicked.connect(browse_ring_exe)
 
     # Update view
-    form.visualize_btn.clicked.connect(visualize)
-    form.radius_slider.valueChanged.connect(slider_radius_change)
-    form.transp_slider.valueChanged.connect(slider_transp_change)
+    form.visualize_btn.clicked.connect(lambda: visualize(log_iter=True))
+    form.radius_value.valueChanged.connect(slider_radius_change)
+    form.transp_value.valueChanged.connect(slider_transp_change)
 
     # Putty repr
-    form.show_putty.clicked.connect(inter_proba_colors)
+    form.show_resi_analysis.clicked.connect(inter_freq_analysis)
 
     form.timer = QtCore.QTimer()
     form.timer.timeout.connect(tab_click_update)
@@ -643,5 +722,7 @@ def make_dialog():
     form.anticorrelate.setEnabled(False)
     form.contact_corr_list.setEnabled(False)
     form.contact_anti_list.setEnabled(False)
+    form.correlated_resi.setHidden(True)
+    form.close_correlated.clicked.connect(close_corr_window)
 
     return dialog
