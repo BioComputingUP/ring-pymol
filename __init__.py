@@ -140,6 +140,7 @@ dialog = None
 dialog_corr = None
 dialog_freq = None
 correlations = dict()
+prev_launch_config = dict()
 
 
 def run_plugin_gui():
@@ -150,7 +151,7 @@ def run_plugin_gui():
     global dialog_corr
     global dialog_freq
 
-    if dialog is None and dialog_corr is None:
+    if dialog is None and dialog_corr is None and dialog_freq is None:
         dialog_corr = open_correlated_window()
         dialog_freq = open_frequency_window()
         dialog = make_dialog()
@@ -211,7 +212,7 @@ def make_dialog():
 
     def log(s: str, timed=True, error=False, warning=False, process=True):
         now = datetime.datetime.now()
-        now = "{}:{}:{:02}".format(now.hour, now.minute, now.second)
+        now = "{}:{:02}:{:02}".format(now.hour, now.minute, now.second)
         out_s = ""
         if timed:
             out_s += "{}  - ".format(now)
@@ -243,22 +244,24 @@ def make_dialog():
 
         import subprocess
 
-        obj_name = form.pymol_obj.currentText()
+        obj_name = form.selections_list.currentText()
+
+        # TODO: check that the obj is actually an obj, otherwise if it is a selection check that Ring was run on the
+        # object pointed from the selection, otherwise throw an error.
+
         if not obj_name:
             log("Please select a Pymol object first!", error=True)
             return
         if not os.path.exists('/tmp/ring'):
             os.mkdir('/tmp/ring')
 
+        stored.chains = ""
+        cmd.iterate(obj_name, 'stored.chains += chain')
+        if stored.chains == "":
+            log("Pymol object does not contain chain name, please set it before running Ring. (Use alter)", error=True)
+            return
+
         file_pth = "/tmp/ring/" + obj_name + ".cif"
-
-        form.main.setEnabled(False)
-        form.button_start.setText("Running...")
-        app.processEvents()
-
-        log("Exporting pymol object {} in cif format ({})".format(obj_name, file_pth))
-        cmd.save(filename=file_pth, selection=obj_name, state=0)
-        log("Exporting done")
 
         stored.state = ''
         cmd.iterate_state(state=-1, selection=obj_name, expression='stored.state=state')
@@ -282,14 +285,38 @@ def make_dialog():
         len_ss = str(form.len_ss.value())
         len_vdw = str(form.len_vdw.value())
 
+        current_run_config = {"-g"   : seq_sep,
+                              "-o"   : len_salt,
+                              "-s"   : len_ss,
+                              "-k"   : len_pipi,
+                              "-a"   : len_pica,
+                              "-b"   : len_hbond,
+                              "-w"   : len_vdw,
+                              "edges": edge_policy}
+
+        if obj_name in prev_launch_config.keys() and prev_launch_config[obj_name] == current_run_config:
+            visualize(log_iter=True)
+            return
+
+        form.main.setEnabled(False)
+        form.visualize_btn.setText("Running ring...")
+        app.processEvents()
+
+        log("Exporting pymol object {} in cif format ({})".format(obj_name, file_pth))
+        cmd.save(filename=file_pth, selection=obj_name, state=0)
+        log("Exporting done")
+
         try:
             p = subprocess.Popen(
                     [form.ring_path.text(), "-i", file_pth, "--out_dir", "/tmp/ring/", "-g", seq_sep,
                      "-o", len_salt, "-s", len_ss, "-k", len_pipi, "-a", len_pica, "-b", len_hbond, "-w", len_vdw,
                      "--all_chains", edge_policy, "--all_models"], stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE, universal_newlines=True)
+
+            prev_launch_config[obj_name] = current_run_config
         except FileNotFoundError:
             log("Ring path is not correct!", error=True)
+            form.visualize_btn.setText("Show")
             form.main.setEnabled(True)
             return
 
@@ -300,12 +327,12 @@ def make_dialog():
             if line != "":
                 if "model" in line:
                     nModel = int(line.split("model ")[1].strip())
-                    form.button_start.setText("Running on model {} | {:.2%}".format(nModel, nModel / nStates))
+                    form.visualize_btn.setText("Running on model {} | {:.2%}".format(nModel, nModel / nStates))
             app.processEvents()
 
-        form.button_start.setText("Start Ring")
+        form.visualize_btn.setText("Show")
         log("Ring generation finished")
-        visualize(first=True, log_iter=True)
+        visualize(log_iter=True)
 
     def browse_ring_exe():
         filename = QtWidgets.QFileDialog.getOpenFileNames(dialog, "Select Ring executable")[0][0]
@@ -314,28 +341,15 @@ def make_dialog():
             form.ring_path.setText(filename)
 
     def refresh_sele():
-        form.sele_names.blockSignals(True)
+        form.selections_list.blockSignals(True)
         selections = cmd.get_names('public_selections')
         selections.extend(list(filter(lambda x: x.split('_')[-1][-3:] != 'cgo',
                                       cmd.get_names('public_nongroup_objects'))))
         selections = sorted(selections)
-        if selections != sorted([form.sele_names.itemText(i) for i in range(form.sele_names.count())]):
-            form.sele_names.clear()
-            form.sele_names.addItems(selections)
-        form.sele_names.blockSignals(False)
-
-    def refresh_obj():
-        form.pymol_obj.blockSignals(True)
-        selections = sorted(list(filter(lambda x: x.split('_')[-1][-3:] != 'cgo',
-                                        cmd.get_names('public_nongroup_objects'))))
-        if selections != sorted([form.pymol_obj.itemText(i) for i in range(form.pymol_obj.count())]):
-            form.pymol_obj.clear()
-            form.pymol_obj.addItems(selections)
-            form.sele_obj.clear()
-            form.sele_obj.addItems(selections)
-            form.sele_obj_2.clear()
-            form.sele_obj_2.addItems(selections)
-        form.pymol_obj.blockSignals(False)
+        if selections != sorted([form.selections_list.itemText(i) for i in range(form.selections_list.count())]):
+            form.selections_list.clear()
+            form.selections_list.addItems(selections)
+        form.selections_list.blockSignals(False)
 
     def get_freq(obj):
         conn_freq = dict()
@@ -362,13 +376,13 @@ def make_dialog():
                     edge1, _, edge2, perc = line.split('\t')
                     edge1 = edge1.replace(":_:", ":")
                     edge2 = edge2.replace(":_:", ":")
-                    conn_freq.setdefault(edge1, [])
                     chain1 = edge1.split(':')[0]
                     chain2 = edge2.split(':')[0]
-                    if form.interchain_2.isChecked() and chain1 == chain2:
+                    if form.interchain.isChecked() and chain1 == chain2:
                         continue
-                    if form.intrachain_2.isChecked() and chain1 != chain2:
+                    if form.intrachain.isChecked() and chain1 != chain2:
                         continue
+                    conn_freq.setdefault(edge1, [])
                     conn_freq[edge1].append(float(perc))
         except FileNotFoundError:
             log("Please run Ring on the selected object first!", error=True)
@@ -378,7 +392,7 @@ def make_dialog():
 
         return conn_freq
 
-    def visualize(first=False, selection=None, color=None, int_type=None, pair_set=None, block=True, log_iter=False):
+    def visualize(selection=None, color=None, int_type=None, pair_set=None, block=True, log_iter=False):
         from pymol import stored
 
         if block:
@@ -387,10 +401,7 @@ def make_dialog():
         if selection:
             obj = selection
         else:
-            if first:
-                obj = form.pymol_obj.currentText()
-            else:
-                obj = form.sele_names.currentText()
+            obj = form.selections_list.currentText()
 
         if obj == '':
             log("Please provide a selection", error=True)
@@ -398,6 +409,7 @@ def make_dialog():
             return
 
         cmd.delete(obj + "_edges")
+        cmd.delete(obj + "_nodes")
 
         states = int(cmd.count_states(selection=obj))
         stored.model = ""
@@ -445,9 +457,9 @@ def make_dialog():
                     freq = 0.5 * 100
 
                 if not selection:
-                    if form.interchain_1.isChecked() and chain1 == chain2:
+                    if form.interchain.isChecked() and chain1 == chain2:
                         continue
-                    if form.intrachain_1.isChecked() and chain1 != chain2:
+                    if form.intrachain.isChecked() and chain1 != chain2:
                         continue
                 tmp1 = ("{}:{}".format(chain1, pos1), "{}:{}".format(chain2, pos2))
                 tmp2 = ("{}:{}".format(chain2, pos2), "{}:{}".format(chain1, pos1))
@@ -491,23 +503,32 @@ def make_dialog():
                 log("{} connections not displayed because atoms not present".format(not_present), warning=True,
                     process=False)
 
+        cmd.hide(selection="*_edges")
         if not selection:
-            if form.check_hide_others.isChecked():
-                cmd.hide(selection="*_edges")
-
             members = ""
             for k in intTypeMap.keys():
                 members += " {}_{}_cgo".format(obj, k)
             cmd.group(obj + "_edges", members=members)
-        else:
-            cmd.hide(selection="*_edges")
 
+            members = ""
+            for bond in intTypeMap.keys():
+                sele = "{}_{}_resi".format(obj, bond)
+                members += " {}".format(sele)
+                freqs = get_freq_combined(obj, bond)
+                for edge, freq in freqs.items():
+                    cmd.select(sele, selection="chain {} and resi {}".format(edge.split(':')[0], edge.split(':')[1]),
+                               merge=1)
+            cmd.group(obj + "_nodes", members=members)
+
+        # Set transp and radius after updating the CGOs
+        slider_radius_change()
+        slider_transp_change()
         if block:
             form.main.setEnabled(True)
             app.processEvents()
 
     def inter_freq_analysis():
-        obj = form.sele_obj.currentText()
+        obj = form.selections_list.currentText()
         if obj == '':
             log("Please provide a selection", error=True)
             return
@@ -531,14 +552,6 @@ def make_dialog():
             inter = "IAC"
         conn_freq = get_freq_combined(obj, inter)
 
-        cmd.delete("filtered_resi")
-        for k, v in conn_freq.items():
-            if form.min_freq_2.value() / 100 <= v <= form.max_freq_2.value() / 100:
-                cmd.select(name="filtered_resi", selection="/{}//{}/{}/".format(obj, k.split(':')[0], k.split(':')[1]),
-                           merge=1)
-            else:
-                conn_freq[k] = 0.001
-
         if conn_freq is not None:
             myspace = {'dict_freq': conn_freq}
             express = "b=dict_freq['{}:{}:{}'.format(chain,resi,resn)] if '{}:{}:{}'.format(chain,resi,resn) " \
@@ -546,13 +559,13 @@ def make_dialog():
             cmd.alter_state(-1, obj, expression=express, space=myspace)
             cmd.spectrum("b", "white yellow orange red", obj, minimum=0.001, maximum=1.0)
 
-        log("Selection of filtered residues based on bond type and frequency created")
+        log("Residues with interaction of type {} colored based on the frequency of contact".format(inter))
         enable_window()
 
     def inter_freq_table():
         import numpy as np
 
-        obj = form.sele_obj.currentText()
+        obj = form.selections_list.currentText()
         if obj == '':
             log("Please provide a selection", error=True)
             return
@@ -582,6 +595,7 @@ def make_dialog():
         df = pd.concat([left, center, right], axis=1)
         tableWidget = dialog_freq.freqTable
         tableWidget.setRowCount(0)
+        tableWidget.setSortingEnabled(False)
 
         tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
@@ -605,16 +619,25 @@ def make_dialog():
                     tableWidget.setItem(rowPosition, i, QtWidgets.QTableWidgetItem(item))
                 else:
                     wItem = QtWidgets.QTableWidgetItem()
-                    wItem.setData(QtCore.Qt.DisplayRole, float(item))
+                    wItem.setData(QtCore.Qt.DisplayRole, round(float(item), 2))
                     tableWidget.setItem(rowPosition, i, wItem)
                 tableWidget.item(rowPosition, i).setBackground(bk_color)
                 tableWidget.item(rowPosition, i).setForeground(fg_color)
                 tableWidget.item(rowPosition, i).setTextAlignment(QtCore.Qt.AlignCenter)
                 if i == 0:
                     prevEdge = item
+        tableWidget.setSortingEnabled(True)
         tableWidget.viewport().update()
         dialog_freq.show()
         enable_window()
+
+    def sele_selected_resi_freq_table():
+        tableWidget = dialog_freq.freqTable
+        indexes = tableWidget.selectionModel().selectedRows()
+        for index in sorted(indexes):
+            chain, resi = tableWidget.item(index.row(), 0).text().split(":")[0:2]
+            cmd.select("selected_row_residue", selection="chain {} and resi {}".format(chain, resi), merge=1)
+            log("Created selection selected_row_residue containing the residue of the selected row in the frequency table")
 
     def slider_radius_change():
         value = form.radius_value.value()
@@ -625,7 +648,7 @@ def make_dialog():
         cmd.set("cgo_transparency", value)
 
     def correlation_obj():
-        obj = form.sele_obj_2.currentText()
+        obj = form.selections_list.currentText()
         if obj == '':
             log("Please select an object first!", error=True)
             return
@@ -691,6 +714,8 @@ def make_dialog():
 
         tableWidget = dialog_corr.corrTable
         tableWidget.setRowCount(0)
+        tableWidget.setSortingEnabled(False)
+
         rowPosition = tableWidget.rowCount()  # necessary even when there are no rows in the table
         prevEdge = None
         color = 2
@@ -724,7 +749,7 @@ def make_dialog():
             tableWidget.setItem(rowPosition, 1, QtWidgets.QTableWidgetItem(y))
 
             zItem = QtWidgets.QTableWidgetItem()
-            zItem.setData(QtCore.Qt.EditRole, float(z))
+            zItem.setData(QtCore.Qt.EditRole, round(float(z), 2))
             tableWidget.setItem(rowPosition, 2, zItem)
 
             wItem = QtWidgets.QTableWidgetItem()
@@ -742,13 +767,14 @@ def make_dialog():
 
             prevEdge = x
             rowPosition += 1
+        tableWidget.setSortingEnabled(True)
         tableWidget.viewport().update()
         dialog_corr.show()
 
     def show_corr():
-        obj = form.sele_obj_2.currentText()
+        obj = form.selections_list.currentText()
         if obj == '':
-            log("Please select an object first!", error=True)
+            log("Please select at least one row first!", error=True)
             return
         disable_window()
 
@@ -811,33 +837,31 @@ def make_dialog():
             timed=False)
         log("Interactions in blue are the one correlating, and in red the ones that anti-correlates with the respective white interactions",
             timed=False)
-        enable_window()
 
-    def tab_click_update():
-        refresh_obj()
-        refresh_sele()
+        enable_window()
 
     form.ring_path.setText("{}/.ring/bin/Ring-md".format(environ['HOME']))
 
     # Execute Ring
-    form.button_start.clicked.connect(run)
+    form.visualize_btn.clicked.connect(run)
     form.ring_exec_button.clicked.connect(browse_ring_exe)
 
     # Update view
-    form.visualize_btn.clicked.connect(lambda: visualize(log_iter=True))
     form.radius_value.valueChanged.connect(slider_radius_change)
     form.transp_value.valueChanged.connect(slider_transp_change)
 
-    # Putty repr
-    form.show_resi_analysis.clicked.connect(inter_freq_analysis)
-    form.show_resi_analysis_table.clicked.connect(inter_freq_table)
+    # Residue based analysis repr
+    form.bttn_color_resi_freq.clicked.connect(inter_freq_analysis)
+    form.bttn_table_freq.clicked.connect(inter_freq_table)
+    dialog_freq.freqTable.itemClicked.connect(sele_selected_resi_freq_table)
 
-    form.timer = QtCore.QTimer()
-    form.timer.timeout.connect(tab_click_update)
-    form.timer.start(1500)
-
-    # Correlation
+    # Interaction based analysis
     form.calc_corr.clicked.connect(correlation_obj)
     dialog_corr.show_corr.clicked.connect(show_corr)
+
+    # Misc
+    form.timer = QtCore.QTimer()
+    form.timer.timeout.connect(refresh_sele)
+    form.timer.start(1500)
 
     return dialog
