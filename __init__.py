@@ -1,5 +1,6 @@
 # Avoid importing "expensive" modules here (e.g. scipy), since this code is
 # executed on PyMOL's startup. Only import such modules inside functions.
+import numpy as np
 import pandas as pd
 from pymol.cgo import *
 
@@ -11,6 +12,16 @@ intTypeMap = {
         "HBOND"    : "cyan",
         "VDW"      : "gray50",
         "IAC"      : "white"
+}
+
+intColorMap = {
+        "IONIC"    : "blue",
+        "SSBOND"   : "yellow",
+        "PIPISTACK": "orange",
+        "PICATION" : "red",
+        "HBOND"    : "cyan",
+        "VDW"      : "gray",
+        "IAC"      : "black"
 }
 
 
@@ -463,10 +474,6 @@ def make_dialog():
                 intType, intSubType = interaction.split(":")
                 chain1, pos1, i1, res1 = nodeId1.split(":")
                 chain2, pos2, i2, res2 = nodeId2.split(":")
-                if chain1 == '.':
-                    chain1 = ''
-                if chain2 == '.':
-                    chain2 = ''
 
                 try:
                     freq = conn_freq[intType][("{}:{}".format(chain1, pos1), "{}:{}".format(chain2, pos2))] * 100
@@ -864,6 +871,128 @@ def make_dialog():
 
         enable_window()
 
+    def resi_plot():
+        from pymol import stored
+
+        try:
+            from matplotlib import pyplot as plt
+        except ImportError:
+            log("To run this feature you have to install matplotlib for the python version that PyMol is using",
+                error=True)
+            return
+
+        obj = form.selections_list.currentText()
+        if obj[0] != "(" or obj[-1] != ")":
+            log("Please select a selection on the box above to use this feature", error=True)
+            return
+
+        states = int(cmd.count_states(selection=obj))
+        if states == 1:
+            log("You can use this feature only on multi-state objects", error=True)
+            return
+
+        stored.model = ""
+        cmd.iterate(obj, 'stored.model = model')
+        file_pth = "/tmp/ring/" + stored.model + ".cif_ringEdges"
+
+        if not os.path.exists(file_pth):
+            log("Before this you need to run Ring-md on the whole object first. Select it above and press the Show button",
+                error=True)
+            return
+
+        stored.chain_resi = set()
+        cmd.iterate(obj, 'stored.chain_resi.add((chain, int(resi), resn))')
+        if len(stored.chain_resi) != 2:
+            log("You need to create a selection with exactly two residues to use this feature", error=True)
+            return
+
+        resi1, resi2 = list(stored.chain_resi)
+        resi1_name = resi1[0] + "/" + str(resi1[1]) + "/" + resi1[2]
+        resi1 = (resi1[0], resi1[1])
+        resi2_name = resi2[0] + "/" + str(resi2[1]) + "/" + resi2[2]
+        resi2 = (resi2[0], resi2[1])
+        interaction_distance = dict()
+
+        interactions_per_state = pd.read_csv(file_pth, sep='\t')
+        for state in range(1, states + 1):
+            df = interactions_per_state[interactions_per_state.Model == state]
+            for (nodeId1, interaction, nodeId2, distance, _, _, atom1, atom2, *_) in df.itertuples(index=False):
+
+                intType, intSubType = interaction.split(":")
+                chain1, pos1, *_ = nodeId1.split(":")
+                chain2, pos2, *_ = nodeId2.split(":")
+                resi11 = (chain1, int(pos1))
+                resi22 = (chain2, int(pos2))
+
+                if (resi1 == resi11 and resi2 == resi22) or (resi2 == resi11 and resi1 == resi22):
+                    interaction_distance.setdefault(intType, np.ones(states) * 999)
+                    interaction_distance[intType][state - 1] = min(interaction_distance[intType][state - 1],
+                                                                   float(distance))
+
+        for inter in interaction_distance.keys():
+            interaction_distance[inter] = list(map(lambda x: x if x != 999 else np.nan, interaction_distance[inter]))
+
+        plt.close()
+        something = False
+        for inter in interaction_distance.keys():
+            something = True
+            plt.scatter(np.arange(1, states + 1), interaction_distance[inter], label=inter, c=intColorMap[inter],
+                        marker='.')
+
+        if something:
+            plt.title("{} - {}".format(resi1_name, resi2_name))
+            plt.grid(which='minor', alpha=0.2)
+            plt.grid(which='major', alpha=0.5)
+            plt.xticks(np.arange(1, states + 1))
+            plt.ylim(bottom=0)
+            plt.xlim(left=0, right=states + 1)
+            plt.xlabel("State")
+            plt.ylabel("Distance (Å)")
+            plt.legend()
+            plt.tight_layout()
+            plt.show()
+        else:
+            log("No interactions found between the two selected residues", warning=True)
+
+    def chain_graph():
+        from pymol import stored
+        try:
+            from matplotlib import pyplot as plt
+            import networkx as nx
+        except ImportError:
+            log("To run this feature you have to install matplotlib and networkx and for the python version that PyMol is using",
+                error=True)
+            return
+
+        obj = form.selections_list.currentText()
+        if len(obj) == 0:
+            log("Please select an object on the box above to use this feature", error=True)
+            return
+
+        if obj[0] == "(" and obj[-1] == ")":
+            log("Please select an object on the box above to use this feature", error=True)
+            return
+
+        plt.close()
+        stored.model = ""
+        cmd.iterate(obj, 'stored.model = model')
+        file_pth = "/tmp/ring/" + stored.model + ".cif_ringEdges"
+        if not os.path.exists(file_pth):
+            log("Before this you need to run Ring-md on the object first. Select it above and press the Show button",
+                error=True)
+            return
+
+        G = nx.Graph()
+        interactions_first_state = pd.read_csv(file_pth, sep='\t')
+        interactions_first_state = interactions_first_state[interactions_first_state.Model == 1]
+        for (nodeId1, _, nodeId2, *_) in interactions_first_state.itertuples(index=False):
+            chain1, *_ = nodeId1.split(":")
+            chain2, *_ = nodeId2.split(":")
+            G.add_edge(chain1, chain2)
+
+        nx.draw_kamada_kawai(G, with_labels=True, font_weight='bold')
+        plt.show()
+
     form.ring_path.setText("{}/.ring/bin/Ring-md".format(environ['HOME']))
 
     # Execute Ring
@@ -882,6 +1011,10 @@ def make_dialog():
     # Interaction based analysis
     form.calc_corr.clicked.connect(correlation_obj)
     dialog_corr.show_corr.clicked.connect(show_corr)
+
+    # Analysis
+    form.resi_plot.clicked.connect(resi_plot)
+    form.chain_graph.clicked.connect(chain_graph)
 
     # Misc
     form.timer = QtCore.QTimer()
