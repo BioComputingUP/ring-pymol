@@ -246,8 +246,12 @@ def make_dialog():
 
         obj_name = form.selections_list.currentText()
 
-        # TODO: check that the obj is actually an obj, otherwise if it is a selection check that Ring was run on the
-        # object pointed from the selection, otherwise throw an error.
+        # If it is a selection then try to just visualize
+        if obj_name[0] == "(" and obj_name[-1] == ")":
+            visualize(log_iter=True)
+            return
+
+        obj_name = obj_name.lstrip('(').rstrip(')')
 
         if not obj_name:
             log("Please select a Pymol object first!", error=True)
@@ -342,13 +346,22 @@ def make_dialog():
 
     def refresh_sele():
         form.selections_list.blockSignals(True)
-        selections = cmd.get_names('public_selections')
-        selections.extend(list(filter(lambda x: x.split('_')[-1][-3:] != 'cgo',
+        present = set(form.selections_list.itemText(i) for i in range(form.selections_list.count()))
+        selections = set(map(lambda x: "(" + x + ")", cmd.get_names('public_selections')))
+        selections.update(list(filter(lambda x: x.split('_')[-1][-3:] != 'cgo',
                                       cmd.get_names('public_nongroup_objects'))))
-        selections = sorted(selections)
-        if selections != sorted([form.selections_list.itemText(i) for i in range(form.selections_list.count())]):
-            form.selections_list.clear()
-            form.selections_list.addItems(selections)
+        not_present_anymore = present - selections
+        new_selections = selections - present
+
+        for sele in not_present_anymore:
+            for sele_in, idx in [(form.selections_list.itemText(i), i) for i in range(form.selections_list.count())]:
+                if sele == sele_in:
+                    form.selections_list.removeItem(idx)
+                    break
+
+        for sele in new_selections:
+            form.selections_list.addItem(sele, form.selections_list.count())
+
         form.selections_list.blockSignals(False)
 
     def get_freq(obj):
@@ -407,6 +420,10 @@ def make_dialog():
             log("Please provide a selection", error=True)
             form.main.setEnabled(True)
             return
+
+        is_selection = obj[0] == "(" and obj[-1] == ")"
+
+        obj = obj.lstrip('(').rstrip(')')
 
         cmd.delete(obj + "_edges")
         cmd.delete(obj + "_nodes")
@@ -495,9 +512,11 @@ def make_dialog():
 
             if log_iter:
                 log_s = "Interactions state {}: ".format(state)
+                other = ""
                 for intType in sorted(interactions_per_type.keys()):
-                    log_s += "{} {}, ".format(intType, len(interactions_per_type[intType]))
-                log(log_s.rstrip(', '), timed=False, process=False)
+                    other += "{} {}, ".format(intType, len(interactions_per_type[intType]))
+                log_s += other if len(other) > 1 else "No interaction for this state, maybe check the filters?"
+                log(log_s.rstrip(', '), timed=False, process=False, warning=len(other) == 0)
 
             if not_present > 0:
                 log("{} connections not displayed because atoms not present".format(not_present), warning=True,
@@ -509,16 +528,21 @@ def make_dialog():
             for k in intTypeMap.keys():
                 members += " {}_{}_cgo".format(obj, k)
             cmd.group(obj + "_edges", members=members)
+            log("Created group {} for interaction edges".format(obj + "_edges"), timed=False)
 
-            members = ""
-            for bond in intTypeMap.keys():
-                sele = "{}_{}_resi".format(obj, bond)
-                members += " {}".format(sele)
-                freqs = get_freq_combined(obj, bond)
-                for edge, freq in freqs.items():
-                    cmd.select(sele, selection="chain {} and resi {}".format(edge.split(':')[0], edge.split(':')[1]),
-                               merge=1)
-            cmd.group(obj + "_nodes", members=members)
+            if not is_selection:
+                members = ""
+                for bond in intTypeMap.keys():
+                    sele = "{}_{}_resi".format(obj, bond)
+                    members += " {}".format(sele)
+                    freqs = get_freq_combined(stored.model, bond)
+                    for edge, freq in freqs.items():
+                        if form.min_freq.value() <= freq * 100 <= form.max_freq.value():
+                            cmd.select(sele,
+                                       selection="chain {} and resi {}".format(edge.split(':')[0], edge.split(':')[1]),
+                                       merge=1)
+                cmd.group(obj + "_nodes", members=members)
+                log("Created group {} for interaction nodes".format(obj + "_edges"), timed=False)
 
         # Set transp and radius after updating the CGOs
         slider_radius_change()
@@ -528,7 +552,7 @@ def make_dialog():
             app.processEvents()
 
     def inter_freq_analysis():
-        obj = form.selections_list.currentText()
+        obj = form.selections_list.currentText().lstrip('(').rstrip(')')
         if obj == '':
             log("Please provide a selection", error=True)
             return
@@ -565,7 +589,7 @@ def make_dialog():
     def inter_freq_table():
         import numpy as np
 
-        obj = form.selections_list.currentText()
+        obj = form.selections_list.currentText().lstrip('(').rstrip(')')
         if obj == '':
             log("Please provide a selection", error=True)
             return
@@ -636,8 +660,8 @@ def make_dialog():
         indexes = tableWidget.selectionModel().selectedRows()
         for index in sorted(indexes):
             chain, resi = tableWidget.item(index.row(), 0).text().split(":")[0:2]
-            cmd.select("selected_row_residue", selection="chain {} and resi {}".format(chain, resi), merge=1)
-            log("Created selection selected_row_residue containing the residue of the selected row in the frequency table")
+            cmd.select("sele_row", selection="chain {} and resi {}".format(chain, resi), merge=1)
+            log("Updated selection sele_row with the residue selected in the frequency table")
 
     def slider_radius_change():
         value = form.radius_value.value()
@@ -648,7 +672,7 @@ def make_dialog():
         cmd.set("cgo_transparency", value)
 
     def correlation_obj():
-        obj = form.selections_list.currentText()
+        obj = form.selections_list.currentText().lstrip('(').rstrip(')')
         if obj == '':
             log("Please select an object first!", error=True)
             return
@@ -772,7 +796,7 @@ def make_dialog():
         dialog_corr.show()
 
     def show_corr():
-        obj = form.selections_list.currentText()
+        obj = form.selections_list.currentText().lstrip('(').rstrip(')')
         if obj == '':
             log("Please select at least one row first!", error=True)
             return
