@@ -1,7 +1,5 @@
 # Avoid importing "expensive" modules here (e.g. scipy), since this code is
 # executed on PyMOL's startup. Only import such modules inside functions.
-import numpy as np
-import pandas as pd
 from pymol.cgo import *
 
 intTypeMap = {
@@ -152,6 +150,7 @@ dialog_corr = None
 dialog_freq = None
 correlations = dict()
 prev_launch_config = dict()
+prev_sele = ""
 
 
 def run_plugin_gui():
@@ -250,6 +249,12 @@ def make_dialog():
         dialog.main.setEnabled(True)
         app.processEvents()
 
+    try:
+        import numpy as np
+        import pandas as pd
+    except ImportError:
+        log("Please install numpy and pandas to use this plugin")
+
     def run():
         from pymol import stored
 
@@ -342,7 +347,7 @@ def make_dialog():
             if line != "":
                 if "model" in line:
                     nModel = int(line.split("model ")[1].strip())
-                    form.visualize_btn.setText("Running on model {} | {:.2%}".format(nModel, nModel / nStates))
+                    log("Running on model {} | {:.2%}".format(nModel, nModel / nStates))
             app.processEvents()
 
         form.visualize_btn.setText("Show")
@@ -374,6 +379,18 @@ def make_dialog():
             form.selections_list.addItem(sele, form.selections_list.count())
 
         form.selections_list.blockSignals(False)
+        global prev_sele
+
+        if len(form.selections_list.currentText()) > 0 and prev_sele != form.selections_list.currentText():
+            form.chain1_sele.blockSignals(True)
+            form.chain2_sele.blockSignals(True)
+            prev_sele = form.selections_list.currentText()
+            form.chain1_sele.clear()
+            form.chain2_sele.clear()
+            form.chain1_sele.addItems(cmd.get_chains(form.selections_list.currentText()))
+            form.chain2_sele.addItems(cmd.get_chains(form.selections_list.currentText()))
+            form.chain1_sele.blockSignals(False)
+            form.chain2_sele.blockSignals(False)
 
     def get_freq(obj):
         conn_freq = dict()
@@ -638,12 +655,12 @@ def make_dialog():
             for i, item in enumerate(row.to_list()[3:]):
                 if i == 0 and item != prevEdge:
                     if color == 1:
-                        bk_color = QColor(173, 173, 173)
+                        bk_color = QColor(232, 231, 252)
                         fg_color = QColor(0, 0, 0)
                         color = 2
                     else:
-                        bk_color = QColor(121, 121, 121)
-                        fg_color = QColor(255, 255, 255)
+                        bk_color = QColor(255, 255, 255)
+                        fg_color = QColor(0, 0, 0)
                         color = 1
 
                 if i == 0:
@@ -686,22 +703,6 @@ def make_dialog():
         disable_window()
         log("Calculation of correlated interactions started")
 
-        inter = ""
-        if form.hbond_2.isChecked():
-            inter = "HBOND"
-        if form.ionic_2.isChecked():
-            inter = "IONIC"
-        if form.pipistack_2.isChecked():
-            inter = "PIPISTACK"
-        if form.pication_2.isChecked():
-            inter = "PICATION"
-        if form.vdw_2.isChecked():
-            inter = "VDW"
-        if form.ssbond_2.isChecked():
-            inter = "SSBOND"
-        if form.iac_2.isChecked():
-            inter = "IAC"
-
         coeff_thr = float(form.coeff_thr.value())
         p_thr = float(form.p_thr.value())
 
@@ -714,87 +715,91 @@ def make_dialog():
             enable_window()
             return
         try:
-            selections, corr_matr, p_matr = calculate_correlation(obj, states, int_type=inter,
-                                                                  coeff_thresh=coeff_thr,
-                                                                  p_thresh=p_thr, max_presence=max_presence,
-                                                                  min_presence=min_presence)
+            for inter in intTypeMap.keys():
+                selections, corr_matr, p_matr = calculate_correlation(obj, states, int_type=inter,
+                                                                      coeff_thresh=coeff_thr,
+                                                                      p_thresh=p_thr, max_presence=max_presence,
+                                                                      min_presence=min_presence)
+                correlations.setdefault(obj, dict())
+                correlations[obj][inter] = (selections, corr_matr, p_matr)
+
         except TypeError:
             log("Run ring on all the states first!", error=True)
             enable_window()
             return
 
-        correlations.setdefault(obj, dict())
-        correlations[obj][inter] = (selections, corr_matr, p_matr)
-
-        create_table(obj, inter)
+        create_table(obj)
 
         enable_window()
 
-    def create_table(obj, inter):
-        import numpy as np
-        import pandas as pd
+    def create_table(obj):
+        df = pd.DataFrame()
 
-        selections, corr_matr, p_matr = correlations[obj][inter]
-        with np.errstate(divide='ignore', invalid='ignore'):
-            indexes = np.argwhere(~np.isnan(corr_matr))
+        for inter in intTypeMap.keys():
+            selections, corr_matr, p_matr = correlations[obj][inter]
+            with np.errstate(divide='ignore', invalid='ignore'):
+                indexes = np.argwhere(~np.isnan(corr_matr))
 
-        edge1s = [selections[x] for x in [y[0] for y in indexes]]
-        edge2s = [selections[x] for x in [y[1] for y in indexes]]
-        corr_vals = [corr_matr[i, j] for (i, j) in indexes]
-        p_vals = [p_matr[i, j] for (i, j) in indexes]
+            edge1s = [selections[x] for x in [y[0] for y in indexes]]
+            edge2s = [selections[x] for x in [y[1] for y in indexes]]
+            inter_labels = [inter for x in edge1s]
+            corr_vals = [corr_matr[i, j] for (i, j) in indexes]
+            p_vals = [p_matr[i, j] for (i, j) in indexes]
 
-        tableWidget = dialog_corr.corrTable
-        tableWidget.setRowCount(0)
-        tableWidget.setSortingEnabled(False)
+            tableWidget = dialog_corr.corrTable
+            tableWidget.setRowCount(0)
+            tableWidget.setSortingEnabled(False)
 
-        rowPosition = tableWidget.rowCount()  # necessary even when there are no rows in the table
-        prevEdge = None
-        color = 2
+            rowPosition = tableWidget.rowCount()  # necessary even when there are no rows in the table
+            prevEdge = None
+            color = 2
 
-        edge1_chains1 = [x.split(':')[0] for x in edge1s]
-        edge1_resi1 = [int(x.split(':')[1]) for x in edge1s]
-        edge1_chains2 = [x.split('- ')[1].split(':')[0] for x in edge1s]
-        edge1_resi2 = [int(x.split(':')[3]) for x in edge1s]
-        df = pd.DataFrame(
-                [edge1s, edge2s, corr_vals, p_vals, edge1_chains1, edge1_resi1, edge1_chains2, edge1_resi2]).transpose()
-        df = df.sort_values([4, 5, 6, 7, 2], ascending=(True, True, True, True, False))
+            edge1_chains1 = [x.split(':')[0] for x in edge1s]
+            edge1_resi1 = [int(x.split(':')[1]) for x in edge1s]
+            edge1_chains2 = [x.split('- ')[1].split(':')[0] for x in edge1s]
+            edge1_resi2 = [int(x.split(':')[3]) for x in edge1s]
+            df = df.append(pd.DataFrame([edge1s, inter_labels, edge2s, corr_vals, p_vals, edge1_chains1,
+                                         edge1_resi1, edge1_chains2, edge1_resi2]).transpose())
+
+        df = df.sort_values([5, 6, 7, 8, 3], ascending=(True, True, True, True, False))
 
         log("{} {} interactions correlates/anti-correlates".format(len(df), inter))
 
         tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         for _, row in df.iterrows():
-            x, y, z, w, *_ = row.to_list()
+            x, p, y, z, w, *_ = row.to_list()
             if x != prevEdge:
                 if color == 1:
-                    bk_color = QColor(173, 173, 173)
+                    bk_color = QColor(232, 231, 252)
                     fg_color = QColor(0, 0, 0)
                     color = 2
                 else:
-                    bk_color = QColor(121, 121, 121)
-                    fg_color = QColor(255, 255, 255)
+                    bk_color = QColor(255, 255, 255)
+                    fg_color = QColor(0, 0, 0)
                     color = 1
 
             tableWidget.insertRow(rowPosition)
 
             tableWidget.setItem(rowPosition, 0, QtWidgets.QTableWidgetItem(x))
-            tableWidget.setItem(rowPosition, 1, QtWidgets.QTableWidgetItem(y))
+            tableWidget.setItem(rowPosition, 1, QtWidgets.QTableWidgetItem(p))
+            tableWidget.setItem(rowPosition, 2, QtWidgets.QTableWidgetItem(y))
 
             zItem = QtWidgets.QTableWidgetItem()
             zItem.setData(QtCore.Qt.EditRole, round(float(z), 2))
-            tableWidget.setItem(rowPosition, 2, zItem)
+            tableWidget.setItem(rowPosition, 3, zItem)
 
             wItem = QtWidgets.QTableWidgetItem()
             wItem.setData(QtCore.Qt.EditRole, float(w))
-            tableWidget.setItem(rowPosition, 3, wItem)
-            for i in range(4):
+            tableWidget.setItem(rowPosition, 4, wItem)
+            for i in range(5):
                 tableWidget.item(rowPosition, i).setBackground(bk_color)
                 tableWidget.item(rowPosition, i).setForeground(fg_color)
                 tableWidget.item(rowPosition, i).setTextAlignment(QtCore.Qt.AlignCenter)
 
             if z > 0:
-                tableWidget.item(rowPosition, 2).setForeground(QColor(0, 0, 255))
+                tableWidget.item(rowPosition, 3).setForeground(QColor(0, 0, 255))
             else:
-                tableWidget.item(rowPosition, 2).setForeground(QColor(255, 0, 0))
+                tableWidget.item(rowPosition, 3).setForeground(QColor(255, 0, 0))
 
             prevEdge = x
             rowPosition += 1
@@ -882,7 +887,7 @@ def make_dialog():
             return
 
         obj = form.selections_list.currentText()
-        if obj[0] != "(" or obj[-1] != ")":
+        if len(obj) == 0 or obj[0] != "(" or obj[-1] != ")":
             log("Please select a selection on the box above to use this feature", error=True)
             return
 
@@ -982,15 +987,38 @@ def make_dialog():
                 error=True)
             return
 
-        G = nx.Graph()
+        if cmd.get_chains(stored.model) == 1:
+            log("Only one chain is present in the selected object")
+
+        G = nx.MultiGraph()
+        edges = dict()
         interactions_first_state = pd.read_csv(file_pth, sep='\t')
         interactions_first_state = interactions_first_state[interactions_first_state.Model == 1]
-        for (nodeId1, _, nodeId2, *_) in interactions_first_state.itertuples(index=False):
+        for (nodeId1, interaction, nodeId2, *_) in interactions_first_state.itertuples(index=False):
             chain1, *_ = nodeId1.split(":")
             chain2, *_ = nodeId2.split(":")
-            G.add_edge(chain1, chain2)
+            intType, *_ = interaction.split(":")
+            keyyyy = tuple(sorted([chain1, chain2]))
+            edges.setdefault(keyyyy, dict())
+            edges[keyyyy].setdefault(intType, 0)
+            edges[keyyyy][intType] += 1
+            if edges[keyyyy][intType] == 1:
+                G.add_edge(chain1, chain2, type=intType)
 
-        nx.draw_kamada_kawai(G, with_labels=True, font_weight='bold')
+        pos = nx.kamada_kawai_layout(G)
+        nx.draw_networkx_nodes(G, pos)
+        ax = plt.gca()
+        for e in G.edges:
+            ax.annotate("",
+                        xy=pos[e[0]], xycoords='data',
+                        xytext=pos[e[1]], textcoords='data',
+                        arrowprops=dict(arrowstyle="<->", color="0.5",
+                                        shrinkA=5, shrinkB=5,
+                                        patchA=None, patchB=None,
+                                        connectionstyle="arc3,rad=rrr".replace('rrr', str(str(0.3*e[2]))),
+                                        ),
+                        )
+        plt.axis('off')
         plt.show()
 
     form.ring_path.setText("{}/.ring/bin/Ring-md".format(environ['HOME']))

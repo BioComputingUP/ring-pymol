@@ -60,7 +60,7 @@
          </sizepolicy>
         </property>
         <property name="styleSheet">
-         <string notr="true">QTableWidget::item:selected{ background-color: rgb(140, 167, 183);
+         <string notr="true">QTableWidget::item:selected{ background-color: rgb(137, 137, 235);
                                      color: white; }
                                  </string>
         </property>
@@ -82,6 +82,11 @@
         <column>
          <property name="text">
           <string>Edge_1</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Interaction</string>
          </property>
         </column>
         <column>

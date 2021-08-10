@@ -39,8 +39,8 @@
          </sizepolicy>
         </property>
         <property name="styleSheet">
-         <string notr="true">QTableWidget::item:selected{ background-color: rgb(140, 167,
-                                        183); color: white; }
+         <string notr="true">QTableWidget::item:selected{ background-color: rgb(137, 137,
+                                        235); color: white; }
                                     </string>
         </property>
         <property name="sizeAdjustPolicy">
