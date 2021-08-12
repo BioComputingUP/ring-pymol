@@ -84,28 +84,39 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
         print("To run this you have to install pandas, numpy and scipy in python")
         return
 
-    contacts_sparse = dict()
-
+    all_cm = dict()
     try:
-        all_cm = pd.read_csv('/tmp/ring/md/{}.cm_{}'.format(obj, int_type), sep=' ', header=None)
+        if int_type == "ALL":
+            for interaction in intTypeMap.keys():
+                all_cm[interaction] = pd.read_csv('/tmp/ring/md/{}.cm_{}'.format(obj, interaction), sep=' ',
+                                                  header=None)
+        else:
+            all_cm[int_type] = pd.read_csv('/tmp/ring/md/{}.cm_{}'.format(obj, int_type), sep=' ', header=None)
     except FileNotFoundError:
         return
 
+    contacts_sparse = dict()
     for j in range(1, frames + 1):
-        df = all_cm[all_cm[0] == j]
-        names = df[1]
-        names = [x.replace(':_:', ':') for x in names]
-        df = df.iloc[:, 2:]
-        matrix = df.values
-        matrix[np.triu_indices(matrix.shape[0])] = 0
-        for i in np.argwhere(matrix > 0):
-            int_id1 = names[i[0]].split(':')
-            int_id1 = (int_id1[0], int(int_id1[1]), int_id1[2])
-            int_id2 = names[i[1]].split(':')
-            int_id2 = (int_id2[0], int(int_id2[1]), int_id2[2])
-            tmp = tuple(sorted([int_id1, int_id2]))
-            contacts_sparse.setdefault(tmp, [])
-            contacts_sparse[tmp].append(j - 1)
+        if int_type == "ALL":
+            interactions = intTypeMap.keys()
+        else:
+            interactions = [int_type]
+        for interaction in interactions:
+            df = all_cm[interaction][all_cm[interaction][0] == j]
+            names = df[1]
+            names = [x.replace(':_:', ':') for x in names]
+            df = df.iloc[:, 2:]
+            matrix = df.values
+            matrix[np.triu_indices(matrix.shape[0])] = 0
+            for i in np.argwhere(matrix > 0):
+                int_id1 = names[i[0]].split(':')
+                int_id1 = (int_id1[0], int(int_id1[1]), int_id1[2])
+                int_id2 = names[i[1]].split(':')
+                int_id2 = (int_id2[0], int(int_id2[1]), int_id2[2])
+                tmp = tuple(sorted([int_id1, int_id2]))
+                contacts_sparse.setdefault(tmp, dict())
+                contacts_sparse[tmp].setdefault(j - 1, 0)
+                contacts_sparse[tmp][j - 1] += 1
 
     to_pop = []
     for k, v in contacts_sparse.items():
@@ -117,9 +128,9 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
         contacts_sparse.pop(k)
 
     z = np.zeros((len(contacts_sparse), frames))
-    for i, v in enumerate(contacts_sparse.values()):
-        for j in v:
-            z[i, j] = 1
+    for i, contacts_for_frame in enumerate(contacts_sparse.values()):
+        for j, contacts in contacts_for_frame.items():
+            z[i, j] = contacts
 
     coeffs_matr = np.ones((z.shape[0], z.shape[0])) * np.nan
     p_matr = np.ones((z.shape[0], z.shape[0])) * np.nan
@@ -252,6 +263,33 @@ def make_dialog():
     except ImportError:
         log("Please install numpy and pandas to use this plugin")
 
+    def get_current_run_config():
+        edge_policy = ""
+        if form.best_edge.isChecked():
+            edge_policy = "--best_edge"
+        if form.multi_edge.isChecked():
+            edge_policy = "--multi_edge"
+        if form.all_edge.isChecked():
+            edge_policy = "--all_edges"
+
+        seq_sep = str(form.seq_separation.value())
+
+        len_hbond = str(form.len_hbond.value())
+        len_pica = str(form.len_pica.value())
+        len_pipi = str(form.len_pipi.value())
+        len_salt = str(form.len_salt.value())
+        len_ss = str(form.len_ss.value())
+        len_vdw = str(form.len_vdw.value())
+
+        return {"-g"   : seq_sep,
+                "-o"   : len_salt,
+                "-s"   : len_ss,
+                "-k"   : len_pipi,
+                "-a"   : len_pica,
+                "-b"   : len_hbond,
+                "-w"   : len_vdw,
+                "edges": edge_policy}
+
     def run():
         from pymol import stored
 
@@ -283,51 +321,32 @@ def make_dialog():
         stored.state = ''
         cmd.iterate_state(state=-1, selection=obj_name, expression='stored.state=state')
 
-        nStates = cmd.count_states(obj_name)
+        current_run_config = get_current_run_config()
 
-        edge_policy = ""
-        if form.best_edge.isChecked():
-            edge_policy = "--best_edge"
-        if form.multi_edge.isChecked():
-            edge_policy = "--multi_edge"
-        if form.all_edge.isChecked():
-            edge_policy = "--all_edges"
-
-        seq_sep = str(form.seq_separation.value())
-
-        len_hbond = str(form.len_hbond.value())
-        len_pica = str(form.len_pica.value())
-        len_pipi = str(form.len_pipi.value())
-        len_salt = str(form.len_salt.value())
-        len_ss = str(form.len_ss.value())
-        len_vdw = str(form.len_vdw.value())
-
-        current_run_config = {"-g"   : seq_sep,
-                              "-o"   : len_salt,
-                              "-s"   : len_ss,
-                              "-k"   : len_pipi,
-                              "-a"   : len_pica,
-                              "-b"   : len_hbond,
-                              "-w"   : len_vdw,
-                              "edges": edge_policy}
-
-        if obj_name in prev_launch_config.keys() and prev_launch_config[obj_name] == current_run_config:
+        if obj_name in prev_launch_config.keys() and prev_launch_config[
+            obj_name] == current_run_config and not form.override_memory.isChecked():
             visualize(log_iter=True)
             return
 
         form.main.setEnabled(False)
         form.visualize_btn.setText("Running ring...")
-        app.processEvents()
 
         log("Exporting pymol object {} in cif format ({})".format(obj_name, file_pth))
+
         cmd.save(filename=file_pth, selection=obj_name, state=0)
         log("Exporting done")
 
         try:
             p = subprocess.Popen(
-                    [form.ring_path.text(), "-i", file_pth, "--out_dir", "/tmp/ring/", "-g", seq_sep,
-                     "-o", len_salt, "-s", len_ss, "-k", len_pipi, "-a", len_pica, "-b", len_hbond, "-w", len_vdw,
-                     "--all_chains", edge_policy, "--all_models"], stdout=subprocess.DEVNULL,
+                    [form.ring_path.text(), "-i", file_pth, "--out_dir", "/tmp/ring/",
+                     "-g", current_run_config["-g"],
+                     "-o", current_run_config["-o"],
+                     "-s", current_run_config["-s"],
+                     "-k", current_run_config["-k"],
+                     "-a", current_run_config["-a"],
+                     "-b", current_run_config["-b"],
+                     "-w", current_run_config["-w"],
+                     "--all_chains", current_run_config["edges"], "--all_models"], stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE, universal_newlines=True)
 
             prev_launch_config[obj_name] = current_run_config
@@ -339,15 +358,14 @@ def make_dialog():
 
         log("Ring generation started")
 
+        n_states = cmd.count_states(obj_name)
         while p.poll() is None:
             line = p.stderr.readline()
             if line != "":
                 if "model" in line:
-                    nModel = int(line.split("model ")[1].strip())
-                    log("Running on model {} | {:.2%}".format(nModel, nModel / nStates))
-            app.processEvents()
+                    current_state = int(line.split("model ")[1].strip())
+                    log("Running on model {} | {:.2%}".format(current_state, current_state / n_states))
 
-        form.visualize_btn.setText("Show")
         log("Ring generation finished")
         visualize(log_iter=True)
 
@@ -376,7 +394,15 @@ def make_dialog():
             form.selections_list.addItem(sele, form.selections_list.count())
 
         form.selections_list.blockSignals(False)
-        global prev_sele
+
+        obj = form.selections_list.currentText()
+        if len(obj) > 0 and obj[0] == "(" and obj[-1] == ")":
+            form.visualize_btn.setText("Show")
+        elif obj in prev_launch_config.keys() and prev_launch_config[obj] == get_current_run_config() \
+                and not form.override_memory.isChecked():
+            form.visualize_btn.setText("Show")
+        else:
+            form.visualize_btn.setText("Execute Ring")
 
     def get_freq(obj):
         conn_freq = dict()
@@ -492,7 +518,7 @@ def make_dialog():
                 tmp2 = ("{}/{}".format(chain2, pos2), "{}/{}".format(chain1, pos1))
                 if (chain1, pos1) in stored.chain_resi and (chain2, pos2) in stored.chain_resi \
                         and (form.min_freq.value() <= freq <= form.max_freq.value() or selection) \
-                        and ((selection and int_type == intType and
+                        and ((selection and (int_type == intType or int_type == "ALL") and
                               (tmp1 in pair_set or tmp2 in pair_set)) or not selection):
                     interactions_per_type.setdefault(intType, [])
 
@@ -516,7 +542,7 @@ def make_dialog():
             for intType, interactions in interactions_per_type.items():
                 not_present += draw_links(interactions,
                                           object_name=obj + "_" + intType + "_cgo" if not selection else selection + "_cgo",
-                                          color=intTypeMap[intType] if not color else color,
+                                          color=intTypeMap[intType] if not color or int_type == "ALL" else color,
                                           coords=stored.coords,
                                           state=state)
 
@@ -701,7 +727,7 @@ def make_dialog():
             enable_window()
             return
         try:
-            for inter in intTypeMap.keys():
+            for inter in list(intTypeMap.keys()) + ["ALL"]:
                 selections, corr_matr, p_matr = calculate_correlation(obj, states, int_type=inter,
                                                                       coeff_thresh=coeff_thr,
                                                                       p_thresh=p_thr, max_presence=max_presence,
@@ -715,20 +741,19 @@ def make_dialog():
             return
 
         create_table(obj)
-
         enable_window()
 
     def create_table(obj):
         df = pd.DataFrame()
 
-        for inter in intTypeMap.keys():
+        for inter in list(intTypeMap.keys()) + ["ALL"]:
             selections, corr_matr, p_matr = correlations[obj][inter]
             with np.errstate(divide='ignore', invalid='ignore'):
                 indexes = np.argwhere(~np.isnan(corr_matr))
 
             edge1s = [selections[x] for x in [y[0] for y in indexes]]
             edge2s = [selections[x] for x in [y[1] for y in indexes]]
-            inter_labels = [inter for x in edge1s]
+            inter_labels = [inter for _ in edge1s]
             corr_vals = [corr_matr[i, j] for (i, j) in indexes]
             p_vals = [p_matr[i, j] for (i, j) in indexes]
 
@@ -747,9 +772,10 @@ def make_dialog():
             df = df.append(pd.DataFrame([edge1s, inter_labels, edge2s, corr_vals, p_vals, edge1_chains1,
                                          edge1_resi1, edge1_chains2, edge1_resi2]).transpose())
 
+            log("{} {} interactions correlates/anti-correlates".format(len(df), inter))
+
         df = df.sort_values([5, 6, 7, 8, 3], ascending=(True, True, True, True, False))
 
-        log("{} {} interactions correlates/anti-correlates".format(len(df), inter))
 
         tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         for _, row in df.iterrows():
