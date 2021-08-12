@@ -74,11 +74,15 @@ def draw_links(interactions, color, object_name, coords, state):
 
 def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coeff_thresh=0.5, p_thresh=0.3,
                           int_type="HBOND"):
-    import pandas as pd
-    import numpy as np
     # import seaborn as sn
     # from matplotlib import pyplot as plt
-    from scipy.stats import pearsonr
+    try:
+        import pandas as pd
+        import numpy as np
+        from scipy.stats import pearsonr
+    except ImportError:
+        print("To run this you have to install pandas, numpy and scipy in python")
+        return
 
     contacts_sparse = dict()
 
@@ -95,18 +99,13 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
         matrix = df.values
         matrix[np.triu_indices(matrix.shape[0])] = 0
         for i in np.argwhere(matrix > 0):
-            if names[i[0]].split(':')[0] < names[i[1]].split(':')[0]:
-                tmp = (names[i[0]], names[i[1]])
-            elif names[i[0]].split(':')[0] > names[i[1]].split(':')[0]:
-                tmp = (names[i[1]], names[i[0]])
-            else:
-                if int(names[i[0]].split(':')[1]) <= int(names[i[1]].split(':')[1]):
-                    tmp = (names[i[0]], names[i[1]])
-                else:
-                    tmp = (names[i[1]], names[i[0]])
-
+            int_id1 = names[i[0]].split(':')
+            int_id1 = (int_id1[0], int(int_id1[1]), int_id1[2])
+            int_id2 = names[i[1]].split(':')
+            int_id2 = (int_id2[0], int(int_id2[1]), int_id2[2])
+            tmp = tuple(sorted([int_id1, int_id2]))
             contacts_sparse.setdefault(tmp, [])
-            contacts_sparse[tmp].append((j - 1, matrix[i[0], i[1]]))
+            contacts_sparse[tmp].append(j - 1)
 
     to_pop = []
     for k, v in contacts_sparse.items():
@@ -119,13 +118,11 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
 
     z = np.zeros((len(contacts_sparse), frames))
     for i, v in enumerate(contacts_sparse.values()):
-        for j, contact in v:
-            z[i, j] = contact
+        for j in v:
+            z[i, j] = 1
 
-    coeffs_matr = np.empty((z.shape[0], z.shape[0]))
-    coeffs_matr.fill(np.nan)
-    p_matr = np.empty((z.shape[0], z.shape[0]))
-    p_matr.fill(np.nan)
+    coeffs_matr = np.ones((z.shape[0], z.shape[0])) * np.nan
+    p_matr = np.ones((z.shape[0], z.shape[0])) * np.nan
 
     for i in range(z.shape[0]):
         for j in range(z.shape[0]):
@@ -135,7 +132,7 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
                     coeffs_matr[i, j] = corr_coeff
                     p_matr[i, j] = p_val
 
-    ticks = ["{} - {}".format(x, y) for (x, y) in contacts_sparse.keys()]
+    ticks = ["{}/{}/{} - {}/{}/{}".format(x[0], x[1], x[2], y[0], y[1], y[2]) for (x, y) in contacts_sparse.keys()]
     ticks = np.array(ticks)
     # hm = sn.heatmap(coeffs_matr, xticklabels=ticks, yticklabels=ticks)
     # hm.set_xticklabels(hm.get_xmajorticklabels(), fontsize=8)
@@ -381,17 +378,6 @@ def make_dialog():
         form.selections_list.blockSignals(False)
         global prev_sele
 
-        if len(form.selections_list.currentText()) > 0 and prev_sele != form.selections_list.currentText():
-            form.chain1_sele.blockSignals(True)
-            form.chain2_sele.blockSignals(True)
-            prev_sele = form.selections_list.currentText()
-            form.chain1_sele.clear()
-            form.chain2_sele.clear()
-            form.chain1_sele.addItems(cmd.get_chains(form.selections_list.currentText()))
-            form.chain2_sele.addItems(cmd.get_chains(form.selections_list.currentText()))
-            form.chain1_sele.blockSignals(False)
-            form.chain2_sele.blockSignals(False)
-
     def get_freq(obj):
         conn_freq = dict()
         for inter in intTypeMap.keys():
@@ -502,8 +488,8 @@ def make_dialog():
                         continue
                     if form.intrachain.isChecked() and chain1 != chain2:
                         continue
-                tmp1 = ("{}:{}".format(chain1, pos1), "{}:{}".format(chain2, pos2))
-                tmp2 = ("{}:{}".format(chain2, pos2), "{}:{}".format(chain1, pos1))
+                tmp1 = ("{}/{}".format(chain1, pos1), "{}/{}".format(chain2, pos2))
+                tmp2 = ("{}/{}".format(chain2, pos2), "{}/{}".format(chain1, pos1))
                 if (chain1, pos1) in stored.chain_resi and (chain2, pos2) in stored.chain_resi \
                         and (form.min_freq.value() <= freq <= form.max_freq.value() or selection) \
                         and ((selection and int_type == intType and
@@ -754,10 +740,10 @@ def make_dialog():
             prevEdge = None
             color = 2
 
-            edge1_chains1 = [x.split(':')[0] for x in edge1s]
-            edge1_resi1 = [int(x.split(':')[1]) for x in edge1s]
-            edge1_chains2 = [x.split('- ')[1].split(':')[0] for x in edge1s]
-            edge1_resi2 = [int(x.split(':')[3]) for x in edge1s]
+            edge1_chains1 = [x.split('/')[0] for x in edge1s]
+            edge1_resi1 = [int(x.split('/')[1]) for x in edge1s]
+            edge1_chains2 = [x.split('- ')[1].split('/')[0] for x in edge1s]
+            edge1_resi2 = [int(x.split('/')[3]) for x in edge1s]
             df = df.append(pd.DataFrame([edge1s, inter_labels, edge2s, corr_vals, p_vals, edge1_chains1,
                                          edge1_resi1, edge1_chains2, edge1_resi2]).transpose())
 
@@ -815,21 +801,6 @@ def make_dialog():
         disable_window()
 
         cmd.delete("edge1 edge2 edge1_cgo edge2_cgo")
-        inter = ""
-        if form.hbond_2.isChecked():
-            inter = "HBOND"
-        if form.ionic_2.isChecked():
-            inter = "IONIC"
-        if form.pipistack_2.isChecked():
-            inter = "PIPISTACK"
-        if form.pication_2.isChecked():
-            inter = "PICATION"
-        if form.vdw_2.isChecked():
-            inter = "VDW"
-        if form.ssbond_2.isChecked():
-            inter = "SSBOND"
-        if form.iac_2.isChecked():
-            inter = "IAC"
 
         table = dialog_corr.corrTable
         selection = table.selectionModel().selectedRows()
@@ -840,18 +811,19 @@ def make_dialog():
         for i in range(len(selection)):
             row = selection[i].row()
             edge1 = table.item(row, 0).text()
-            edge2 = table.item(row, 1).text()
-            corr_val = float(table.item(row, 2).text())
+            inter = table.item(row, 1).text()
+            edge2 = table.item(row, 2).text()
+            corr_val = float(table.item(row, 3).text())
 
             resi1, resi2 = edge1.split(' - ')
             resi1, resi2 = resi1[:-4], resi2[:-4]
-            resi1_c, resi1_n = resi1.split(':')
-            resi2_c, resi2_n = resi2.split(':')
+            resi1_c, resi1_n = resi1.split('/')
+            resi2_c, resi2_n = resi2.split('/')
 
             resi3, resi4 = edge2.split(' - ')
             resi3, resi4 = resi3[:-4], resi4[:-4]
-            resi3_c, resi3_n = resi3.split(':')
-            resi4_c, resi4_n = resi4.split(':')
+            resi3_c, resi3_n = resi3.split('/')
+            resi4_c, resi4_n = resi4.split('/')
 
             cmd.select("edge1", "/{}//{}/{} or /{}//{}/{}".format(obj, resi1_c, resi1_n,
                                                                   obj, resi2_c, resi2_n), merge=1)
@@ -946,10 +918,10 @@ def make_dialog():
 
         if something:
             plt.title("{} - {}".format(resi1_name, resi2_name))
-            plt.grid(which='minor', alpha=0.2)
-            plt.grid(which='major', alpha=0.5)
-            plt.xticks(np.arange(1, states + 1))
-            plt.ylim(bottom=0)
+            plt.grid()
+            plt.ylim(bottom=0, top=max(filter(lambda x: x != np.nan,
+                                              [item for sublist in list(interaction_distance.values()) for item in
+                                               sublist])) + 1)
             plt.xlim(left=0, right=states + 1)
             plt.xlabel("State")
             plt.ylabel("Distance (Å)")
@@ -963,10 +935,11 @@ def make_dialog():
         from pymol import stored
         try:
             from matplotlib import pyplot as plt
+            import matplotlib.patches as mpatches
             import networkx as nx
         except ImportError:
-            log("To run this feature you have to install matplotlib and networkx and for the python version that PyMol is using",
-                error=True)
+            log("To run this feature you have to install matplotlib and networkx and for the python version "
+                "that PyMol is using", error=True)
             return
 
         obj = form.selections_list.currentText()
@@ -988,7 +961,7 @@ def make_dialog():
             return
 
         if cmd.get_chains(stored.model) == 1:
-            log("Only one chain is present in the selected object")
+            log("Only one chain is present in the selected object", warning=True)
 
         G = nx.MultiGraph()
         edges = dict()
@@ -1005,20 +978,108 @@ def make_dialog():
             if edges[keyyyy][intType] == 1:
                 G.add_edge(chain1, chain2, type=intType)
 
+        seen = dict()
+        present_interaction = set()
         pos = nx.kamada_kawai_layout(G)
         nx.draw_networkx_nodes(G, pos)
+        nx.draw_networkx_labels(G, pos)
         ax = plt.gca()
-        for e in G.edges:
+        for e in G.edges(data=True):
+            seen.setdefault((e[0], e[1]), 0)
+            present_interaction.add(e[2]["type"])
             ax.annotate("",
                         xy=pos[e[0]], xycoords='data',
                         xytext=pos[e[1]], textcoords='data',
-                        arrowprops=dict(arrowstyle="<->", color="0.5",
+                        arrowprops=dict(arrowstyle="<->", color=intColorMap[e[2]["type"]],
                                         shrinkA=5, shrinkB=5,
                                         patchA=None, patchB=None,
-                                        connectionstyle="arc3,rad=rrr".replace('rrr', str(str(0.3*e[2]))),
+                                        connectionstyle="arc3,rad={}".format(0.2 * seen[(e[0], e[1])]),
                                         ),
                         )
+            seen[(e[0], e[1])] += 1
+
+        handler_list = []
+        for k, v in intColorMap.items():
+            if k in present_interaction:
+                handler_list.append(mpatches.Patch(color=v, label=k))
+
+        plt.legend(handles=handler_list, loc='best')
+
+        plt.title("Chain interaction graph for {}".format(stored.model))
         plt.axis('off')
+        plt.show()
+
+    def inter_heatmap():
+        from pymol import stored
+        try:
+            from matplotlib import pyplot as plt
+            import seaborn as sn
+        except ImportError:
+            log("To run this feature you have to install matplotlib and seaborn and for the python version "
+                "that PyMol is using", error=True)
+            return
+
+        obj = form.selections_list.currentText()
+        if len(obj) == 0:
+            log("Please select an object on the box of the view/filter tab to use this feature", error=True)
+            return
+
+        if obj[0] == "(" and obj[-1] == ")":
+            log("Please select an object on the box of the view/filter tab to use this feature", error=True)
+            return
+
+        sele_inter = form.interaction_sele.currentText()
+
+        stored.model = ""
+        cmd.iterate(obj, 'stored.model = model')
+        if cmd.get_chains(stored.model) == 1:
+            log("Only one chain is present in the selected object, cannot use this tool", error=True)
+            return
+
+        file_pth = "/tmp/ring/md/" + stored.model + ".gfreq_{}".format(sele_inter)
+        if not os.path.exists(file_pth):
+            log("Before this you need to run Ring-md on the object first. Select it in the View/Filter tab and press "
+                "the Show button", error=True)
+            return
+
+        contact_freq = dict()
+        order = []
+        present = set()
+        with open(file_pth, 'r') as f:
+            for line in f:
+                edge1, _, edge2, perc = line.split('\t')
+                edge1 = edge1.replace(":_:", ":").replace(":", "/")
+                edge2 = edge2.replace(":_:", ":").replace(":", "/")
+                chain1 = edge1.split('/')[0]
+                chain2 = edge2.split('/')[0]
+                if chain1 != chain2:
+                    contact_freq.setdefault((edge1, edge2), perc)
+                    if edge1 not in present:
+                        present.add(edge1)
+                        order.append(edge1)
+
+        if len(order) == 0:
+            log("No interaction of this type found", error=True)
+            return
+
+        matr = np.zeros((len(order), len(order))) * np.nan
+        for i, edge1 in enumerate(order):
+            for j, edge2 in enumerate(order):
+                try:
+                    matr[i, j] = contact_freq[(edge1, edge2)]
+                    matr[j, i] = contact_freq[(edge1, edge2)]
+                except KeyError:
+                    pass
+        plt.close()
+        ax = plt.subplot()
+        sn.heatmap(matr, vmin=0, vmax=1, xticklabels=order, yticklabels=order, cmap='viridis', ax=ax)
+        change_chain = dict()
+        for i, x in enumerate(order):
+            change_chain.setdefault(x.split('/')[0], i)
+        ax.hlines(list(change_chain.values())[1:], *ax.get_xlim(), colors=["k"])
+        ax.vlines(list(change_chain.values())[1:], *ax.get_ylim(), colors=["k"])
+        plt.title("{} interchain interactions".format(sele_inter))
+        plt.tight_layout()
         plt.show()
 
     form.ring_path.setText("{}/.ring/bin/Ring-md".format(environ['HOME']))
@@ -1043,6 +1104,7 @@ def make_dialog():
     # Analysis
     form.resi_plot.clicked.connect(resi_plot)
     form.chain_graph.clicked.connect(chain_graph)
+    form.show_inter_heatmap.clicked.connect(inter_heatmap)
 
     # Misc
     form.timer = QtCore.QTimer()

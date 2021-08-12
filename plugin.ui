@@ -26,7 +26,7 @@
    <property name="horizontalSpacing">
     <number>0</number>
    </property>
-   <item row="2" column="0">
+   <item row="3" column="0">
     <widget class="QListWidget" name="console_log">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
@@ -67,7 +67,7 @@
      </item>
     </widget>
    </item>
-   <item row="0" column="0">
+   <item row="1" column="0">
     <widget class="QTabWidget" name="main">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -92,56 +92,6 @@
        <string>View / Filter</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QGroupBox" name="Selectionandshow">
-         <property name="title">
-          <string>Select a Pymol object or selection to show the connections</string>
-         </property>
-         <property name="flat">
-          <bool>false</bool>
-         </property>
-         <property name="checkable">
-          <bool>false</bool>
-         </property>
-         <layout class="QGridLayout" name="gridLayout">
-          <item row="0" column="0">
-           <widget class="QComboBox" name="selections_list">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>300</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
-            <property name="editable">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="visualize_btn">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Show</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
        <item>
         <widget class="QWidget" name="tools_widget" native="true">
          <property name="sizePolicy">
@@ -802,20 +752,6 @@
           <bool>false</bool>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="3" column="3">
-           <widget class="QPushButton" name="show_inter_heatmap">
-            <property name="text">
-             <string>Show heatmap</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QComboBox" name="chain2_sele">
-            <property name="toolTip">
-             <string>Chain 2</string>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="1" colspan="2">
            <widget class="QPushButton" name="chain_graph">
             <property name="sizePolicy">
@@ -832,7 +768,21 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="2">
+          <item row="2" column="0" colspan="4">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Visualize a frequency heatmap for interchain residues in contact for a specific interaction:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="4">
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
            <widget class="QComboBox" name="interaction_sele">
             <property name="toolTip">
              <string>Interaction type</string>
@@ -859,7 +809,7 @@
             </item>
             <item>
              <property name="text">
-              <string>DISULFIDE</string>
+              <string>SSBOND</string>
              </property>
             </item>
             <item>
@@ -874,24 +824,10 @@
             </item>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QComboBox" name="chain1_sele">
-            <property name="toolTip">
-             <string>Chain 1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0" colspan="4">
-           <widget class="QLabel" name="label_3">
+          <item row="3" column="2" colspan="2">
+           <widget class="QPushButton" name="show_inter_heatmap">
             <property name="text">
-             <string>Visualize a frequency heatmap for interchain residues in contact for a specific interaction:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="4">
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <string>Show heatmap</string>
             </property>
            </widget>
           </item>
@@ -907,7 +843,7 @@
           </sizepolicy>
          </property>
          <property name="title">
-          <string>Residue pari interaction analysis</string>
+          <string>Residue pair interaction analysis</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
@@ -1231,7 +1167,7 @@
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Pi-Cation</string>
+                  <string>π-Cation</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1247,7 +1183,7 @@
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Pi-Pi stacks</string>
+                  <string>π-π Stacks</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1494,6 +1430,56 @@
        </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="Selectionandshow">
+     <property name="title">
+      <string>Select a Pymol object or selection to show the connections</string>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QComboBox" name="selections_list">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>300</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="editable">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="visualize_btn">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Show</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>
