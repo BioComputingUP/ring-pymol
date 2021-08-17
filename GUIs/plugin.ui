@@ -46,10 +46,11 @@
        <height>150</height>
       </size>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
      <property name="styleSheet">
-      <string notr="true">QListWidget::item { border-bottom: 1px solid rgb(150, 150, 150) ; padding: 2px;}
-                      QListWidget::item:selected { background: rgb(103, 103, 103); }
-                  </string>
+      <string notr="true">QListWidget::item { border-bottom: 1px solid black;}</string>
      </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
@@ -59,6 +60,9 @@
      </property>
      <property name="midLineWidth">
       <number>1</number>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::NoSelection</enum>
      </property>
      <item>
       <property name="text">
@@ -352,6 +356,9 @@
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="focusPolicy">
+                   <enum>Qt::NoFocus</enum>
+                  </property>
                   <property name="text">
                    <string>Color</string>
                   </property>
@@ -364,6 +371,9 @@
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="focusPolicy">
+                   <enum>Qt::NoFocus</enum>
                   </property>
                   <property name="text">
                    <string>Show table</string>
@@ -1442,7 +1452,7 @@
    <item row="0" column="0">
     <widget class="QGroupBox" name="Selectionandshow">
      <property name="title">
-      <string>Select a Pymol object or selection to show the connections</string>
+      <string>Select a Pymol object or selection</string>
      </property>
      <property name="flat">
       <bool>false</bool>
@@ -1480,6 +1490,9 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
         </property>
         <property name="text">
          <string>Show</string>
