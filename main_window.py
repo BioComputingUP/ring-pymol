@@ -84,6 +84,7 @@ class MainDialog(QtWidgets.QDialog):
             self.widg.console_log.item(0).setForeground(QColor(255, 146, 13))
 
         if process:
+            self.widg.console_log.repaint()
             self.processEvents()
 
     def disable_window(self):
@@ -280,6 +281,7 @@ class MainDialog(QtWidgets.QDialog):
             self.log("Please run Ring on the selected object first!", error=True)
             return
 
+        self.log("Drawing started")
         interactions_per_state = pd.read_csv(file_pth, sep='\t')
 
         for state in range(1, states + 1):
@@ -368,6 +370,9 @@ class MainDialog(QtWidgets.QDialog):
         # Set transp and radius after updating the CGOs
         self.slider_radius_change()
         self.slider_transp_change()
+
+        self.log("Drawing completed")
+
         if block:
             self.enable_window()
 
@@ -596,11 +601,11 @@ class MainDialog(QtWidgets.QDialog):
             chain1, *_ = nodeId1.split(":")
             chain2, *_ = nodeId2.split(":")
             intType, *_ = interaction.split(":")
-            keyyyy = tuple(sorted([chain1, chain2]))
-            edges.setdefault(keyyyy, dict())
-            edges[keyyyy].setdefault(intType, 0)
-            edges[keyyyy][intType] += 1
-            if edges[keyyyy][intType] == 1:
+            key = tuple(sorted([chain1, chain2]))
+            edges.setdefault(key, dict())
+            edges[key].setdefault(intType, 0)
+            edges[key][intType] += 1
+            if edges[key][intType] == 1:
                 G.add_edge(chain1, chain2, type=intType)
 
         seen = dict()
