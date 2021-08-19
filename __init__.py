@@ -37,4 +37,7 @@ def ring_plugin(test=False):
 
 
 if __name__ == '__main__':
-    ring_plugin(test=True)
+    import pymol
+
+    pymol.finish_launching()
+    # ring_plugin(test=True)

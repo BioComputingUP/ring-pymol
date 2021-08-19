@@ -209,12 +209,15 @@ class MainDialog(QtWidgets.QDialog):
         self.log("Ring generation started")
 
         n_states = cmd.count_states(obj_name)
+        prev_state = 0
         while p.poll() is None:
             line = p.stderr.readline()
             if line != "":
                 if "model" in line:
                     current_state = int(line.split("model ")[1].strip())
-                    self.log("Running on model {} | {:.2%}".format(current_state, current_state / n_states))
+                    if current_state > prev_state:
+                        self.log("Running on model {} | {:.2%}".format(current_state, current_state / n_states))
+                        prev_state = current_state
 
         self.log("Ring generation finished")
         self.visualize(log_iter=True)
@@ -297,9 +300,13 @@ class MainDialog(QtWidgets.QDialog):
                 return
 
             cmd.iterate(obj, 'stored.chain_resi.add((chain, resi))')
+
             stored.coords = dict()
+            stored.tmp = ""
             cmd.iterate_state(state=state, selection=obj,
-                              expression='stored.coords["chain {} and resi {} and name {}".format(chain, resi, name)] = [x,y,z]')
+                              expression='stored.tmp = stored.coords.setdefault("chain {} and resi {} and name {}"'
+                                         '.format(chain, resi, name), [x,y,z])',
+                              )
 
             interactions_per_type = dict()
 
