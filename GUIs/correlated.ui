@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>730</width>
-    <height>443</height>
+    <width>833</width>
+    <height>575</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -86,12 +86,22 @@
         </column>
         <column>
          <property name="text">
+          <string>Frequency</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
           <string>Interaction</string>
          </property>
         </column>
         <column>
          <property name="text">
           <string>Edge_2</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Frequency</string>
          </property>
         </column>
         <column>

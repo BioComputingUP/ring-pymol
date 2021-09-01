@@ -1,3 +1,6 @@
+import math
+from typing import Dict, List, Union
+
 from PyQt5.QtGui import QColor
 from pymol.cgo import *
 
@@ -22,45 +25,213 @@ intColorMap = {
 }
 
 
-def get_freq(obj):
+class Node:
+    def __init__(self, *args):
+        if len(args) == 1:
+            self.init_string(*args)
+        else:
+            self.init_args(*args)
+
+    def init_string(self, string_id: str):
+        if ':' in string_id:
+            ids = string_id.strip().split(':')
+        else:
+            ids = string_id.strip().split('/')
+
+        self.chain: str = ids[0]
+        self.resi: int = int(ids[1])
+        self.ins = None
+        self.resn = None
+
+        if len(ids) > 2:
+            if len(ids[2]) == 3:
+                self.resn: str = ids[2]
+            else:
+                self.ins: str = ids[2]
+            if len(ids) > 3:
+                self.resn: str = ids[3]
+
+        if self.ins == '_':
+            self.ins = None
+
+    def init_args(self, chain: str, resi: Union[int, str], resn: str = None, ins: str = None):
+        self.chain: str = chain
+        self.resi: int = int(resi)
+        self.ins: str = ins
+        self.resn: str = resn
+
+    def __lt__(self, other):
+        if self.ins:
+            return self.chain < other.chain or \
+                   self.chain == other.chain and self.resi < other.resi or \
+                   self.chain == other.chain and self.resi == other.resi and self.ins < other.ins
+        return self.chain < other.chain or self.chain == other.chain and self.resi < other.resi
+
+    def __le__(self, other):
+        return self == other or self < other
+
+    def __gt__(self, other):
+        return other < self
+
+    def __ge__(self, other):
+        return self == other or other < self
+
+    def __eq__(self, other):
+        if not other:
+            return False
+        base = self.chain == other.chain and self.resi == other.resi and self.ins == other.ins
+        if self.resn and other.resn:
+            base = base and self.resn == other.resn
+        return base
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __repr__(self):
+        if self.resn:
+            if self.ins:
+                return "{}/{}/{}/{}".format(self.chain, self.resi, self.ins, self.resn)
+            else:
+                return "{}/{}/{}".format(self.chain, self.resi, self.resn)
+        elif self.ins:
+            return "{}/{}/{}".format(self.chain, self.resi, self.ins)
+        return "{}/{}".format(self.chain, self.resi)
+
+    def __hash__(self):
+        if self.ins is not None:
+            return hash((self.chain, self.resi, self.ins))
+        return hash((self.chain, self.resi))
+
+    def id_repr(self):
+        return "{}/{}".format(self.chain, self.resi)
+
+    def id_tuple(self):
+        return self.chain, self.resi
+
+
+class Edge:
+    def __init__(self, *args):
+        if len(args) == 2:
+            self.init_nodes(*args)
+        else:
+            self.init_list(*args)
+
+    def init_nodes(self, node1: Node, node2: Node):
+        self.node1: Node = node1
+        self.node2: Node = node2
+
+    def init_list(self, sorted_node_list: List[Node]):
+        if len(sorted_node_list) != 2:
+            raise ValueError("Cannot create an Edge with more than two nodes")
+        self.node1: Node = sorted_node_list[0]
+        self.node2: Node = sorted_node_list[1]
+
+    def __lt__(self, other):
+        return self.node1 < other.node1 or (self.node1 == other.node1 and self.node2 < other.node2)
+
+    def __le__(self, other):
+        return self == other or self < other
+
+    def __gt__(self, other):
+        return other < self
+
+    def __ge__(self, other):
+        return self == other or other < self
+
+    def __eq__(self, other):
+        if not other:
+            return False
+        return (self.node1 == other.node1 and self.node2 == other.node2) or (
+                self.node1 == other.node2 and self.node2 == other.node1)
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __repr__(self):
+        return "{} - {}".format(self.node1, self.node2)
+
+    def __hash__(self):
+        return hash((self.node1, self.node2))
+
+
+def get_freq(obj, interchain=False, intrachain=False) -> Dict[str, Dict[Edge, float]]:
     conn_freq = dict()
     for inter in intTypeMap.keys():
-        try:
-            conn_freq.setdefault(inter, dict())
-            with open("/tmp/ring/md/{}.gfreq_{}".format(obj, inter), 'r') as f:
-                for line in f:
-                    edge1, _, edge2, perc = line.split('\t')
-                    edge1 = edge1.rsplit(':', 2)[0]
-                    edge2 = edge2.rsplit(':', 2)[0]
-                    conn_freq[inter].setdefault((edge1, edge2), float(perc))
-        except FileNotFoundError:
-            raise FileNotFoundError
+        conn_freq.setdefault(inter, dict())
+        with open("/tmp/ring/md/{}.gfreq_{}".format(obj, inter), 'r') as f:
+            for line in f:
+                node1, _, node2, perc = line.split('\t')
+                node1 = Node(node1)
+                node2 = Node(node2)
+                edge = Edge(node1, node2)
+
+                if intrachain and node1.chain != node2.chain:
+                    continue
+                if interchain and node1.chain == node2.chain:
+                    continue
+
+                conn_freq[inter].setdefault(edge, float(perc))
     return conn_freq
 
 
-def get_freq_combined(obj, bond, interchain=False, intrachain=False):
-    import math
+def get_freq_combined(obj, bond, interchain=False, intrachain=False, key_string=False):
     conn_freq = dict()
     try:
         with open("/tmp/ring/md/{}.gfreq_{}".format(obj, bond), 'r') as f:
             for line in f:
-                edge1, _, edge2, perc = line.split('\t')
-                edge1 = edge1.replace(":_:", ":")
-                edge2 = edge2.replace(":_:", ":")
-                chain1 = edge1.split(':')[0]
-                chain2 = edge2.split(':')[0]
-                if interchain and chain1 == chain2:
+                node1, _, node2, perc = line.split('\t')
+                node1 = Node(node1)
+                node2 = Node(node2)
+                if intrachain and node1.chain != node2.chain:
                     continue
-                if intrachain and chain1 != chain2:
+                if interchain and node1.chain == node2.chain:
                     continue
-                conn_freq.setdefault(edge1, [])
-                conn_freq[edge1].append(float(perc))
+                if not key_string:
+                    conn_freq.setdefault(node1, [])
+                    conn_freq[node1].append(float(perc))
+                else:
+                    conn_freq.setdefault(str(node1), [])
+                    conn_freq[str(node1)].append(float(perc))
+
     except FileNotFoundError:
         raise FileNotFoundError
     for k, v in conn_freq.items():
         conn_freq[k] = 1 - math.prod([(1 - x) for x in v])
 
     return conn_freq
+
+
+def get_freq_combined_all_interactions(obj):
+    conn_freq = dict()
+    for inter in intTypeMap.keys():
+        with open("/tmp/ring/md/{}.gfreq_{}".format(obj, inter), 'r') as f:
+            for line in f:
+                node1, _, node2, perc = line.split('\t')
+                node1 = Node(node1)
+                node2 = Node(node2)
+                edge = Edge(node1, node2)
+                if node1.chain != node2.chain:
+                    conn_freq.setdefault(edge, [])
+                    conn_freq[edge].append(float(perc))
+
+    all_freq = dict()
+    for k, v in conn_freq.items():
+        all_freq[k] = 1 - math.prod([(1 - x) for x in v])
+
+    return all_freq
+
+
+def get_node_names_ordered(obj):
+    node_list = []
+    with open("/tmp/ring/{}.cif_ringNodes".format(obj), 'r') as f:
+        f.readline()
+        for line in f:
+            node_id, *_, model = line.strip().split("\t")
+            if model == "1":
+                node_list.append(Node(node_id))
+            else:
+                return node_list
+    return node_list
 
 
 def draw_links(interactions, color, object_name, coords, state):
@@ -137,20 +308,18 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
             interactions = [int_type]
         for interaction in interactions:
             df = all_cm[interaction][all_cm[interaction][0] == j]
-            names = df[1]
-            names = [x.replace(':_:', ':') for x in names]
+            nodes = df[1]
+            nodes = [Node(x) for x in nodes]
             df = df.iloc[:, 2:]
             matrix = df.values
             matrix[np.triu_indices(matrix.shape[0])] = 0
             for i in np.argwhere(matrix > 0):
-                int_id1 = names[i[0]].split(':')
-                int_id1 = (int_id1[0], int(int_id1[1]), int_id1[2])
-                int_id2 = names[i[1]].split(':')
-                int_id2 = (int_id2[0], int(int_id2[1]), int_id2[2])
-                tmp = tuple(sorted([int_id1, int_id2]))
-                contacts_sparse.setdefault(tmp, dict())
-                contacts_sparse[tmp].setdefault(j - 1, 0)
-                contacts_sparse[tmp][j - 1] += 1
+                node1 = nodes[i[0]]
+                node2 = nodes[i[1]]
+                edge = Edge(sorted([node1, node2]))
+                contacts_sparse.setdefault(edge, dict())
+                contacts_sparse[edge].setdefault(j - 1, 0)
+                contacts_sparse[edge][j - 1] += 1
 
     to_pop = []
     for k, v in contacts_sparse.items():
@@ -177,13 +346,13 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
                     coeffs_matr[i, j] = corr_coeff
                     p_matr[i, j] = p_val
 
-    ticks = ["{}/{}/{} - {}/{}/{}".format(x[0], x[1], x[2], y[0], y[1], y[2]) for (x, y) in contacts_sparse.keys()]
+    ticks = [str(edge) for edge in contacts_sparse.keys()]
     ticks = np.array(ticks)
     # hm = sn.heatmap(coeffs_matr, xticklabels=ticks, yticklabels=ticks)
     # hm.set_xticklabels(hm.get_xmajorticklabels(), fontsize=8)
     # hm.set_yticklabels(hm.get_ymajorticklabels(), fontsize=8)
     # plt.show()
-    return ticks, coeffs_matr, p_matr
+    return list(contacts_sparse.keys()), coeffs_matr, p_matr
 
 
 def get_bg_fg_colors(color):

@@ -1,13 +1,11 @@
-from pymol import cmd
-
-from pymol.Qt import QtWidgets
-from pymol.Qt import QtCore
-from pymol.Qt.utils import loadUi
-from PyQt5.QtGui import QColor
-
 import os
 
-from utilities import get_bg_fg_colors, intTypeMap
+from PyQt5.QtGui import QColor
+from pymol import cmd
+from pymol.Qt import QtCore, QtWidgets
+from pymol.Qt.utils import loadUi
+
+from utilities import Edge, Node, get_bg_fg_colors, get_freq, intTypeMap
 
 
 class CorrelationDialog(QtWidgets.QDialog):
@@ -35,17 +33,21 @@ class CorrelationDialog(QtWidgets.QDialog):
 
         df = pd.DataFrame()
 
+        freq_inter = get_freq(obj)
+
         self.current_obj = obj
 
         tableWidget = self.corrTable
         for inter in list(intTypeMap.keys()) + ["ALL"]:
-            selections, corr_matr, p_matr = self.parent.correlations[obj][inter]
+            edges, corr_matr, p_matr = self.parent.correlations[obj][inter]
             with np.errstate(divide='ignore', invalid='ignore'):
                 indexes = np.argwhere(~np.isnan(corr_matr))
 
-            edge1s = [selections[x] for x in [y[0] for y in indexes]]
-            edge2s = [selections[x] for x in [y[1] for y in indexes]]
+            edge1s = [edges[x] for x in [y[0] for y in indexes]]
+            freqs1 = [freq_inter[inter][edge] if inter != 'ALL' else 0.0 for edge in edge1s]
             inter_labels = [inter for _ in edge1s]
+            edge2s = [edges[x] for x in [y[1] for y in indexes]]
+            freqs2 = [freq_inter[inter][edge] if inter != 'ALL' else 0.0 for edge in edge2s]
             corr_vals = [corr_matr[i, j] for (i, j) in indexes]
             p_vals = [p_matr[i, j] for (i, j) in indexes]
 
@@ -54,47 +56,51 @@ class CorrelationDialog(QtWidgets.QDialog):
 
             rowPosition = tableWidget.rowCount()  # necessary even when there are no rows in the table
 
-            edge1_chains1 = [x.split('/')[0] for x in edge1s]
-            edge1_resi1 = [int(x.split('/')[1]) for x in edge1s]
-            edge1_chains2 = [x.split('- ')[1].split('/')[0] for x in edge1s]
-            edge1_resi2 = [int(x.split('/')[3]) for x in edge1s]
-            df = df.append(pd.DataFrame([edge1s, inter_labels, edge2s, corr_vals, p_vals, edge1_chains1,
-                                         edge1_resi1, edge1_chains2, edge1_resi2]).transpose())
+            df = df.append(pd.DataFrame([edge1s, freqs1, inter_labels, edge2s, freqs2, corr_vals, p_vals]).transpose())
 
             self.parent.log("{} {} interactions correlates/anti-correlates".format(len(df), inter))
 
-        df = df.sort_values([5, 6, 7, 8, 3], ascending=(True, True, True, True, False))
+        df = df.sort_values([0, 3, 5], ascending=(True, True, False))
 
         prev_edge = None
         color = 2
         tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         for _, row in df.iterrows():
-            x, p, y, z, w, *_ = row.to_list()
+            x, f1, p, y, f2, z, w, *_ = row.to_list()
             if x != prev_edge:
                 bg_color, fg_color, color = get_bg_fg_colors(color)
 
             tableWidget.insertRow(rowPosition)
 
-            tableWidget.setItem(rowPosition, 0, QtWidgets.QTableWidgetItem(x))
-            tableWidget.setItem(rowPosition, 1, QtWidgets.QTableWidgetItem(p))
-            tableWidget.setItem(rowPosition, 2, QtWidgets.QTableWidgetItem(y))
+            tableWidget.setItem(rowPosition, 0, QtWidgets.QTableWidgetItem(str(x)))
+
+            f1Item = QtWidgets.QTableWidgetItem()
+            f1Item.setData(QtCore.Qt.EditRole, round(float(f1), 3))
+            tableWidget.setItem(rowPosition, 1, f1Item)
+
+            tableWidget.setItem(rowPosition, 2, QtWidgets.QTableWidgetItem(p))
+            tableWidget.setItem(rowPosition, 3, QtWidgets.QTableWidgetItem(str(y)))
+
+            f2Item = QtWidgets.QTableWidgetItem()
+            f2Item.setData(QtCore.Qt.EditRole, round(float(f2), 3))
+            tableWidget.setItem(rowPosition, 4, f2Item)
 
             zItem = QtWidgets.QTableWidgetItem()
             zItem.setData(QtCore.Qt.EditRole, round(float(z), 2))
-            tableWidget.setItem(rowPosition, 3, zItem)
+            tableWidget.setItem(rowPosition, 5, zItem)
 
             wItem = QtWidgets.QTableWidgetItem()
             wItem.setData(QtCore.Qt.EditRole, float(w))
-            tableWidget.setItem(rowPosition, 4, wItem)
-            for i in range(5):
+            tableWidget.setItem(rowPosition, 6, wItem)
+            for i in range(7):
                 tableWidget.item(rowPosition, i).setBackground(bg_color)
                 tableWidget.item(rowPosition, i).setForeground(fg_color)
                 tableWidget.item(rowPosition, i).setTextAlignment(QtCore.Qt.AlignCenter)
 
             if z > 0:
-                tableWidget.item(rowPosition, 3).setForeground(QColor(0, 0, 255))
+                tableWidget.item(rowPosition, 5).setForeground(QColor(0, 0, 255))
             else:
-                tableWidget.item(rowPosition, 3).setForeground(QColor(255, 0, 0))
+                tableWidget.item(rowPosition, 5).setForeground(QColor(255, 0, 0))
 
             prev_edge = x
             rowPosition += 1
@@ -120,30 +126,23 @@ class CorrelationDialog(QtWidgets.QDialog):
         for i in range(len(selection)):
             row = selection[i].row()
             edge1 = table.item(row, 0).text()
-            inter = table.item(row, 1).text()
-            edge2 = table.item(row, 2).text()
-            corr_val = float(table.item(row, 3).text())
+            inter = table.item(row, 2).text()
+            edge2 = table.item(row, 3).text()
+            corr_val = float(table.item(row, 5).text())
 
-            resi1, resi2 = edge1.split(' - ')
-            resi1, resi2 = resi1[:-4], resi2[:-4]
-            resi1_c, resi1_n = resi1.split('/')
-            resi2_c, resi2_n = resi2.split('/')
+            edge1 = Edge([Node(node) for node in edge1.split(' - ')])
+            edge2 = Edge([Node(node) for node in edge2.split(' - ')])
 
-            resi3, resi4 = edge2.split(' - ')
-            resi3, resi4 = resi3[:-4], resi4[:-4]
-            resi3_c, resi3_n = resi3.split('/')
-            resi4_c, resi4_n = resi4.split('/')
+            cmd.select("edge1", "/{}//{}/{} or /{}//{}/{}".format(self.current_obj, edge1.node1.chain, edge1.node1.resi,
+                                                                  self.current_obj, edge1.node2.chain, edge1.node2.resi), merge=1)
+            sele_set.add(edge1)
 
-            cmd.select("edge1", "/{}//{}/{} or /{}//{}/{}".format(self.current_obj, resi1_c, resi1_n,
-                                                                  self.current_obj, resi2_c, resi2_n), merge=1)
-            sele_set.add((resi1, resi2))
-
-            cmd.select("edge2", "/{}//{}/{} or /{}//{}/{}".format(self.current_obj, resi3_c, resi3_n,
-                                                                  self.current_obj, resi4_c, resi4_n), merge=1)
+            cmd.select("edge2", "/{}//{}/{} or /{}//{}/{}".format(self.current_obj, edge2.node1.chain, edge2.node1.resi,
+                                                                  self.current_obj, edge2.node2.chain, edge2.node2.resi), merge=1)
             if corr_val > 0:
-                corr_set.add((resi3, resi4))
+                corr_set.add(edge2)
             else:
-                anti_set.add((resi3, resi4))
+                anti_set.add(edge2)
 
         self.parent.visualize(selection="edge1", color="white", int_type=inter, pair_set=sele_set, block=False)
         self.parent.visualize(selection="edge2", color="blue", int_type=inter, pair_set=corr_set, block=False)

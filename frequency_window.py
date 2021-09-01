@@ -61,28 +61,26 @@ class FreqDialog(QtWidgets.QDialog):
                     pass
 
         right = pd.DataFrame(mtr, columns=["PIPISTACK", "PICATION", "IONIC", "HBOND", "SSBOND", "VDW", "IAC"])
-        resi_chain = [x.split(':')[0] for x in all_resi]
-        resi_number = [int(x.split(':')[1]) for x in all_resi]
-        center = pd.DataFrame([all_resi]).transpose()
-        left = pd.DataFrame([resi_chain, resi_number]).transpose().rename(columns={0: 'chain', 1: 'number'})
-        df = pd.concat([left, center, right], axis=1)
+        center = pd.DataFrame([[x for x in all_resi]]).transpose()
+        df = pd.concat([center, right], axis=1)
         tableWidget = self.freqTable
         tableWidget.setRowCount(0)
         tableWidget.setSortingEnabled(False)
 
         tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
-        df = df.sort_values(by=['chain', 'number'], ascending=[True, True]).reset_index()
+        df = df.sort_values(by=0, ascending=True).reset_index()
+
         prevEdge = None
         color = 2
-        for (rowPosition, (_, row)) in enumerate(df.iterrows()):
+        for rowPosition, row in df.iterrows():
             tableWidget.insertRow(rowPosition)
-            for i, item in enumerate(row.to_list()[3:]):
+            for i, item in enumerate(row.to_list()[1:]):
                 if i == 0 and item != prevEdge:
                     bg_color, fg_color, color = get_bg_fg_colors(color)
 
                 if i == 0:
-                    tableWidget.setItem(rowPosition, i, QtWidgets.QTableWidgetItem(item))
+                    tableWidget.setItem(rowPosition, i, QtWidgets.QTableWidgetItem(str(item)))
                 else:
                     wItem = QtWidgets.QTableWidgetItem()
                     wItem.setData(QtCore.Qt.DisplayRole, round(float(item), 2))
@@ -101,6 +99,6 @@ class FreqDialog(QtWidgets.QDialog):
         tableWidget = self.freqTable
         indexes = tableWidget.selectionModel().selectedRows()
         for index in sorted(indexes):
-            chain, resi = tableWidget.item(index.row(), 0).text().split(":")[0:2]
+            chain, resi = tableWidget.item(index.row(), 0).text().split("/")[0:2]
             cmd.select("sele_row", selection="chain {} and resi {}".format(chain, resi), merge=1)
             self.parent.log("Updated selection sele_row with the residue selected in the frequency table")

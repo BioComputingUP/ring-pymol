@@ -1,18 +1,21 @@
 import datetime
-import os
+import subprocess
 from os import environ
 
+import matplotlib.patches as mpatches
+import networkx as nx
 import numpy as np
 import pandas as pd
-from PyQt5.QtGui import QColor
-from pymol import cmd
+import seaborn as sn
+from matplotlib import pyplot as plt
+from pymol import stored
 from pymol.Qt import QtCore, QtWidgets
 from pymol.Qt.utils import loadUi
 
 from correlation_window import CorrelationDialog
 from frequency_window import FreqDialog
-from utilities import calculate_correlation, draw_links, get_freq, get_freq_combined, intTypeMap, intColorMap, \
-    is_selection
+from rmsd_clustering import cluster_distribution_heatmap, get_rmsd_dist_matrix, hierarchy_cut_plot
+from utilities import *
 
 
 class MainDialog(QtWidgets.QDialog):
@@ -56,6 +59,12 @@ class MainDialog(QtWidgets.QDialog):
         self.widg.resi_plot.clicked.connect(self.resi_plot_fn)
         self.widg.chain_graph.clicked.connect(self.chain_graph_fn)
         self.widg.show_inter_heatmap.clicked.connect(self.inter_heatmap)
+        self.widg.SS_interaction.clicked.connect(self.secondary_structure_graph)
+
+        # Clustering
+        self.widg.clusterize.clicked.connect(self.calculate_clustering)
+        self.widg.hierarchy_plot.clicked.connect(self.hierarchy_plot_fn)
+        self.widg.cluster_plot.clicked.connect(self.cluster_plot_fn)
 
         # Misc
         self.widg.timer = QtCore.QTimer()
@@ -137,9 +146,6 @@ class MainDialog(QtWidgets.QDialog):
             self.widg.ring_path.setText(filename)
 
     def run(self):
-        from pymol import stored
-        import subprocess
-
         obj_name = self.widg.selections_list.currentText()
 
         if len(obj_name) == 0:
@@ -161,8 +167,6 @@ class MainDialog(QtWidgets.QDialog):
                      error=True)
             return
 
-        file_pth = "/tmp/ring/" + obj_name + ".cif"
-
         stored.state = ''
         cmd.iterate_state(state=-1, selection=obj_name, expression='stored.state=state')
 
@@ -180,6 +184,8 @@ class MainDialog(QtWidgets.QDialog):
 
         self.disable_window()
         self.widg.visualize_btn.setText("Running ring...")
+
+        file_pth = "/tmp/ring/" + obj_name + ".cif"
 
         self.log("Exporting pymol object {} in cif format ({})".format(obj_name, file_pth))
 
@@ -299,7 +305,7 @@ class MainDialog(QtWidgets.QDialog):
                 self.processEvents()
                 return
 
-            cmd.iterate(obj, 'stored.chain_resi.add((chain, resi))')
+            cmd.iterate(obj, 'stored.chain_resi.add((chain, int(resi)))')
 
             stored.coords = dict()
             stored.tmp = ""
@@ -311,27 +317,26 @@ class MainDialog(QtWidgets.QDialog):
             interactions_per_type = dict()
 
             for (nodeId1, interaction, nodeId2, _, _, _, atom1, atom2, *_) in df.itertuples(index=False):
-
-                intType, intSubType = interaction.split(":")
-                chain1, pos1, i1, res1 = nodeId1.split(":")
-                chain2, pos2, i2, res2 = nodeId2.split(":")
+                intType = interaction.split(":")[0]
+                node1 = Node(nodeId1)
+                node2 = Node(nodeId2)
+                edge = Edge(node1, node2)
 
                 try:
-                    freq = conn_freq[intType][("{}:{}".format(chain1, pos1), "{}:{}".format(chain2, pos2))] * 100
+                    freq = conn_freq[intType][edge] * 100
                 except KeyError:
                     freq = 0.5 * 100
 
                 if not selection:
-                    if self.widg.interchain.isChecked() and chain1 == chain2:
+                    if self.widg.interchain.isChecked() and node1.chain == node2.chain:
                         continue
-                    if self.widg.intrachain.isChecked() and chain1 != chain2:
+                    if self.widg.intrachain.isChecked() and node1.chain != node2.chain:
                         continue
-                tmp1 = ("{}/{}".format(chain1, pos1), "{}/{}".format(chain2, pos2))
-                tmp2 = ("{}/{}".format(chain2, pos2), "{}/{}".format(chain1, pos1))
-                if (chain1, pos1) in stored.chain_resi and (chain2, pos2) in stored.chain_resi \
+
+                if node1.id_tuple() in stored.chain_resi and node2.id_tuple() in stored.chain_resi \
                         and (self.widg.min_freq.value() <= freq <= self.widg.max_freq.value() or selection) \
                         and ((selection and (int_type == intType or int_type == "ALL") and
-                              (tmp1 in pair_set or tmp2 in pair_set)) or not selection):
+                              edge in pair_set) or not selection):
                     interactions_per_type.setdefault(intType, [])
 
                     if intType == "PIPISTACK" or intType == "IONIC":
@@ -339,16 +344,16 @@ class MainDialog(QtWidgets.QDialog):
                         if "," in atom1:
                             t += (atom1,)
                         else:
-                            t += ("chain {} and resi {} and name {}".format(chain1, pos1, atom1),)
+                            t += ("chain {} and resi {} and name {}".format(node1.chain, str(node1.resi), atom1),)
                         if "," in atom2:
                             t += (atom2,)
                         else:
-                            t += ("chain {} and resi {} and name {}".format(chain2, pos2, atom2),)
+                            t += ("chain {} and resi {} and name {}".format(node2.chain, str(node2.resi), atom2),)
                         interactions_per_type[intType].append(t)
                     else:
                         interactions_per_type[intType].append(
-                                ("chain {} and resi {} and name {}".format(chain1, pos1, atom1),
-                                 "chain {} and resi {} and name {}".format(chain2, pos2, atom2)))
+                                ("chain {} and resi {} and name {}".format(node1.chain, str(node1.resi), atom1),
+                                 "chain {} and resi {} and name {}".format(node2.chain, str(node2.resi), atom2)))
 
             not_present = 0
             for intType, interactions in interactions_per_type.items():
@@ -398,10 +403,10 @@ class MainDialog(QtWidgets.QDialog):
                 freqs = get_freq_combined(model_name, bond, interchain=self.widg.interchain.isChecked(),
                                           intrachain=self.widg.intrachain.isChecked())
 
-                for edge, freq in freqs.items():
+                for node, freq in freqs.items():
                     if self.widg.min_freq.value() <= freq * 100 <= self.widg.max_freq.value():
                         cmd.select(sele,
-                                   selection="chain {} and resi {}".format(edge.split(':')[0], edge.split(':')[1]),
+                                   selection="chain {} and resi {}".format(node.chain, node.resi),
                                    merge=1)
             cmd.group(obj + "_nodes", members=members)
             self.log("Created group {} for interaction nodes".format(obj + "_edges"), timed=False)
@@ -429,11 +434,11 @@ class MainDialog(QtWidgets.QDialog):
             inter = "SSBOND"
         if self.widg.iac.isChecked():
             inter = "IAC"
-        conn_freq = get_freq_combined(obj, inter)
+        conn_freq = get_freq_combined(obj, inter, key_string=True)
 
         if conn_freq is not None:
             myspace = {'dict_freq': conn_freq}
-            express = "b=dict_freq['{}:{}:{}'.format(chain,resi,resn)] if '{}:{}:{}'.format(chain,resi,resn) " \
+            express = "b=dict_freq['{}/{}/{}'.format(chain,resi,resn)] if '{}/{}/{}'.format(chain,resi,resn) " \
                       "in dict_freq.keys() else 0.001"
             cmd.alter_state(-1, obj, expression=express, space=myspace)
             cmd.spectrum("b", "white yellow orange red", obj, minimum=0.001, maximum=1.0)
@@ -468,12 +473,12 @@ class MainDialog(QtWidgets.QDialog):
             return
         try:
             for inter in list(intTypeMap.keys()) + ["ALL"]:
-                selections, corr_matr, p_matr = calculate_correlation(obj, states, int_type=inter,
-                                                                      coeff_thresh=coeff_thr,
-                                                                      p_thresh=p_thr, max_presence=max_presence,
-                                                                      min_presence=min_presence)
+                edges, corr_matr, p_matr = calculate_correlation(obj, states, int_type=inter,
+                                                                 coeff_thresh=coeff_thr,
+                                                                 p_thresh=p_thr, max_presence=max_presence,
+                                                                 min_presence=min_presence)
                 self.correlations.setdefault(obj, dict())
-                self.correlations[obj][inter] = (selections, corr_matr, p_matr)
+                self.correlations[obj][inter] = (edges, corr_matr, p_matr)
 
         except TypeError:
             self.log("Run ring on all the states first!", error=True)
@@ -484,15 +489,6 @@ class MainDialog(QtWidgets.QDialog):
         self.enable_window()
 
     def resi_plot_fn(self):
-        from pymol import stored
-
-        try:
-            from matplotlib import pyplot as plt
-        except ImportError:
-            self.log("To run this feature you have to install matplotlib for the python version that PyMol is using",
-                     error=True)
-            return
-
         obj = self.widg.selections_list.currentText()
         if len(obj) == 0 or obj[0] != "(" or obj[-1] != ")":
             self.log("Please select a selection on the box above to use this feature", error=True)
@@ -519,25 +515,22 @@ class MainDialog(QtWidgets.QDialog):
             self.log("You need to create a selection with exactly two residues to use this feature", error=True)
             return
 
-        resi1, resi2 = list(stored.chain_resi)
-        resi1_name = resi1[0] + "/" + str(resi1[1]) + "/" + resi1[2]
-        resi1 = (resi1[0], resi1[1])
-        resi2_name = resi2[0] + "/" + str(resi2[1]) + "/" + resi2[2]
-        resi2 = (resi2[0], resi2[1])
+        node1, node2 = list(stored.chain_resi)
+        node1 = Node(node1[0], node1[1], node1[2])
+        node2 = Node(node2[0], node2[1], node2[2])
+        edge1 = Edge(sorted([node1, node2]))
         interaction_distance = dict()
 
         interactions_per_state = pd.read_csv(file_pth, sep='\t')
         for state in range(1, states + 1):
             df = interactions_per_state[interactions_per_state.Model == state]
             for (nodeId1, interaction, nodeId2, distance, _, _, atom1, atom2, *_) in df.itertuples(index=False):
-
                 intType, intSubType = interaction.split(":")
-                chain1, pos1, *_ = nodeId1.split(":")
-                chain2, pos2, *_ = nodeId2.split(":")
-                resi11 = (chain1, int(pos1))
-                resi22 = (chain2, int(pos2))
+                node1_1 = Node(nodeId1)
+                node2_2 = Node(nodeId2)
+                edge2 = Edge(sorted([node1_1, node2_2]))
 
-                if (resi1 == resi11 and resi2 == resi22) or (resi2 == resi11 and resi1 == resi22):
+                if edge1 == edge2:
                     interaction_distance.setdefault(intType, np.ones(states) * 999)
                     interaction_distance[intType][state - 1] = min(interaction_distance[intType][state - 1],
                                                                    float(distance))
@@ -546,14 +539,16 @@ class MainDialog(QtWidgets.QDialog):
             interaction_distance[inter] = list(map(lambda x: x if x != 999 else np.nan, interaction_distance[inter]))
 
         plt.close()
+        plt.style.use('default')
         something = False
         for inter in interaction_distance.keys():
             something = True
             plt.scatter(np.arange(1, states + 1), interaction_distance[inter], label=inter, c=intColorMap[inter],
-                        marker='.')
+                        marker='.', s=100)
+            plt.plot(np.arange(1, states + 1), interaction_distance[inter], label=inter, c=intColorMap[inter])
 
         if something:
-            plt.title("{} - {}".format(resi1_name, resi2_name))
+            plt.title("{} - {}".format(node1, node2))
             plt.grid()
             plt.ylim(bottom=0, top=max(filter(lambda x: not np.isnan(x),
                                               [item for sublist in list(interaction_distance.values()) for item in
@@ -567,27 +562,83 @@ class MainDialog(QtWidgets.QDialog):
         else:
             self.log("No interactions found between the two selected residues", warning=True)
 
-    def chain_graph_fn(self):
-        from pymol import stored
+    def inter_heatmap(self):
         try:
-            from matplotlib import pyplot as plt
-            import matplotlib.patches as mpatches
-            import networkx as nx
-        except ImportError:
-            self.log("To run this feature you have to install matplotlib and networkx and for the python version "
-                     "that PyMol is using", error=True)
+            obj, model, _ = self.get_values_from_input()
+        except ValueError:
+            return
+        sele_inter = self.widg.interaction_sele.currentText()
+
+        stored.model = ""
+        cmd.iterate(obj, 'stored.model = model')
+        if cmd.get_chains(stored.model) == 1:
+            self.log("Only one chain is present in the selected object, cannot use this tool", error=True)
             return
 
-        obj = self.widg.selections_list.currentText()
-        if len(obj) == 0:
-            self.log("Please select an object to use this feature", error=True)
-            return
+        if sele_inter != "ALL":
+            file_pth = "/tmp/ring/md/" + stored.model + ".gfreq_{}".format(sele_inter)
+            if not os.path.exists(file_pth):
+                self.log("Before this you need to run Ring-md on the object first!", error=True)
+                return
 
-        if obj[0] == "(" and obj[-1] == ")":
-            self.log("Please select an object to use this feature", error=True)
-            return
+            contact_freq = dict()
+            order = []
+            present = set()
+            with open(file_pth, 'r') as f:
+                for line in f:
+                    node1, _, node2, perc = line.split('\t')
+                    node1 = Node(node1)
+                    node2 = Node(node2)
+                    if node1.chain != node2.chain:
+                        contact_freq.setdefault(Edge(node1, node2), perc)
+                        if node1 not in present:
+                            present.add(node1)
+                            order.append(node1)
 
+            if len(order) == 0:
+                self.log("No interaction of this type found", error=True)
+                return
+
+        else:
+            order = get_node_names_ordered(obj)
+            contact_freq = get_freq_combined_all_interactions(obj)
+
+            tmp = [x.node1 for x in contact_freq.keys()]
+            to_remove = []
+            for node in order:
+                if node not in tmp:
+                    to_remove.append(node)
+            for item in to_remove:
+                order.remove(item)
+
+        matr = np.zeros((len(order), len(order))) * np.nan
+        for i, node1 in enumerate(order):
+            for j, node2 in enumerate(order):
+                try:
+                    matr[i, j] = contact_freq[Edge(node1, node2)]
+                    matr[j, i] = contact_freq[Edge(node1, node2)]
+                except KeyError:
+                    pass
         plt.close()
+        plt.style.use('default')
+        ax = plt.subplot()
+        str_order = [str(x) for x in order]
+        sn.heatmap(matr, vmin=0, vmax=1, xticklabels=str_order, yticklabels=str_order, cmap='viridis', ax=ax)
+        change_chain = dict()
+        for i, x in enumerate(order):
+            change_chain.setdefault(x.chain, i)
+        ax.hlines(list(change_chain.values())[1:], *ax.get_xlim(), colors=["k"])
+        ax.vlines(list(change_chain.values())[1:], *ax.get_ylim(), colors=["k"])
+        plt.title("{} interchain interactions".format(sele_inter))
+        plt.tight_layout()
+        plt.show()
+
+    def get_values_from_input(self):
+        obj = self.widg.selections_list.currentText()
+        if len(obj) == 0 or obj[0] == "(" and obj[-1] == ")":
+            self.log("Please select an object to use this feature", error=True)
+            raise ValueError
+
         stored.model = ""
         cmd.iterate(obj, 'stored.model = model')
         file_pth = "/tmp/ring/" + stored.model + ".cif_ringEdges"
@@ -595,9 +646,17 @@ class MainDialog(QtWidgets.QDialog):
             self.log(
                     "Before this you need to run Ring-md on the object first. Select it above and press the Show button",
                     error=True)
+            raise ValueError
+
+        return obj, stored.model, file_pth
+
+    def chain_graph_fn(self):
+        try:
+            obj, model, file_pth = self.get_values_from_input()
+        except ValueError:
             return
 
-        if cmd.get_chains(stored.model) == 1:
+        if cmd.get_chains(model) == 1:
             self.log("Only one chain is present in the selected object", warning=True)
 
         G = nx.MultiGraph()
@@ -613,14 +672,101 @@ class MainDialog(QtWidgets.QDialog):
             edges[key].setdefault(intType, 0)
             edges[key][intType] += 1
             if edges[key][intType] == 1:
+                G.add_node(chain1, chain=chain1)
+                G.add_node(chain2, chain=chain2)
                 G.add_edge(chain1, chain2, type=intType)
 
+        self.draw_multigraph(G, "Chain interaction graph for {}".format(model))
+
+    def secondary_structure_graph(self):
+        try:
+            obj, model, file_pth = self.get_values_from_input()
+        except ValueError:
+            return
+
+        stored.sec_struct = dict()
+        ss_id = dict()
+        stored.order = []
+        cmd.iterate(obj, 'tmp = stored.sec_struct.setdefault((chain, int(resi)), ss)')
+        cmd.iterate(obj, 'stored.order.append((chain, int(resi)))')
+
+        n_alpha = dict()
+        n_beta = dict()
+        is_prev_ss = 0
+        for chain_resi in stored.order:
+            chain = chain_resi[0]
+
+            is_alpha = stored.sec_struct[chain_resi] == "H" or stored.sec_struct[chain_resi] == "G" or \
+                       stored.sec_struct[chain_resi] == "I"
+            is_beta = stored.sec_struct[chain_resi] == "B" or stored.sec_struct[chain_resi] == "E" or \
+                      stored.sec_struct[chain_resi] == "S"
+            if is_alpha or is_beta:
+                if is_prev_ss == 0 or is_prev_ss == 1 and is_beta or is_prev_ss == 2 and is_alpha:
+                    if is_alpha:
+                        n_alpha.setdefault(chain, 0)
+                        n_alpha[chain] += 1
+                        is_prev_ss = 1
+                    else:
+                        n_beta.setdefault(chain, 0)
+                        n_beta[chain] += 1
+                        is_prev_ss = 2
+
+                ss_id[chain_resi] = "{}α{}".format(chain, n_alpha[chain]) if is_alpha else "{}β{}".format(chain,
+                                                                                                          n_beta[chain])
+            else:
+                is_prev_ss = 0
+
+        G = nx.MultiGraph()
+        present_edges = set()
+        interactions = pd.read_csv(file_pth, sep='\t')
+        for (nodeId1, interaction, nodeId2, *_) in interactions.itertuples(index=False):
+            node1 = Node(nodeId1)
+            node2 = Node(nodeId2)
+            intType, *_ = interaction.split(":")
+
+            if node1.id_tuple() in ss_id and node2.id_tuple() in ss_id:
+                composite_key = (ss_id[(node1.chain, node1.resi)], ss_id[(node2.chain, node2.resi)], intType)
+                if composite_key not in present_edges:
+                    G.add_node(ss_id[node1.id_tuple()], chain=node1.chain)
+                    G.add_node(ss_id[node2.id_tuple()], chain=node2.chain)
+                    G.add_edge(ss_id[node1.id_tuple()], ss_id[node2.id_tuple()], type=intType)
+                    present_edges.add(composite_key)
+
+        nchar = max([len(x) for x in ss_id.values()])
+        if nchar == 3:
+            size = 14
+        elif nchar == 4:
+            size = 12
+        elif nchar == 5:
+            size = 9
+        else:
+            size = 7
+        self.draw_multigraph(G, "Secondary structure interaction graph for {}".format(model), shrink=16,
+                             node_size=1000, text_size=size)
+
+    @staticmethod
+    def draw_multigraph(G, title, shrink=12, node_size=700, text_size=12):
         seen = dict()
         present_interaction = set()
         pos = nx.kamada_kawai_layout(G)
-        nx.draw_networkx_nodes(G, pos)
-        nx.draw_networkx_labels(G, pos)
+
+        plt.close()
+        plt.style.use('default')
         ax = plt.gca()
+
+        default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        chain_id = dict()
+        cont = -1
+        for n, chain in G.nodes(data="chain"):
+            if chain not in chain_id:
+                cont += 1
+            chain_id.setdefault(chain, cont)
+
+        nx.draw_networkx_nodes(G, pos, nodelist=G.nodes,
+                               node_color=[default_colors[chain_id[c] % len(default_colors)] for n, c in
+                                           G.nodes(data='chain')],
+                               node_size=node_size, ax=ax)
+        nx.draw_networkx_labels(G, pos, font_color='white', font_size=text_size, ax=ax)
         for e in G.edges(data=True):
             seen.setdefault((e[0], e[1]), 0)
             present_interaction.add(e[2]["type"])
@@ -628,94 +774,65 @@ class MainDialog(QtWidgets.QDialog):
                         xy=pos[e[0]], xycoords='data',
                         xytext=pos[e[1]], textcoords='data',
                         arrowprops=dict(arrowstyle="<->", color=intColorMap[e[2]["type"]],
-                                        shrinkA=5, shrinkB=5,
+                                        shrinkA=shrink, shrinkB=shrink,
                                         patchA=None, patchB=None,
+                                        lw=1.8,
                                         connectionstyle="arc3,rad={}".format(0.2 * seen[(e[0], e[1])]),
                                         ),
                         )
             seen[(e[0], e[1])] += 1
-
         handler_list = []
         for k, v in intColorMap.items():
             if k in present_interaction:
                 handler_list.append(mpatches.Patch(color=v, label=k))
-
         plt.legend(handles=handler_list, loc='best')
-
-        plt.title("Chain interaction graph for {}".format(stored.model))
+        plt.title(title)
+        plt.tight_layout()
         plt.axis('off')
         plt.show()
 
-    def inter_heatmap(self):
-        from pymol import stored
-        try:
-            from matplotlib import pyplot as plt
-            import seaborn as sn
-        except ImportError:
-            self.log("To run this feature you have to install matplotlib and seaborn and for the python version "
-                     "that PyMol is using", error=True)
-            return
-
+    def calculate_clustering(self):
         obj = self.widg.selections_list.currentText()
-        if len(obj) == 0:
+
+        if len(obj) == 0 or obj[0] == "(" and obj[-1] == ")":
             self.log("Please select an object to use this feature", error=True)
-            return
+            raise ValueError
 
-        if obj[0] == "(" and obj[-1] == ")":
+        self.disable_window()
+        self.widg.visualize_btn.setText("Running ring...")
+
+        file_pth = "/tmp/ring/" + obj + ".cif"
+
+        self.log("Exporting pymol object {} in cif format ({})".format(obj, file_pth))
+
+        cmd.save(filename=file_pth, selection=obj, state=0)
+        self.log("Exporting done")
+
+        get_rmsd_dist_matrix(self, obj)
+        self.enable_window()
+
+    def hierarchy_plot_fn(self):
+        obj = self.widg.selections_list.currentText()
+
+        if len(obj) == 0 or obj[0] == "(" and obj[-1] == ")":
             self.log("Please select an object to use this feature", error=True)
-            return
+            raise ValueError
 
-        sele_inter = self.widg.interaction_sele.currentText()
+        file_pth = "/tmp/ring/" + obj + ".npy"
+        if os.path.exists(file_pth):
+            hierarchy_cut_plot(self, obj)
+        else:
+            self.log("Run the clustering first!", error=True)
 
-        stored.model = ""
-        cmd.iterate(obj, 'stored.model = model')
-        if cmd.get_chains(stored.model) == 1:
-            self.log("Only one chain is present in the selected object, cannot use this tool", error=True)
-            return
+    def cluster_plot_fn(self):
+        obj = self.widg.selections_list.currentText()
 
-        file_pth = "/tmp/ring/md/" + stored.model + ".gfreq_{}".format(sele_inter)
-        if not os.path.exists(file_pth):
-            self.log(
-                    "Before this you need to run Ring-md on the object first. Select it in the View/Filter tab and press "
-                    "the Show button", error=True)
-            return
+        if len(obj) == 0 or obj[0] == "(" and obj[-1] == ")":
+            self.log("Please select an object to use this feature", error=True)
+            raise ValueError
 
-        contact_freq = dict()
-        order = []
-        present = set()
-        with open(file_pth, 'r') as f:
-            for line in f:
-                edge1, _, edge2, perc = line.split('\t')
-                edge1 = edge1.replace(":_:", ":").replace(":", "/")
-                edge2 = edge2.replace(":_:", ":").replace(":", "/")
-                chain1 = edge1.split('/')[0]
-                chain2 = edge2.split('/')[0]
-                if chain1 != chain2:
-                    contact_freq.setdefault((edge1, edge2), perc)
-                    if edge1 not in present:
-                        present.add(edge1)
-                        order.append(edge1)
-
-        if len(order) == 0:
-            self.log("No interaction of this type found", error=True)
-            return
-
-        matr = np.zeros((len(order), len(order))) * np.nan
-        for i, edge1 in enumerate(order):
-            for j, edge2 in enumerate(order):
-                try:
-                    matr[i, j] = contact_freq[(edge1, edge2)]
-                    matr[j, i] = contact_freq[(edge1, edge2)]
-                except KeyError:
-                    pass
-        plt.close()
-        ax = plt.subplot()
-        sn.heatmap(matr, vmin=0, vmax=1, xticklabels=order, yticklabels=order, cmap='viridis', ax=ax)
-        change_chain = dict()
-        for i, x in enumerate(order):
-            change_chain.setdefault(x.split('/')[0], i)
-        ax.hlines(list(change_chain.values())[1:], *ax.get_xlim(), colors=["k"])
-        ax.vlines(list(change_chain.values())[1:], *ax.get_ylim(), colors=["k"])
-        plt.title("{} interchain interactions".format(sele_inter))
-        plt.tight_layout()
-        plt.show()
+        file_pth = "/tmp/ring/" + obj + ".npy"
+        if os.path.exists(file_pth):
+            cluster_distribution_heatmap(self, obj)
+        else:
+            self.log("Run the clustering first!", error=True)

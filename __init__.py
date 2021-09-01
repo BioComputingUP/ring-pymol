@@ -1,6 +1,7 @@
 # Avoid importing "expensive" modules here (e.g. scipy), since this code is
 # executed on PyMOL's startup. Only import such modules inside functions.
 import sys
+
 from pymol import cmd
 
 
@@ -40,4 +41,7 @@ if __name__ == '__main__':
     import pymol
 
     pymol.finish_launching()
-    # ring_plugin(test=True)
+    cmd.set("defer_builds_mode", 3)
+    # cmd.fetch("2h9r")
+    cmd.load("/home/alessio/dynamics/trj.cif")
+    cmd.do("ring_plugin")
