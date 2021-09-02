@@ -44,4 +44,7 @@ if __name__ == '__main__':
     cmd.set("defer_builds_mode", 3)
     # cmd.fetch("2h9r")
     cmd.load("/home/alessio/dynamics/trj.cif")
+    cmd.dss()
+    cmd.show_as("cartoon")
+    cmd.util.cbc()
     cmd.do("ring_plugin")

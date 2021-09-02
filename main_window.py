@@ -798,14 +798,22 @@ class MainDialog(QtWidgets.QDialog):
             self.log("Please select an object to use this feature", error=True)
             raise ValueError
 
+        if not os.path.exists('/tmp/ring'):
+            os.mkdir('/tmp/ring')
+
         self.disable_window()
-        self.widg.visualize_btn.setText("Running ring...")
 
-        file_pth = "/tmp/ring/" + obj + ".cif"
+        if self.widg.CA_atoms.isChecked():
+            sele = '{} and name CA'.format(obj)
+            obj = '{}_ca'.format(obj)
+            file_pth = "/tmp/ring/" + obj + ".xyz"
+        else:
+            sele = obj
+            file_pth = "/tmp/ring/" + obj + ".xyz"
 
-        self.log("Exporting pymol object {} in cif format ({})".format(obj, file_pth))
+        self.log("Exporting pymol object {} in xyz format ({})".format(sele, file_pth))
 
-        cmd.save(filename=file_pth, selection=obj, state=0)
+        cmd.save(filename=file_pth, selection=sele, state=0, format='xyz')
         self.log("Exporting done")
 
         get_rmsd_dist_matrix(self, obj)
@@ -818,7 +826,11 @@ class MainDialog(QtWidgets.QDialog):
             self.log("Please select an object to use this feature", error=True)
             raise ValueError
 
+        if self.widg.CA_atoms.isChecked():
+            obj = '{}_ca'.format(obj)
+
         file_pth = "/tmp/ring/" + obj + ".npy"
+
         if os.path.exists(file_pth):
             hierarchy_cut_plot(self, obj)
         else:
@@ -830,6 +842,9 @@ class MainDialog(QtWidgets.QDialog):
         if len(obj) == 0 or obj[0] == "(" and obj[-1] == ")":
             self.log("Please select an object to use this feature", error=True)
             raise ValueError
+
+        if self.widg.CA_atoms.isChecked():
+            obj = '{}_ca'.format(obj)
 
         file_pth = "/tmp/ring/" + obj + ".npy"
         if os.path.exists(file_pth):

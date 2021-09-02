@@ -4,7 +4,6 @@ import os
 import matplotlib.cm as cm
 import numpy as np
 import seaborn as sn
-from Bio.PDB.MMCIFParser import FastMMCIFParser
 from Bio.SVDSuperimposer import SVDSuperimposer
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
@@ -12,6 +11,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from scipy import cluster
 from scipy.spatial.distance import squareform
 from sklearn.metrics import silhouette_score
+from tqdm import tqdm
 
 n_best = 3
 structure_coords = dict()
@@ -34,7 +34,7 @@ def hierarchy_optimization(X, range_n_clusters):
 
 
 def cluster_distribution_heatmap(logger, pdb_id, x_len=30):
-    X = get_rmsd_dist_matrix(logger, pdb_id=pdb_id)
+    X = get_rmsd_dist_matrix(logger, pdb_id)
 
     range_n_clusters = range(2, len(X))
     labels, Z = hierarchy_optimization(X, range_n_clusters)
@@ -86,7 +86,7 @@ def cluster_distribution_heatmap(logger, pdb_id, x_len=30):
 
 
 def hierarchy_cut_plot(logger, pdb_id):
-    X = get_rmsd_dist_matrix(logger, pdb_id=pdb_id)
+    X = get_rmsd_dist_matrix(logger, pdb_id)
 
     range_n_clusters = range(2, len(X))
     result_labels, Z = hierarchy_optimization(X, range_n_clusters)
@@ -117,10 +117,32 @@ def hierarchy_cut_plot(logger, pdb_id):
 def f(args):
     sup = SVDSuperimposer()
     i, j = args
-    print(i, j)
     sup.set(structure_coords[i], structure_coords[j])
     sup.run()
     return i, j, sup.get_rms()
+
+
+def load_structure_coords(filename):
+    coords = dict()
+    current_model = 0
+
+    with open(filename, 'r') as file:
+        file.readline()
+        file.readline()
+        for line in tqdm(file):
+            line = line.strip().split(' ')
+            if len(line) == 4:
+                x, y, z = line[1:]
+                coords.setdefault(current_model, [])
+                coords[current_model].append(np.asarray([float(x), float(y), float(z)], dtype=np.float32))
+            else:
+                current_model += 1
+                file.readline()  # Skip second line of header
+
+    for model in coords.keys():
+        coords[model] = np.asarray(coords[model], dtype=np.float32)
+
+    return coords
 
 
 def get_rmsd_dist_matrix(logger, pdb_id):
@@ -129,18 +151,14 @@ def get_rmsd_dist_matrix(logger, pdb_id):
     if not os.path.exists(mtrx_file):
         logger.log("Loading structure")
 
-        filename = "/tmp/ring/{}.cif".format(pdb_id)
-        structure = FastMMCIFParser(QUIET=True).get_structure(structure_id=pdb_id, filename=filename)
-
-        n_models = len(structure)
+        filename = "/tmp/ring/{}.xyz".format(pdb_id)
 
         logger.log("Getting coords")
         global structure_coords
-        for model in range(n_models):
-            structure_coords[model] = np.asarray([atom.get_coord() for atom in structure[model].get_atoms()])
 
-        del structure
+        structure_coords = load_structure_coords(filename)
 
+        n_models = len(structure_coords.keys())
         X = np.zeros((n_models, n_models))
         indexes = np.tril_indices(n_models)
 
