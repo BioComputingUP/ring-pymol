@@ -1,3 +1,4 @@
+import math
 import os
 
 from PyQt5.QtGui import QColor
@@ -44,10 +45,10 @@ class CorrelationDialog(QtWidgets.QDialog):
                 indexes = np.argwhere(~np.isnan(corr_matr))
 
             edge1s = [edges[x] for x in [y[0] for y in indexes]]
-            freqs1 = [freq_inter[inter][edge] if inter != 'ALL' else 0.0 for edge in edge1s]
+            freqs1 = [freq_inter[inter][edge] if inter != 'ALL' else math.nan for edge in edge1s]
             inter_labels = [inter for _ in edge1s]
             edge2s = [edges[x] for x in [y[1] for y in indexes]]
-            freqs2 = [freq_inter[inter][edge] if inter != 'ALL' else 0.0 for edge in edge2s]
+            freqs2 = [freq_inter[inter][edge] if inter != 'ALL' else math.nan for edge in edge2s]
             corr_vals = [corr_matr[i, j] for (i, j) in indexes]
             p_vals = [p_matr[i, j] for (i, j) in indexes]
 

@@ -80,7 +80,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_1">
       <property name="enabled">
@@ -233,19 +233,23 @@
                <item>
                 <widget class="QLabel" name="label_24">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>0</width>
-                   <height>22</height>
+                   <width>20</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 255), stop:0.315789 rgba(255, 255, 0, 255), stop:0.688995 rgba(255, 125, 0, 255), stop:1 rgba(224, 0, 0, 255))</string>
+                  <string notr="true">QLabel{ background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 255), stop:0.315789 rgba(255, 255, 0, 255), stop:0.688995 rgba(255, 125, 0, 255), stop:1 rgba(224, 0, 0, 255));
+  border-radius: 10px;
+  min-height: 25px;
+  min-width: 20px;
+}</string>
                  </property>
                  <property name="text">
                   <string/>
@@ -972,24 +976,10 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0" colspan="2">
-              <widget class="QProgressBar" name="clustering_progress">
-               <property name="value">
-                <number>24</number>
-               </property>
-              </widget>
-             </item>
              <item row="3" column="1">
               <widget class="QPushButton" name="cluster_plot">
                <property name="text">
                 <string>State clustering plot</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0" colspan="2">
-              <widget class="QPushButton" name="clusterize">
-               <property name="text">
-                <string>Calculate clustering</string>
                </property>
               </widget>
              </item>
@@ -1010,6 +1000,13 @@
                </property>
               </widget>
              </item>
+             <item row="1" column="0" colspan="2">
+              <widget class="QPushButton" name="clusterize">
+               <property name="text">
+                <string>Calculate distance matrix</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>
@@ -1019,19 +1016,6 @@
              <string>Reduce states</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_11">
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_6">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>RMSD value for hierarchical clustering cut:</string>
-               </property>
-              </widget>
-             </item>
              <item row="1" column="0" colspan="2">
               <widget class="QLabel" name="label_5">
                <property name="sizePolicy">
@@ -1046,36 +1030,74 @@
               </widget>
              </item>
              <item row="3" column="0">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox">
-               <property name="suffix">
-                <string> Å</string>
+              <widget class="QWidget" name="widget_12" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
                </property>
-               <property name="singleStep">
-                <double>0.500000000000000</double>
-               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_9">
+                <item>
+                 <widget class="QLabel" name="label_6">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>RMSD value for hierarchical clustering cut:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDoubleSpinBox" name="doubleSpinBox">
+                  <property name="suffix">
+                   <string> Å</string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.500000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </widget>
              </item>
              <item row="3" column="1">
-              <widget class="QPushButton" name="pushButton_4">
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <italic>false</italic>
-                 <bold>true</bold>
-                 <underline>false</underline>
-                 <strikeout>false</strikeout>
-                 <kerning>true</kerning>
-                </font>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="text">
-                <string>CREATE OBJECT</string>
-               </property>
-               <property name="checkable">
-                <bool>false</bool>
-               </property>
+              <widget class="QWidget" name="widget_13" native="true">
+               <layout class="QVBoxLayout" name="verticalLayout_10">
+                <item>
+                 <widget class="QLabel" name="label_8">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pushButton_4">
+                  <property name="font">
+                   <font>
+                    <weight>75</weight>
+                    <italic>false</italic>
+                    <bold>true</bold>
+                    <underline>false</underline>
+                    <strikeout>false</strikeout>
+                    <kerning>true</kerning>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true"/>
+                  </property>
+                  <property name="text">
+                   <string>CREATE OBJECT</string>
+                  </property>
+                  <property name="checkable">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </widget>
              </item>
             </layout>
@@ -1660,6 +1682,12 @@
    </item>
    <item row="0" column="0">
     <widget class="QGroupBox" name="Selectionandshow">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title">
       <string>Select a Pymol object or selection</string>
      </property>
@@ -1709,6 +1737,13 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QProgressBar" name="progress_bar">
+     <property name="value">
+      <number>0</number>
+     </property>
     </widget>
    </item>
   </layout>

@@ -70,6 +70,7 @@ class MainDialog(QtWidgets.QDialog):
         self.widg.timer = QtCore.QTimer()
         self.widg.timer.timeout.connect(self.refresh_sele)
         self.widg.timer.start(1500)
+        self.close_progress()
 
     def processEvents(self):
         self.app.processEvents()
@@ -95,6 +96,16 @@ class MainDialog(QtWidgets.QDialog):
         if process:
             self.widg.console_log.repaint()
             self.processEvents()
+
+    def progress(self, p):
+        if not self.widg.progress_bar.isVisible():
+            self.widg.progress_bar.setVisible(True)
+        self.widg.progress_bar.setValue(p)
+        self.processEvents()
+
+    def close_progress(self):
+        self.widg.progress_bar.setVisible(False)
+        self.processEvents()
 
     def disable_window(self):
         self.main.setEnabled(False)
@@ -222,9 +233,9 @@ class MainDialog(QtWidgets.QDialog):
                 if "model" in line:
                     current_state = int(line.split("model ")[1].strip())
                     if current_state > prev_state:
-                        self.log("Running on model {} | {:.2%}".format(current_state, current_state / n_states))
+                        self.progress((current_state / n_states) * 100)
                         prev_state = current_state
-
+        self.close_progress()
         self.log("Ring generation finished")
         self.visualize(log_iter=True)
 
@@ -310,7 +321,7 @@ class MainDialog(QtWidgets.QDialog):
             stored.coords = dict()
             stored.tmp = ""
             cmd.iterate_state(state=state, selection=obj,
-                              expression='stored.tmp = stored.coords.setdefault("chain {} and resi {} and name {}"'
+                              expression='stored.tmp = stored.coords.setdefault("{}/{}/{}"'
                                          '.format(chain, resi, name), [x,y,z])',
                               )
 
@@ -344,16 +355,16 @@ class MainDialog(QtWidgets.QDialog):
                         if "," in atom1:
                             t += (atom1,)
                         else:
-                            t += ("chain {} and resi {} and name {}".format(node1.chain, str(node1.resi), atom1),)
+                            t += ("{}/{}/{}".format(node1.chain, str(node1.resi), atom1),)
                         if "," in atom2:
                             t += (atom2,)
                         else:
-                            t += ("chain {} and resi {} and name {}".format(node2.chain, str(node2.resi), atom2),)
+                            t += ("{}/{}/{}".format(node2.chain, str(node2.resi), atom2),)
                         interactions_per_type[intType].append(t)
                     else:
                         interactions_per_type[intType].append(
-                                ("chain {} and resi {} and name {}".format(node1.chain, str(node1.resi), atom1),
-                                 "chain {} and resi {} and name {}".format(node2.chain, str(node2.resi), atom2)))
+                                ("{}/{}/{}".format(node1.chain, str(node1.resi), atom1),
+                                 "{}/{}/{}".format(node2.chain, str(node2.resi), atom2)))
 
             not_present = 0
             for intType, interactions in interactions_per_type.items():
@@ -687,19 +698,24 @@ class MainDialog(QtWidgets.QDialog):
         stored.sec_struct = dict()
         ss_id = dict()
         stored.order = []
-        cmd.iterate(obj, 'tmp = stored.sec_struct.setdefault((chain, int(resi)), ss)')
+        cmd.iterate(obj, 'stored.sec_struct.setdefault((chain, int(resi)), set()).add(ss)')
         cmd.iterate(obj, 'stored.order.append((chain, int(resi)))')
+
+        seen = set()
+        stored.order = [x for x in stored.order if not (x in seen or seen.add(x))]
+
+        for k in stored.sec_struct.keys():
+            if '' in stored.sec_struct[k]:
+                stored.sec_struct[k].remove('')
 
         n_alpha = dict()
         n_beta = dict()
         is_prev_ss = 0
-        for chain_resi in stored.order:
+        for i, chain_resi in enumerate(stored.order):
             chain = chain_resi[0]
-
-            is_alpha = stored.sec_struct[chain_resi] == "H" or stored.sec_struct[chain_resi] == "G" or \
-                       stored.sec_struct[chain_resi] == "I"
-            is_beta = stored.sec_struct[chain_resi] == "B" or stored.sec_struct[chain_resi] == "E" or \
-                      stored.sec_struct[chain_resi] == "S"
+            ss_char = stored.sec_struct[chain_resi].pop() if len(stored.sec_struct[chain_resi]) > 0 else ''
+            is_alpha = ss_char == "H" or ss_char == "G" or ss_char == "I"
+            is_beta = ss_char == "B" or ss_char == "E" or ss_char == "S"
             if is_alpha or is_beta:
                 if is_prev_ss == 0 or is_prev_ss == 1 and is_beta or is_prev_ss == 2 and is_alpha:
                     if is_alpha:
@@ -801,8 +817,6 @@ class MainDialog(QtWidgets.QDialog):
         if not os.path.exists('/tmp/ring'):
             os.mkdir('/tmp/ring')
 
-        self.disable_window()
-
         if self.widg.CA_atoms.isChecked():
             sele = '{} and name CA'.format(obj)
             obj = '{}_ca'.format(obj)
@@ -811,13 +825,17 @@ class MainDialog(QtWidgets.QDialog):
             sele = obj
             file_pth = "/tmp/ring/" + obj + ".xyz"
 
-        self.log("Exporting pymol object {} in xyz format ({})".format(sele, file_pth))
+        if not os.path.exists('/tmp/ring/{}.npy'.format(obj)):
+            self.disable_window()
+            self.log("Exporting pymol object {} in xyz format ({})".format(sele, file_pth))
 
-        cmd.save(filename=file_pth, selection=sele, state=0, format='xyz')
-        self.log("Exporting done")
+            cmd.save(filename=file_pth, selection=sele, state=0, format='xyz')
+            self.log("Exporting done")
 
-        get_rmsd_dist_matrix(self, obj)
-        self.enable_window()
+            get_rmsd_dist_matrix(self, obj)
+            self.enable_window()
+        else:
+            self.log('Distance matrix already computed', warning=True)
 
     def hierarchy_plot_fn(self):
         obj = self.widg.selections_list.currentText()
