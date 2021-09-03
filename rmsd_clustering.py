@@ -2,15 +2,16 @@ import multiprocessing as mp
 import os
 import time
 
-import matplotlib.cm as cm
 import numpy as np
 import seaborn as sn
 from Bio.SVDSuperimposer import SVDSuperimposer
 from matplotlib import pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
+from pymol import cmd
 from scipy import cluster
 from scipy.spatial.distance import squareform
 from sklearn.metrics import silhouette_score
+
+from utilities import generate_colormap
 
 n_best = 20
 structure_coords = dict()
@@ -22,13 +23,15 @@ def cm_to_inch(x):
     return x / 2.54
 
 
-def hierarchy_optimization(X):
+def hierarchy_optimization(X, get_heights=False, get_center_label=False):
     result_label = dict()
     cut_heights = dict()
 
-    range_n_clusters = range(2, len(X))
+    range_n_clusters = list(range(2, len(X)))
     Z = cluster.hierarchy.linkage(squareform(X), optimal_ordering=True, method='complete')
 
+    centroid_clusters = dict()
+    names = range(len(X))
     clusters = cluster.hierarchy.cut_tree(Z, n_clusters=range_n_clusters)
     for i, n_clusters in enumerate(range_n_clusters):
         cluster_labels = clusters[:, i].flatten()
@@ -36,56 +39,44 @@ def hierarchy_optimization(X):
         silhouette_avg = silhouette_score(X, cluster_labels, metric='precomputed')
         result_label.setdefault(n_clusters, (silhouette_avg, cluster_labels))
 
-        tmp = cluster.hierarchy.dendrogram(Z, p=n_clusters, truncate_mode='lastp', no_plot=True)
-        last_h = min(list(filter(lambda x: x != 0, [item for sublist in tmp['dcoord'] for item in sublist])))
-        cut_heights.setdefault(n_clusters, last_h)
+        if get_heights:
+            tmp = cluster.hierarchy.dendrogram(Z, p=n_clusters, truncate_mode='lastp', no_plot=True)
+            last_h = min(list(filter(lambda x: x != 0, [item for sublist in tmp['dcoord'] for item in sublist])))
+            cut_heights.setdefault(n_clusters, last_h)
 
-    return result_label, Z, cut_heights
+        if get_center_label:
+            for counter in range(n_clusters):
+                nameList = list(zip(names, cluster_labels))
+                mask = np.array([i == counter for i in cluster_labels])
+                idx = np.argmin(sum(X[:, mask][mask, :]))
+                sublist = [name for (name, label) in nameList if label == counter]
+                centroid_clusters.setdefault(n_clusters, []).append(sublist[idx])
 
-
-def get_cluster_labels_for_rmsd(logger, pdb_id, rmsd_val):
-    mtrx_file = "/tmp/ring/{}.npy".format(pdb_id)
-    if not os.path.exists(mtrx_file):
-        logger.log('Run the clustering calculation first', error=True)
-        return
-
-    X = get_rmsd_dist_matrix(logger, pdb_id)
-    result_labels, _, n_cluster_height = hierarchy_optimization(X)
-    point = 0
-    for n, h in n_cluster_height.items():
-        if h <= rmsd_val:
-            point = n
-            logger.log('Number of clusters for selected RMSD cut: {}'.format(n), warning=True)
-    return result_labels[point][2]
+    return result_label, Z, cut_heights, centroid_clusters
 
 
-def get_cluster_labels_for_n_cluster(logger, pdb_id, n_cluster):
-    mtrx_file = "/tmp/ring/{}.npy".format(pdb_id)
-    if not os.path.exists(mtrx_file):
-        logger.log('Run the clustering calculation first', error=True)
-        return
-
-    X = get_rmsd_dist_matrix(logger, pdb_id)
-    result_labels, *_ = hierarchy_optimization(X)
-
-    if n_cluster not in result_labels.keys():
-        logger.log('Number of clusters is not in the range 2 - {}'.format(max(result_labels.keys())), error=True)
-        raise ValueError
-
-    return result_labels[n_cluster][2]
-
-
-def cluster_distribution_heatmap(logger, pdb_id, x_len=50):
-    mtrx_file = "/tmp/ring/{}.npy".format(pdb_id)
-    if not os.path.exists(mtrx_file):
-        logger.log('Run the clustering calculation first', error=True)
-        return
+def cluster_distribution_heatmap(logger, pdb_id, rmsd_val=None, desired_clusters=None, x_len=50):
+    logger.disable_window()
 
     X = get_rmsd_dist_matrix(logger, pdb_id)
 
-    labels, Z, _ = hierarchy_optimization(X)
-    labels = sorted([(v1, v2) for (v1, v2) in labels.values()], key=lambda x: x[0], reverse=True)
-    labels = labels[2][1]
+    labels, Z, cut_heights, _ = hierarchy_optimization(X, get_heights=True)
+
+    if desired_clusters is not None:
+        if desired_clusters not in labels:
+            logger.log("The number of cluster has to be in the range 2 - {} (inclusive)".format(max(labels)))
+            return
+    else:
+        point = max(labels)
+        for n, h in cut_heights.items():
+            if h <= rmsd_val:
+                point = n
+                break
+        logger.log('Number of clusters for selected RMSD cut: {}'.format(point), warning=True)
+
+    n_clusters = desired_clusters if desired_clusters is not None else point
+
+    labels = labels[n_clusters][1]
 
     def remove_spines(ax):
         ax.spines['right'].set_color('none')
@@ -102,11 +93,7 @@ def cluster_distribution_heatmap(logger, pdb_id, x_len=50):
     best = np.pad(labels, (0, pad_size), mode='constant', constant_values=np.nan)
     best = np.reshape(best, (int(len(best) / x_len), x_len))
 
-    colors = []
-    n_clusters = len(set(labels.tolist()))
-    for i in range(n_clusters):
-        colors.append(cm.nipy_spectral((float(i) + 1) / (n_clusters + 1)))
-    cmap = LinearSegmentedColormap.from_list('Custom', colors, len(colors))
+    cmap = generate_colormap(n_clusters)
 
     sn.set(font_scale=0.8)
 
@@ -117,6 +104,7 @@ def cluster_distribution_heatmap(logger, pdb_id, x_len=50):
     ax1.set_xticklabels(range(1, best.shape[1] + 1))
 
     remove_spines(ax1)
+    logger.enable_window()
 
     plt.xlabel('States')
     plt.title("Structure {} - {} clusters".format(pdb_id, len(set(labels))),
@@ -126,31 +114,42 @@ def cluster_distribution_heatmap(logger, pdb_id, x_len=50):
     plt.show()
 
 
-def hierarchy_cut_plot(logger, pdb_id):
-    mtrx_file = "/tmp/ring/{}.npy".format(pdb_id)
-    if not os.path.exists(mtrx_file):
-        logger.log('Run the clustering calculation first', error=True)
-        return
-
+def hierarchy_cut_plot(logger, pdb_id, rmsd_val=None, desired_clusters=None):
+    logger.disable_window()
     X = get_rmsd_dist_matrix(logger, pdb_id)
 
-    result_labels, Z, cut_heights = hierarchy_optimization(X)
-    result_labels = sorted([(n_cluster, silh_val) for n_cluster, (silh_val, _) in result_labels.items()],
-                           key=lambda x: x[1], reverse=True)
-    colors = []
+    result_labels, Z, cut_heights, _ = hierarchy_optimization(X, get_heights=True)
 
+    if desired_clusters is not None:
+        if desired_clusters in result_labels:
+            silh_val = result_labels[desired_clusters][0]
+            y_val = cut_heights[desired_clusters]
+        else:
+            logger.log("The number of cluster has to be in the range 2 - {} (inclusive)".format(max(result_labels)))
+            return
+    else:
+        point = max(result_labels)
+        for n, h in cut_heights.items():
+            if h <= rmsd_val:
+                point = n
+                break
+        logger.log('Number of clusters for selected RMSD cut: {}'.format(point), warning=True)
+        silh_val = result_labels[point][0]
+        y_val = cut_heights[point]
+
+    logger.enable_window()
+
+    n_clusters = desired_clusters if desired_clusters is not None else point
     plt.close()
     plt.style.use('default')
-    for i in range(2, n_best):
-        color = cm.nipy_spectral(float(i + 1) / (n_best + 1))
-        colors.append(color)
-        plt.axhline(y=cut_heights[i], color=color, linestyle="--", zorder=0,
-                    label="{} clusters, silh: {:.3f}".format(result_labels[i][0], result_labels[i][1]),
-                    linewidth=1.3)
-    cluster.hierarchy.dendrogram(Z, distance_sort=True, p=50, truncate_mode='lastp')
+    plt.axhline(y=y_val, linestyle="--", zorder=0,
+                label="{} clusters, silh: {:.3f}".format(n_clusters,
+                                                         silh_val),
+                linewidth=1.3)
+    cluster.hierarchy.dendrogram(Z, distance_sort=True, p=n_clusters, truncate_mode='lastp')
     plt.ylabel('RMSD (Å)')
     plt.suptitle("RMSD clustering", fontsize=14, fontweight='bold')
-    plt.legend(loc='upper right', framealpha=1, prop={'size': 6})
+    plt.legend(loc='upper right', framealpha=1, prop={'size': 9})
     plt.tight_layout()
     plt.show()
 
@@ -198,6 +197,7 @@ def get_rmsd_dist_matrix(logger, pdb_id):
     mtrx_file = "/tmp/ring/{}.npy".format(pdb_id)
 
     if not os.path.exists(mtrx_file):
+        logger.disable_window()
         logger.log("Loading structure")
 
         filename = "/tmp/ring/{}.xyz".format(pdb_id)
@@ -231,10 +231,44 @@ def get_rmsd_dist_matrix(logger, pdb_id):
         np.fill_diagonal(X, 0)
         np.save(mtrx_file, X)
         logger.log('Done')
+        logger.enable_window()
     else:
         logger.log("Loading distance matrix")
         X = np.load(mtrx_file)
     return X
+
+
+def cluster_states_obj(logger, pdb_id, rmsd_val=None, desired_clusters=None):
+    logger.disable_window()
+    X = get_rmsd_dist_matrix(logger, pdb_id)
+
+    logger.log("Operation started, please wait")
+
+    result_labels, _, cut_heights, repr_labels = hierarchy_optimization(X, get_heights=True, get_center_label=True)
+
+    if desired_clusters is not None:
+        if desired_clusters not in result_labels:
+            logger.log("The number of cluster has to be in the range 2 - {} (inclusive)".format(max(result_labels)))
+            return
+    else:
+        point = max(result_labels)
+        for n, h in cut_heights.items():
+            if h <= rmsd_val:
+                point = n
+                break
+        logger.log('Number of clusters for selected RMSD cut: {}'.format(point), warning=True)
+
+    n_clusters = desired_clusters if desired_clusters is not None else point
+
+    obj_name = "{}_cl".format(pdb_id.strip('_ca'))
+    cmd.delete(obj_name)
+
+    for state in repr_labels[n_clusters]:
+        cmd.create(obj_name, pdb_id.strip('_ca'), source_state=state + 1, target_state=-1, copy_properties=True)
+
+    logger.log("Created new object with representative states from original object")
+    logger.log("States used from original object: {}".format(sorted(repr_labels[n_clusters])))
+    logger.enable_window()
 
 
 if __name__ == '__main__':
@@ -246,5 +280,5 @@ if __name__ == '__main__':
             print(s)
 
 
-    logger = Logger()
-    cluster_distribution_heatmap(logger, "trj_ca", 50)
+    temporary = Logger()
+    hierarchy_cut_plot(temporary, "2h9r_ca", rmsd_val=3.5)

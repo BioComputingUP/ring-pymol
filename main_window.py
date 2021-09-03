@@ -14,7 +14,7 @@ from pymol.Qt.utils import loadUi
 
 from correlation_window import CorrelationDialog
 from frequency_window import FreqDialog
-from rmsd_clustering import cluster_distribution_heatmap, get_rmsd_dist_matrix, hierarchy_cut_plot
+from rmsd_clustering import cluster_distribution_heatmap, cluster_states_obj, get_rmsd_dist_matrix, hierarchy_cut_plot
 from utilities import *
 
 
@@ -65,6 +65,9 @@ class MainDialog(QtWidgets.QDialog):
         self.widg.clusterize.clicked.connect(self.calculate_clustering)
         self.widg.hierarchy_plot.clicked.connect(self.hierarchy_plot_fn)
         self.widg.cluster_plot.clicked.connect(self.cluster_plot_fn)
+        self.widg.create_obj.clicked.connect(self.create_cluster_obj)
+        self.widg.rmsd_box.toggled.connect(lambda: self.checked(rmsd=True))
+        self.widg.cluster_box.toggled.connect(lambda: self.checked(rmsd=False))
 
         # Misc
         self.widg.timer = QtCore.QTimer()
@@ -114,6 +117,18 @@ class MainDialog(QtWidgets.QDialog):
     def enable_window(self):
         self.main.setEnabled(True)
         self.processEvents()
+
+    def checked(self, rmsd):
+        self.widg.cluster_box.blockSignals(True)
+        self.widg.rmsd_box.blockSignals(True)
+        if rmsd:
+            self.widg.cluster_box.setChecked(False)
+            self.widg.rmsd_box.setChecked(True)
+        else:
+            self.widg.rmsd_box.setChecked(False)
+            self.widg.cluster_box.setChecked(True)
+        self.widg.cluster_box.blockSignals(False)
+        self.widg.rmsd_box.blockSignals(False)
 
     def slider_radius_change(self):
         value = self.widg.radius_value.value()
@@ -849,8 +864,15 @@ class MainDialog(QtWidgets.QDialog):
 
         file_pth = "/tmp/ring/" + obj + ".npy"
 
+        n_cluster = None
+        rmsd_val = None
+        if self.widg.cluster_box.isChecked():
+            n_cluster = int(self.widg.n_cluster.value())
+        else:
+            rmsd_val = float(self.widg.rmsd_val.value())
+
         if os.path.exists(file_pth):
-            hierarchy_cut_plot(self, obj)
+            hierarchy_cut_plot(self, obj, rmsd_val, n_cluster)
         else:
             self.log("Run the clustering first!", error=True)
 
@@ -865,7 +887,37 @@ class MainDialog(QtWidgets.QDialog):
             obj = '{}_ca'.format(obj)
 
         file_pth = "/tmp/ring/" + obj + ".npy"
+        n_cluster = None
+        rmsd_val = None
+        if self.widg.cluster_box.isChecked():
+            n_cluster = int(self.widg.n_cluster.value())
+        else:
+            rmsd_val = float(self.widg.rmsd_val.value())
+
         if os.path.exists(file_pth):
-            cluster_distribution_heatmap(self, obj)
+            cluster_distribution_heatmap(self, obj, rmsd_val, n_cluster)
+        else:
+            self.log("Run the clustering first!", error=True)
+
+    def create_cluster_obj(self):
+        obj = self.widg.selections_list.currentText()
+
+        if len(obj) == 0 or obj[0] == "(" and obj[-1] == ")":
+            self.log("Please select an object to use this feature", error=True)
+            raise ValueError
+
+        if self.widg.CA_atoms.isChecked():
+            obj = '{}_ca'.format(obj)
+
+        n_cluster = None
+        rmsd_val = None
+        if self.widg.cluster_box.isChecked():
+            n_cluster = int(self.widg.n_cluster.value())
+        else:
+            rmsd_val = float(self.widg.rmsd_val.value())
+
+        file_pth = "/tmp/ring/" + obj + ".npy"
+        if os.path.exists(file_pth):
+            cluster_states_obj(self, obj, rmsd_val, n_cluster)
         else:
             self.log("Run the clustering first!", error=True)
