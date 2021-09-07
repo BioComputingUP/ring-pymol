@@ -4,10 +4,10 @@ from os import environ
 
 import matplotlib.patches as mpatches
 import networkx as nx
-import numpy as np
 import pandas as pd
 import seaborn as sn
 from matplotlib import pyplot as plt
+from matplotlib.colors import to_rgba
 from pymol import stored
 from pymol.Qt import QtCore, QtWidgets
 from pymol.Qt.utils import loadUi
@@ -687,20 +687,20 @@ class MainDialog(QtWidgets.QDialog):
 
         G = nx.MultiGraph()
         edges = dict()
-        interactions_first_state = pd.read_csv(file_pth, sep='\t')
-        interactions_first_state = interactions_first_state[interactions_first_state.Model == 1]
-        for (nodeId1, interaction, nodeId2, *_) in interactions_first_state.itertuples(index=False):
+        df = pd.read_csv(file_pth, sep='\t')
+        for (nodeId1, interaction, nodeId2, *_) in df.itertuples(index=False):
             chain1, *_ = nodeId1.split(":")
             chain2, *_ = nodeId2.split(":")
             intType, *_ = interaction.split(":")
             key = tuple(sorted([chain1, chain2]))
-            edges.setdefault(key, dict())
-            edges[key].setdefault(intType, 0)
-            edges[key][intType] += 1
-            if edges[key][intType] == 1:
-                G.add_node(chain1, chain=chain1)
-                G.add_node(chain2, chain=chain2)
-                G.add_edge(chain1, chain2, type=intType)
+            edges.setdefault(key, set())
+            edges[key].add(intType)
+
+        for k, interactions in edges.items():
+            for intType in interactions:
+                G.add_node(k[0], chain=k[0])
+                G.add_node(k[1], chain=k[1])
+                G.add_edge(k[0], k[1], type=intType, freq=1.0)
 
         self.draw_multigraph(G, "Chain interaction graph for {}".format(model))
 
@@ -748,20 +748,28 @@ class MainDialog(QtWidgets.QDialog):
                 is_prev_ss = 0
 
         G = nx.MultiGraph()
-        present_edges = set()
         interactions = pd.read_csv(file_pth, sep='\t')
-        for (nodeId1, interaction, nodeId2, *_) in interactions.itertuples(index=False):
+        frequency = dict()
+        max_model = 0
+        for (nodeId1, interaction, nodeId2, *_, n_model) in interactions.itertuples(index=False):
             node1 = Node(nodeId1)
             node2 = Node(nodeId2)
             intType, *_ = interaction.split(":")
+            if n_model > max_model:
+                max_model = n_model
+                seen_this_model = set()
 
             if node1.id_tuple() in ss_id and node2.id_tuple() in ss_id:
-                composite_key = (ss_id[(node1.chain, node1.resi)], ss_id[(node2.chain, node2.resi)], intType)
-                if composite_key not in present_edges:
+                composite_key = (ss_id[node1.id_tuple()], ss_id[(node2.chain, node2.resi)], intType)
+                if composite_key not in seen_this_model:
+                    frequency.setdefault(composite_key, 0.0)
+                    frequency[composite_key] += 1.0
                     G.add_node(ss_id[node1.id_tuple()], chain=node1.chain)
                     G.add_node(ss_id[node2.id_tuple()], chain=node2.chain)
-                    G.add_edge(ss_id[node1.id_tuple()], ss_id[node2.id_tuple()], type=intType)
-                    present_edges.add(composite_key)
+                    seen_this_model.add(composite_key)
+
+        for k, v in frequency.items():
+            G.add_edge(k[0], k[1], type=k[2], freq=v / max_model)
 
         nchar = max([len(x) for x in ss_id.values()])
         if nchar == 3:
@@ -779,7 +787,7 @@ class MainDialog(QtWidgets.QDialog):
     def draw_multigraph(G, title, shrink=12, node_size=700, text_size=12):
         seen = dict()
         present_interaction = set()
-        pos = nx.kamada_kawai_layout(G)
+        pos = nx.kamada_kawai_layout(G, center=(20, 20))
 
         plt.close()
         plt.style.use('default')
@@ -804,7 +812,9 @@ class MainDialog(QtWidgets.QDialog):
             ax.annotate("",
                         xy=pos[e[0]], xycoords='data',
                         xytext=pos[e[1]], textcoords='data',
-                        arrowprops=dict(arrowstyle="<->", color=intColorMap[e[2]["type"]],
+                        arrowprops=dict(arrowstyle="<->",
+                                        color=to_rgba(intColorMap[e[2]["type"]],
+                                                      remap(e[2]["freq"], 0.0, 1.0, 0.15, 1.0)),
                                         shrinkA=shrink, shrinkB=shrink,
                                         patchA=None, patchB=None,
                                         lw=1.8,

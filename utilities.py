@@ -423,3 +423,7 @@ def generate_colormap(number_of_distinct_colors: int = 80):
             initial_cm[lower_half + j * number_of_shades: lower_half + (j + 1) * number_of_shades, i] += modifier
 
     return ListedColormap(initial_cm)
+
+
+def remap(value, low1, high1, low2, high2):
+    return low2 + (value - low1) * (high2 - low2) / (high1 - low1)

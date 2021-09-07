@@ -146,7 +146,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_1">
       <property name="enabled">
@@ -814,111 +814,6 @@
          </layout>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QGroupBox" name="groupBox_2">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="title">
-          <string>Chain interaction analysis</string>
-         </property>
-         <property name="flat">
-          <bool>false</bool>
-         </property>
-         <property name="checkable">
-          <bool>false</bool>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_5">
-          <item row="0" column="1" colspan="2">
-           <widget class="QPushButton" name="chain_graph">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="toolTip">
-             <string>Plot a graph of chains interaction</string>
-            </property>
-            <property name="text">
-             <string>Chain interaction graph</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0" colspan="4">
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>Visualize a frequency heatmap for interchain residues in contact for a specific interaction:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="4">
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0" colspan="2">
-           <widget class="QComboBox" name="interaction_sele">
-            <property name="toolTip">
-             <string>Interaction type</string>
-            </property>
-            <item>
-             <property name="text">
-              <string>ALL</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>HBOND</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>IONIC</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>PIPISTACK</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>PICATION</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>SSBOND</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>VDW</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>IAC</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="3" column="2" colspan="2">
-           <widget class="QPushButton" name="show_inter_heatmap">
-            <property name="text">
-             <string>Show heatmap</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
        <item row="4" column="0">
         <widget class="QGroupBox" name="groupBox_6">
          <property name="sizePolicy">
@@ -1006,6 +901,111 @@
              </size>
             </property>
            </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string>Chain interaction analysis</string>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+         <property name="checkable">
+          <bool>false</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="2" column="0" colspan="4">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Visualize a frequency heatmap for interchain residues in contact for a specific interaction:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QComboBox" name="interaction_sele">
+            <property name="toolTip">
+             <string>Interaction type</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>ALL</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>HBOND</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>IONIC</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>PIPISTACK</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>PICATION</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>SSBOND</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>VDW</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>IAC</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="4">
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="2">
+           <widget class="QPushButton" name="chain_graph">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>Plot a graph of chains interaction</string>
+            </property>
+            <property name="text">
+             <string>Chain interaction graph</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2" colspan="2">
+           <widget class="QPushButton" name="show_inter_heatmap">
+            <property name="text">
+             <string>Show heatmap</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
