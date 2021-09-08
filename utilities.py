@@ -282,8 +282,6 @@ def draw_links(interactions, color, object_name, coords, state):
 
 def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coeff_thresh=0.5, p_thresh=0.3,
                           int_type="HBOND"):
-    # import seaborn as sn
-    # from matplotlib import pyplot as plt
     try:
         import pandas as pd
         import numpy as np
@@ -350,11 +348,6 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
                     p_matr[i, j] = p_val
 
     ticks = [str(edge) for edge in contacts_sparse.keys()]
-    ticks = np.array(ticks)
-    # hm = sn.heatmap(coeffs_matr, xticklabels=ticks, yticklabels=ticks)
-    # hm.set_xticklabels(hm.get_xmajorticklabels(), fontsize=8)
-    # hm.set_yticklabels(hm.get_ymajorticklabels(), fontsize=8)
-    # plt.show()
     return list(contacts_sparse.keys()), coeffs_matr, p_matr
 
 
@@ -377,6 +370,8 @@ def is_selection(string):
 def generate_colormap(number_of_distinct_colors: int = 80):
     if number_of_distinct_colors == 0:
         number_of_distinct_colors = 80
+
+    number_of_distinct_colors = max(8, number_of_distinct_colors)
 
     number_of_shades = 7
     number_of_distinct_colors_with_multiply_of_shades = int(

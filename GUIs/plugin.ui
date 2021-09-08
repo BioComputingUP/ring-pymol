@@ -135,6 +135,9 @@
      <property name="value">
       <number>0</number>
      </property>
+     <property name="format">
+      <string>%v%</string>
+     </property>
     </widget>
    </item>
    <item row="1" column="0">
@@ -1038,7 +1041,52 @@
           <property name="verticalSpacing">
            <number>25</number>
           </property>
-          <item row="5" column="0">
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="CA_atoms">
+            <property name="text">
+             <string>Only Cα atoms</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="1">
+           <widget class="QGroupBox" name="cluster_box">
+            <property name="title">
+             <string>Number of clusters</string>
+            </property>
+            <property name="flat">
+             <bool>false</bool>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_9">
+             <item>
+              <widget class="QSpinBox" name="n_cluster">
+               <property name="maximum">
+                <number>10000000</number>
+               </property>
+               <property name="value">
+                <number>8</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="8" column="0" colspan="2">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Select how to cut the hierarchical clustering (has effect on plots and states reduction):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="0">
            <widget class="QGroupBox" name="rmsd_box">
             <property name="title">
              <string>RMSD value</string>
@@ -1067,26 +1115,61 @@
            </widget>
           </item>
           <item row="3" column="0">
-           <widget class="QPushButton" name="hierarchy_plot">
+           <widget class="QLabel" name="label_8">
             <property name="text">
-             <string>Hierachical clustering plot</string>
+             <string>Clustering method:</string>
             </property>
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QPushButton" name="cluster_plot">
-            <property name="text">
-             <string>State clustering plot</string>
+           <widget class="QComboBox" name="clustering_method">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
+            <item>
+             <property name="text">
+              <string>complete</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>single</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>average</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>weighted</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>centroid</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>median</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>ward</string>
+             </property>
+            </item>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QRadioButton" name="CA_atoms">
+          <item row="2" column="0">
+           <widget class="QPushButton" name="hierarchy_plot">
             <property name="text">
-             <string>Only Cα atoms</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
+             <string>Hierachical clustering plot</string>
             </property>
            </widget>
           </item>
@@ -1097,45 +1180,10 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0" colspan="2">
-           <widget class="QPushButton" name="clusterize">
+          <item row="2" column="1">
+           <widget class="QPushButton" name="cluster_plot">
             <property name="text">
-             <string>Calculate distance matrix</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QGroupBox" name="cluster_box">
-            <property name="title">
-             <string>Number of clusters</string>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_9">
-             <item>
-              <widget class="QSpinBox" name="n_cluster">
-               <property name="maximum">
-                <number>10000000</number>
-               </property>
-               <property name="value">
-                <number>8</number>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="4" column="0" colspan="2">
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Select how to cut the hierarchical clustering (has effect on plots and states reduction):</string>
+             <string>State clustering plot</string>
             </property>
            </widget>
           </item>

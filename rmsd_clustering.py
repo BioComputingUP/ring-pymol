@@ -23,17 +23,20 @@ def cm_to_inch(x):
     return x / 2.54
 
 
-def hierarchy_optimization(X, get_heights=False, get_center_label=False):
+def hierarchy_optimization(X, logger, method='complete', get_heights=False, get_center_label=False, height=None,
+                           desired_clusters=None):
     result_label = dict()
     cut_heights = dict()
 
     range_n_clusters = list(range(2, len(X)))
-    Z = cluster.hierarchy.linkage(squareform(X), optimal_ordering=True, method='complete')
+    Z = cluster.hierarchy.linkage(squareform(X), optimal_ordering=True, method=method)
 
-    centroid_clusters = dict()
+    centroid_clusters = []
+    found = False
     names = range(len(X))
     clusters = cluster.hierarchy.cut_tree(Z, n_clusters=range_n_clusters)
     for i, n_clusters in enumerate(range_n_clusters):
+        logger.progress((i / len(range_n_clusters)) * 100)
         cluster_labels = clusters[:, i].flatten()
 
         silhouette_avg = silhouette_score(X, cluster_labels, metric='precomputed')
@@ -44,23 +47,27 @@ def hierarchy_optimization(X, get_heights=False, get_center_label=False):
             last_h = min(list(filter(lambda x: x != 0, [item for sublist in tmp['dcoord'] for item in sublist])))
             cut_heights.setdefault(n_clusters, last_h)
 
-        if get_center_label:
-            for counter in range(n_clusters):
+        if get_center_label and ((height is not None and last_h <= height) or
+                                 (desired_clusters is not None and n_clusters == desired_clusters) or
+                                 n_clusters == len(range_n_clusters) - 1) and not found:
+            found = True
+            for cluster_id in range(n_clusters):
                 nameList = list(zip(names, cluster_labels))
-                mask = np.array([i == counter for i in cluster_labels])
+                mask = np.array([i == cluster_id for i in cluster_labels])
                 idx = np.argmin(sum(X[:, mask][mask, :]))
-                sublist = [name for (name, label) in nameList if label == counter]
-                centroid_clusters.setdefault(n_clusters, []).append(sublist[idx])
+                sublist = [name for (name, label) in nameList if label == cluster_id]
+                centroid_clusters.append(sublist[idx])
 
+    logger.close_progress()
     return result_label, Z, cut_heights, centroid_clusters
 
 
-def cluster_distribution_heatmap(logger, pdb_id, rmsd_val=None, desired_clusters=None, x_len=50):
+def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_clusters=None, x_len=50):
     logger.disable_window()
 
-    X = get_rmsd_dist_matrix(logger, pdb_id)
+    X =get_rmsd_dist_matrix(logger, pdb_id)
 
-    labels, Z, cut_heights, _ = hierarchy_optimization(X, get_heights=True)
+    labels, Z, cut_heights, _ = hierarchy_optimization(X, logger, method, get_heights=True)
 
     if desired_clusters is not None:
         if desired_clusters not in labels:
@@ -106,19 +113,18 @@ def cluster_distribution_heatmap(logger, pdb_id, rmsd_val=None, desired_clusters
     remove_spines(ax1)
     logger.enable_window()
 
-    plt.xlabel('States')
+    plt.xlabel('States', fontdict={'size': 13, })
     plt.title("Structure {} - {} clusters".format(pdb_id, len(set(labels))),
               fontsize=14)
     plt.tight_layout()
     plt.grid(False)
-    plt.show()
+    plt.show(block=False)
 
 
-def hierarchy_cut_plot(logger, pdb_id, rmsd_val=None, desired_clusters=None):
-    logger.disable_window()
+def hierarchy_cut_plot(logger, pdb_id, method, rmsd_val=None, desired_clusters=None):
     X = get_rmsd_dist_matrix(logger, pdb_id)
 
-    result_labels, Z, cut_heights, _ = hierarchy_optimization(X, get_heights=True)
+    result_labels, Z, cut_heights, _ = hierarchy_optimization(X, logger, method, get_heights=True)
 
     if desired_clusters is not None:
         if desired_clusters in result_labels:
@@ -137,21 +143,19 @@ def hierarchy_cut_plot(logger, pdb_id, rmsd_val=None, desired_clusters=None):
         silh_val = result_labels[point][0]
         y_val = cut_heights[point]
 
-    logger.enable_window()
-
     n_clusters = desired_clusters if desired_clusters is not None else point
     plt.close()
     plt.style.use('default')
-    plt.axhline(y=y_val, linestyle="--", zorder=0,
-                label="{} clusters, silh: {:.3f}".format(n_clusters,
-                                                         silh_val),
-                linewidth=1.3)
-    cluster.hierarchy.dendrogram(Z, distance_sort=True, p=n_clusters, truncate_mode='lastp')
+    plt.axhline(y=y_val, linestyle="--", zorder=0, linewidth=1.3,
+                label="{} clusters, silh: {:.3f}".format(n_clusters, silh_val))
+    cluster.hierarchy.dendrogram(Z, distance_sort=True, p=n_clusters, truncate_mode='lastp',
+                                 labels=np.arange(1, Z.shape[0] + 2))
+
     plt.ylabel('RMSD (Å)')
     plt.suptitle("RMSD clustering", fontsize=14, fontweight='bold')
     plt.legend(loc='upper right', framealpha=1, prop={'size': 9})
     plt.tight_layout()
-    plt.show()
+    plt.show(block=False)
 
 
 def get_rmsd(args):
@@ -193,11 +197,13 @@ def init(args):
     counter = args
 
 
-def get_rmsd_dist_matrix(logger, pdb_id):
+def get_rmsd_dist_matrix(logger, pdb_id, only_load=True):
     mtrx_file = "/tmp/ring/{}.npy".format(pdb_id)
 
     if not os.path.exists(mtrx_file):
-        logger.disable_window()
+        if only_load:
+            return
+
         logger.log("Loading structure")
 
         filename = "/tmp/ring/{}.xyz".format(pdb_id)
@@ -231,43 +237,37 @@ def get_rmsd_dist_matrix(logger, pdb_id):
         np.fill_diagonal(X, 0)
         np.save(mtrx_file, X)
         logger.log('Done')
-        logger.enable_window()
     else:
         logger.log("Loading distance matrix")
         X = np.load(mtrx_file)
     return X
 
 
-def cluster_states_obj(logger, pdb_id, rmsd_val=None, desired_clusters=None):
+def cluster_states_obj(logger, pdb_id, method, rmsd_val=None, desired_clusters=None):
     logger.disable_window()
     X = get_rmsd_dist_matrix(logger, pdb_id)
 
     logger.log("Operation started, please wait")
 
-    result_labels, _, cut_heights, repr_labels = hierarchy_optimization(X, get_heights=True, get_center_label=True)
+    result_labels, _, cut_heights, repr_labels = hierarchy_optimization(X, logger, method, get_heights=True,
+                                                                        get_center_label=True, height=rmsd_val,
+                                                                        desired_clusters=desired_clusters)
 
     if desired_clusters is not None:
         if desired_clusters not in result_labels:
             logger.log("The number of cluster has to be in the range 2 - {} (inclusive)".format(max(result_labels)))
             return
-    else:
-        point = max(result_labels)
-        for n, h in cut_heights.items():
-            if h <= rmsd_val:
-                point = n
-                break
-        logger.log('Number of clusters for selected RMSD cut: {}'.format(point), warning=True)
-
-    n_clusters = desired_clusters if desired_clusters is not None else point
 
     obj_name = "{}_cl".format(pdb_id.strip('_ca'))
     cmd.delete(obj_name)
 
-    for state in repr_labels[n_clusters]:
-        cmd.create(obj_name, pdb_id.strip('_ca'), source_state=state + 1, target_state=-1, copy_properties=True)
+    repr_labels = np.asarray(repr_labels) + 1
+
+    for state in repr_labels:
+        cmd.create(obj_name, pdb_id.strip('_ca'), source_state=state, target_state=-1, copy_properties=True)
 
     logger.log("Created new object with representative states from original object")
-    logger.log("States used from original object: {}".format(sorted(repr_labels[n_clusters])))
+    logger.log("States used from original object: {}".format(sorted(repr_labels)))
     logger.enable_window()
 
 
@@ -276,8 +276,16 @@ if __name__ == '__main__':
         def __init__(self):
             pass
 
+        @staticmethod
         def log(self, s, warning=False, error=False):
             print(s)
+
+        @staticmethod
+        def progress(n):
+            print(n)
+
+        def close_progress(self):
+            pass
 
 
     temporary = Logger()

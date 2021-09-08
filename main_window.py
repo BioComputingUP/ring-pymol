@@ -62,7 +62,6 @@ class MainDialog(QtWidgets.QDialog):
         self.widg.SS_interaction.clicked.connect(self.secondary_structure_graph)
 
         # Clustering
-        self.widg.clusterize.clicked.connect(self.calculate_clustering)
         self.widg.hierarchy_plot.clicked.connect(self.hierarchy_plot_fn)
         self.widg.cluster_plot.clicked.connect(self.cluster_plot_fn)
         self.widg.create_obj.clicked.connect(self.create_cluster_obj)
@@ -104,6 +103,7 @@ class MainDialog(QtWidgets.QDialog):
         if not self.widg.progress_bar.isVisible():
             self.widg.progress_bar.setVisible(True)
         self.widg.progress_bar.setValue(p)
+        self.widg.progress_bar.setFormat("%.02f %%" % p)
         self.processEvents()
 
     def close_progress(self):
@@ -252,6 +252,7 @@ class MainDialog(QtWidgets.QDialog):
                         prev_state = current_state
         self.close_progress()
         self.log("Ring generation finished")
+        self.enable_window()
         self.visualize(log_iter=True)
 
     def refresh_sele(self):
@@ -284,7 +285,7 @@ class MainDialog(QtWidgets.QDialog):
         else:
             self.widg.visualize_btn.setText("Execute Ring")
 
-    def visualize(self, selection=None, color=None, int_type=None, pair_set=None, block=True, log_iter=False):
+    def visualize(self, selection=None, color=None, int_type=None, pair_set=None, block=False, log_iter=False):
         from pymol import stored
 
         if block:
@@ -325,11 +326,6 @@ class MainDialog(QtWidgets.QDialog):
             stored.chain_resi = set()
 
             conn_freq = get_freq(stored.model)
-
-            if conn_freq is None:
-                self.widg.main.setEnabled(True)
-                self.processEvents()
-                return
 
             cmd.iterate(obj, 'stored.chain_resi.add((chain, int(resi)))')
 
@@ -584,7 +580,7 @@ class MainDialog(QtWidgets.QDialog):
             plt.ylabel("Distance (Å)")
             plt.legend()
             plt.tight_layout()
-            plt.show()
+            plt.show(block=False)
         else:
             self.log("No interactions found between the two selected residues", warning=True)
 
@@ -657,7 +653,7 @@ class MainDialog(QtWidgets.QDialog):
         ax.vlines(list(change_chain.values())[1:], *ax.get_ylim(), colors=["k"])
         plt.title("{} interchain interactions".format(sele_inter))
         plt.tight_layout()
-        plt.show()
+        plt.show(block=False)
 
     def get_values_from_input(self):
         obj = self.widg.selections_list.currentText()
@@ -830,7 +826,7 @@ class MainDialog(QtWidgets.QDialog):
         plt.title(title)
         plt.tight_layout()
         plt.axis('off')
-        plt.show()
+        plt.show(block=False)
 
     def calculate_clustering(self):
         obj = self.widg.selections_list.currentText()
@@ -850,17 +846,13 @@ class MainDialog(QtWidgets.QDialog):
             sele = obj
             file_pth = "/tmp/ring/" + obj + ".xyz"
 
-        if not os.path.exists('/tmp/ring/{}.npy'.format(obj)):
-            self.disable_window()
-            self.log("Exporting pymol object {} in xyz format ({})".format(sele, file_pth))
-
-            cmd.save(filename=file_pth, selection=sele, state=0, format='xyz')
-            self.log("Exporting done")
-
-            get_rmsd_dist_matrix(self, obj)
-            self.enable_window()
-        else:
-            self.log('Distance matrix already computed', warning=True)
+        self.log("Distance matrix for structure {} not found, creation started".format(obj), warning=True)
+        self.log("Exporting pymol object {} in xyz format ({})".format(sele, file_pth))
+        self.disable_window()
+        cmd.save(filename=file_pth, selection=sele, state=0, format='xyz')
+        self.log("Exporting done")
+        get_rmsd_dist_matrix(self, obj, only_load=False)
+        self.enable_window()
 
     def hierarchy_plot_fn(self):
         obj = self.widg.selections_list.currentText()
@@ -872,8 +864,6 @@ class MainDialog(QtWidgets.QDialog):
         if self.widg.CA_atoms.isChecked():
             obj = '{}_ca'.format(obj)
 
-        file_pth = "/tmp/ring/" + obj + ".npy"
-
         n_cluster = None
         rmsd_val = None
         if self.widg.cluster_box.isChecked():
@@ -881,10 +871,12 @@ class MainDialog(QtWidgets.QDialog):
         else:
             rmsd_val = float(self.widg.rmsd_val.value())
 
-        if os.path.exists(file_pth):
-            hierarchy_cut_plot(self, obj, rmsd_val, n_cluster)
-        else:
-            self.log("Run the clustering first!", error=True)
+        file_pth = "/tmp/ring/" + obj + ".npy"
+        if not os.path.exists(file_pth):
+            self.calculate_clustering()
+
+        method = self.widg.clustering_method.currentText()
+        hierarchy_cut_plot(self, obj, method, rmsd_val, n_cluster)
 
     def cluster_plot_fn(self):
         obj = self.widg.selections_list.currentText()
@@ -896,7 +888,6 @@ class MainDialog(QtWidgets.QDialog):
         if self.widg.CA_atoms.isChecked():
             obj = '{}_ca'.format(obj)
 
-        file_pth = "/tmp/ring/" + obj + ".npy"
         n_cluster = None
         rmsd_val = None
         if self.widg.cluster_box.isChecked():
@@ -904,10 +895,12 @@ class MainDialog(QtWidgets.QDialog):
         else:
             rmsd_val = float(self.widg.rmsd_val.value())
 
-        if os.path.exists(file_pth):
-            cluster_distribution_heatmap(self, obj, rmsd_val, n_cluster)
-        else:
-            self.log("Run the clustering first!", error=True)
+        file_pth = "/tmp/ring/" + obj + ".npy"
+        if not os.path.exists(file_pth):
+            self.calculate_clustering()
+
+        method = self.widg.clustering_method.currentText()
+        cluster_distribution_heatmap(self, obj, method, rmsd_val, n_cluster)
 
     def create_cluster_obj(self):
         obj = self.widg.selections_list.currentText()
@@ -927,7 +920,8 @@ class MainDialog(QtWidgets.QDialog):
             rmsd_val = float(self.widg.rmsd_val.value())
 
         file_pth = "/tmp/ring/" + obj + ".npy"
-        if os.path.exists(file_pth):
-            cluster_states_obj(self, obj, rmsd_val, n_cluster)
-        else:
-            self.log("Run the clustering first!", error=True)
+        if not os.path.exists(file_pth):
+            self.calculate_clustering()
+
+        method = self.widg.clustering_method.currentText()
+        cluster_states_obj(self, obj, method, rmsd_val, n_cluster)
