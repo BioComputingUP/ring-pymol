@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>719</width>
-    <height>777</height>
+    <height>685</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -309,8 +309,8 @@
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>20</width>
-                   <height>25</height>
+                   <width>22</width>
+                   <height>27</height>
                   </size>
                  </property>
                  <property name="styleSheet">
@@ -318,6 +318,7 @@
   border-radius: 10px;
   min-height: 25px;
   min-width: 20px;
+  border: 1px solid black;
 }</string>
                  </property>
                  <property name="text">

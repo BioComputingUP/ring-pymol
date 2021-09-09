@@ -5,8 +5,6 @@ from os import environ
 import matplotlib.patches as mpatches
 import networkx as nx
 import pandas as pd
-import seaborn as sn
-from matplotlib import pyplot as plt
 from matplotlib.colors import to_rgba
 from pymol import stored
 from pymol.Qt import QtCore, QtWidgets
@@ -14,7 +12,7 @@ from pymol.Qt.utils import loadUi
 
 from correlation_window import CorrelationDialog
 from frequency_window import FreqDialog
-from rmsd_clustering import cluster_distribution_heatmap, cluster_states_obj, get_rmsd_dist_matrix, hierarchy_cut_plot
+from rmsd_clustering import *
 from utilities import *
 
 
@@ -62,6 +60,7 @@ class MainDialog(QtWidgets.QDialog):
         self.widg.SS_interaction.clicked.connect(self.secondary_structure_graph)
 
         # Clustering
+        self.clustering_runned_ids = set()
         self.widg.hierarchy_plot.clicked.connect(self.hierarchy_plot_fn)
         self.widg.cluster_plot.clicked.connect(self.cluster_plot_fn)
         self.widg.create_obj.clicked.connect(self.create_cluster_obj)
@@ -74,6 +73,7 @@ class MainDialog(QtWidgets.QDialog):
         self.widg.timer.start(1500)
         self.close_progress()
 
+    # Helper functions
     def processEvents(self):
         self.app.processEvents()
 
@@ -171,6 +171,7 @@ class MainDialog(QtWidgets.QDialog):
         if filename:
             self.widg.ring_path.setText(filename)
 
+    # Ring related functions
     def run(self):
         obj_name = self.widg.selections_list.currentText()
 
@@ -218,26 +219,25 @@ class MainDialog(QtWidgets.QDialog):
         cmd.save(filename=file_pth, selection=obj_name, state=0)
         self.log("Exporting done")
 
-        try:
-            p = subprocess.Popen(
-                    [self.widg.ring_path.text(), "-i", file_pth, "--out_dir", "/tmp/ring/",
-                     "-g", current_run_config["-g"],
-                     "-o", current_run_config["-o"],
-                     "-s", current_run_config["-s"],
-                     "-k", current_run_config["-k"],
-                     "-a", current_run_config["-a"],
-                     "-b", current_run_config["-b"],
-                     "-w", current_run_config["-w"],
-                     "--all_chains", current_run_config["edges"], "--all_models"], stdout=subprocess.DEVNULL,
-                    stderr=subprocess.PIPE, universal_newlines=True)
-
-            self.prev_launch_config[obj_name] = current_run_config
-        except FileNotFoundError:
+        if not os.path.exists(self.widg.ring_path.text()):
             self.log("Ring path is not correct! Set it in the configuration tab", error=True)
             self.widg.visualize_btn.setText("Show")
             self.enable_window()
             return
 
+        p = subprocess.Popen(
+                [self.widg.ring_path.text(), "-i", file_pth, "--out_dir", "/tmp/ring/",
+                 "-g", current_run_config["-g"],
+                 "-o", current_run_config["-o"],
+                 "-s", current_run_config["-s"],
+                 "-k", current_run_config["-k"],
+                 "-a", current_run_config["-a"],
+                 "-b", current_run_config["-b"],
+                 "-w", current_run_config["-w"],
+                 "--all_chains", current_run_config["edges"], "--all_models"], stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE, universal_newlines=True)
+
+        self.prev_launch_config[obj_name] = current_run_config
         self.log("Ring generation started")
 
         n_states = cmd.count_states(obj_name)
@@ -433,6 +433,7 @@ class MainDialog(QtWidgets.QDialog):
             cmd.group(obj + "_nodes", members=members)
             self.log("Created group {} for interaction nodes".format(obj + "_edges"), timed=False)
 
+    # Ring Analysis functions
     def inter_freq_analysis(self):
         obj = self.widg.selections_list.currentText().lstrip('(').rstrip(')')
         if obj == '':
@@ -655,6 +656,7 @@ class MainDialog(QtWidgets.QDialog):
         plt.tight_layout()
         plt.show(block=False)
 
+    # Chain and SS interaction graphs
     def get_values_from_input(self):
         obj = self.widg.selections_list.currentText()
         if len(obj) == 0 or obj[0] == "(" and obj[-1] == ")":
@@ -738,8 +740,8 @@ class MainDialog(QtWidgets.QDialog):
                         n_beta[chain] += 1
                         is_prev_ss = 2
 
-                ss_id[chain_resi] = "{}α{}".format(chain, n_alpha[chain]) if is_alpha else "{}β{}".format(chain,
-                                                                                                          n_beta[chain])
+                ss_id[chain_resi] = "{} α{}".format(chain, n_alpha[chain]) if is_alpha else "{} β{}".format(chain,
+                                                                                                            n_beta[chain])
             else:
                 is_prev_ss = 0
 
@@ -828,6 +830,7 @@ class MainDialog(QtWidgets.QDialog):
         plt.axis('off')
         plt.show(block=False)
 
+    # Clustering related functions
     def calculate_clustering(self):
         obj = self.widg.selections_list.currentText()
 
@@ -851,77 +854,39 @@ class MainDialog(QtWidgets.QDialog):
         self.disable_window()
         cmd.save(filename=file_pth, selection=sele, state=0, format='xyz')
         self.log("Exporting done")
-        get_rmsd_dist_matrix(self, obj, only_load=False)
+        compute_rmsd_dist_matrix(self, obj)
         self.enable_window()
 
-    def hierarchy_plot_fn(self):
+    def init_clustering(self):
         obj = self.widg.selections_list.currentText()
-
         if len(obj) == 0 or obj[0] == "(" and obj[-1] == ")":
             self.log("Please select an object to use this feature", error=True)
             raise ValueError
-
         if self.widg.CA_atoms.isChecked():
             obj = '{}_ca'.format(obj)
-
         n_cluster = None
         rmsd_val = None
         if self.widg.cluster_box.isChecked():
             n_cluster = int(self.widg.n_cluster.value())
         else:
             rmsd_val = float(self.widg.rmsd_val.value())
-
         file_pth = "/tmp/ring/" + obj + ".npy"
-        if not os.path.exists(file_pth):
-            self.calculate_clustering()
 
+        # TODO: remove comment for deployment
+        if not os.path.exists(file_pth): # or obj not in self.clustering_runned_ids:
+            self.calculate_clustering()
+            self.clustering_runned_ids.add(obj)
         method = self.widg.clustering_method.currentText()
+        return method, n_cluster, obj, rmsd_val
+
+    def hierarchy_plot_fn(self):
+        method, n_cluster, obj, rmsd_val = self.init_clustering()
         hierarchy_cut_plot(self, obj, method, rmsd_val, n_cluster)
 
     def cluster_plot_fn(self):
-        obj = self.widg.selections_list.currentText()
-
-        if len(obj) == 0 or obj[0] == "(" and obj[-1] == ")":
-            self.log("Please select an object to use this feature", error=True)
-            raise ValueError
-
-        if self.widg.CA_atoms.isChecked():
-            obj = '{}_ca'.format(obj)
-
-        n_cluster = None
-        rmsd_val = None
-        if self.widg.cluster_box.isChecked():
-            n_cluster = int(self.widg.n_cluster.value())
-        else:
-            rmsd_val = float(self.widg.rmsd_val.value())
-
-        file_pth = "/tmp/ring/" + obj + ".npy"
-        if not os.path.exists(file_pth):
-            self.calculate_clustering()
-
-        method = self.widg.clustering_method.currentText()
+        method, n_cluster, obj, rmsd_val = self.init_clustering()
         cluster_distribution_heatmap(self, obj, method, rmsd_val, n_cluster)
 
     def create_cluster_obj(self):
-        obj = self.widg.selections_list.currentText()
-
-        if len(obj) == 0 or obj[0] == "(" and obj[-1] == ")":
-            self.log("Please select an object to use this feature", error=True)
-            raise ValueError
-
-        if self.widg.CA_atoms.isChecked():
-            obj = '{}_ca'.format(obj)
-
-        n_cluster = None
-        rmsd_val = None
-        if self.widg.cluster_box.isChecked():
-            n_cluster = int(self.widg.n_cluster.value())
-        else:
-            rmsd_val = float(self.widg.rmsd_val.value())
-
-        file_pth = "/tmp/ring/" + obj + ".npy"
-        if not os.path.exists(file_pth):
-            self.calculate_clustering()
-
-        method = self.widg.clustering_method.currentText()
+        method, n_cluster, obj, rmsd_val = self.init_clustering()
         cluster_states_obj(self, obj, method, rmsd_val, n_cluster)

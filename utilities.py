@@ -250,32 +250,33 @@ def draw_links(interactions, color, object_name, coords, state):
         tup_color = list(color)
 
     not_present = 0
-    obj = [BEGIN, LINES, COLOR] + tup_color
-    for interaction in interactions:
-        valid = True
-        # obj.extend([BEGIN, LINES, COLOR] + tup_color)
-        if "," in interaction[0]:
-            coord1 = ([float(x) for x in interaction[0].split(',')],)
-        else:
-            try:
-                coord1 = (coords[interaction[0]],)
-            except KeyError:
-                valid = False
+    obj = [BEGIN, END]
+    if len(interactions) > 0:
+        obj = [BEGIN, LINES, COLOR] + tup_color
+        for interaction in interactions:
+            valid = True
+            if "," in interaction[0]:
+                coord1 = ([float(x) for x in interaction[0].split(',')],)
+            else:
+                try:
+                    coord1 = (coords[interaction[0]],)
+                except KeyError:
+                    valid = False
 
-        if "," in interaction[1]:
-            coord2 = ([float(x) for x in interaction[1].split(',')],)
-        else:
-            try:
-                coord2 = (coords[interaction[1]],)
-            except KeyError:
-                valid = False
+            if "," in interaction[1]:
+                coord2 = ([float(x) for x in interaction[1].split(',')],)
+            else:
+                try:
+                    coord2 = (coords[interaction[1]],)
+                except KeyError:
+                    valid = False
 
-        if valid:
-            for x, y in zip(coord1, coord2):
-                obj.extend([VERTEX] + x + [VERTEX] + y)
-        else:
-            not_present += 1
-    obj.append(END)
+            if valid:
+                for x, y in zip(coord1, coord2):
+                    obj.extend([VERTEX] + x + [VERTEX] + y)
+            else:
+                not_present += 1
+        obj.append(END)
     cmd.load_cgo(obj, object_name, state=state, zoom=False)
     return not_present
 
@@ -417,7 +418,7 @@ def generate_colormap(number_of_distinct_colors: int = 80):
             modifier = j * modifier / upper_partitions_half
             initial_cm[lower_half + j * number_of_shades: lower_half + (j + 1) * number_of_shades, i] += modifier
 
-    return ListedColormap(initial_cm)
+    return ListedColormap(initial_cm, N=number_of_distinct_colors)
 
 
 def remap(value, low1, high1, low2, high2):
