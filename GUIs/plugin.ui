@@ -196,7 +196,7 @@
               <widget class="QRadioButton" name="pipistack">
                <property name="font">
                 <font>
-                 <family>Roboto</family>
+                 <family>Ubuntu</family>
                  <stylestrategy>PreferDefault</stylestrategy>
                  <kerning>true</kerning>
                 </font>
@@ -213,7 +213,7 @@
               <widget class="QRadioButton" name="pication">
                <property name="font">
                 <font>
-                 <family>Roboto</family>
+                 <family>Ubuntu</family>
                 </font>
                </property>
                <property name="text">
@@ -225,7 +225,7 @@
               <widget class="QRadioButton" name="hbond">
                <property name="font">
                 <font>
-                 <family>Roboto</family>
+                 <family>Ubuntu</family>
                 </font>
                </property>
                <property name="text">
@@ -240,7 +240,7 @@
               <widget class="QRadioButton" name="iac">
                <property name="font">
                 <font>
-                 <family>Roboto</family>
+                 <family>Ubuntu</family>
                 </font>
                </property>
                <property name="text">
@@ -381,7 +381,7 @@
               <widget class="QRadioButton" name="ssbond">
                <property name="font">
                 <font>
-                 <family>Roboto</family>
+                 <family>Ubuntu</family>
                 </font>
                </property>
                <property name="text">
@@ -393,7 +393,7 @@
               <widget class="QRadioButton" name="ionic">
                <property name="font">
                 <font>
-                 <family>Roboto</family>
+                 <family>Ubuntu</family>
                 </font>
                </property>
                <property name="text">
@@ -405,7 +405,7 @@
               <widget class="QRadioButton" name="vdw">
                <property name="font">
                 <font>
-                 <family>Roboto</family>
+                 <family>Ubuntu</family>
                 </font>
                </property>
                <property name="text">
