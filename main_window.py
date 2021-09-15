@@ -2,10 +2,9 @@ import datetime
 import subprocess
 from os import environ
 
-import matplotlib.patches as mpatches
-import networkx as nx
-import pandas as pd
 from matplotlib.colors import to_rgba
+from networkx import MultiGraph, draw_networkx_labels, draw_networkx_nodes, kamada_kawai_layout
+from pandas import read_csv
 from pymol import stored
 from pymol.Qt import QtCore, QtWidgets
 from pymol.Qt.utils import loadUi
@@ -112,10 +111,12 @@ class MainDialog(QtWidgets.QDialog):
 
     def disable_window(self):
         self.main.setEnabled(False)
+        self.widg.visualize_btn.setEnabled(False)
         self.processEvents()
 
     def enable_window(self):
         self.main.setEnabled(True)
+        self.widg.visualize_btn.setEnabled(True)
         self.processEvents()
 
     def checked(self, rmsd):
@@ -181,7 +182,7 @@ class MainDialog(QtWidgets.QDialog):
 
         # If it is a selection then try to just visualize
         if is_selection(obj_name):
-            self.visualize(log_iter=True)
+            self.visualize()
             return
 
         if not os.path.exists('/tmp/ring'):
@@ -202,7 +203,7 @@ class MainDialog(QtWidgets.QDialog):
         # If Ring has already been run on that obj and the run config didn't changed then just visualize results
         if obj_name in self.prev_launch_config.keys() and self.prev_launch_config[obj_name] == current_run_config \
                 and not self.widg.override_memory.isChecked():
-            self.visualize(log_iter=True)
+            self.visualize()
             return
 
         if len(self.widg.ring_path.text()) == 0:
@@ -210,7 +211,6 @@ class MainDialog(QtWidgets.QDialog):
             return
 
         self.disable_window()
-        self.widg.visualize_btn.setText("Running ring...")
 
         file_pth = "/tmp/ring/" + obj_name + ".cif"
 
@@ -253,7 +253,7 @@ class MainDialog(QtWidgets.QDialog):
         self.close_progress()
         self.log("Ring generation finished")
         self.enable_window()
-        self.visualize(log_iter=True)
+        self.visualize()
 
     def refresh_sele(self):
         self.widg.selections_list.blockSignals(True)
@@ -285,12 +285,9 @@ class MainDialog(QtWidgets.QDialog):
         else:
             self.widg.visualize_btn.setText("Execute Ring")
 
-    def visualize(self, selection=None, color=None, int_type=None, pair_set=None, block=False, log_iter=False):
+    def visualize(self, selection=None, color=None, int_type=None, edge_set=None):
         from pymol import stored
 
-        if block:
-            self.widg.main.setEnabled(False)
-            self.processEvents()
         if selection:
             obj = selection
         else:
@@ -298,7 +295,6 @@ class MainDialog(QtWidgets.QDialog):
 
         if obj == '':
             self.log("Please provide a selection", error=True)
-            self.widg.main.setEnabled(True)
             return
 
         is_sele = is_selection(obj)
@@ -318,50 +314,49 @@ class MainDialog(QtWidgets.QDialog):
             return
 
         self.log("Drawing started")
-        interactions_per_state = pd.read_csv(file_pth, sep='\t')
 
-        for state in range(1, states + 1):
-            df = interactions_per_state[interactions_per_state.Model == state]
+        stored.chain_resi = set()
+        cmd.iterate(obj, 'stored.chain_resi.add((chain, int(resi)))')
+        conn_freq = get_freq(stored.model)
 
-            stored.chain_resi = set()
+        def draw():
+            interactions_per_state = pd.read_csv(file_pth, sep='\t')
 
-            conn_freq = get_freq(stored.model)
+            for state in range(1, states + 1):
+                df = interactions_per_state[interactions_per_state.Model == state]
 
-            cmd.iterate(obj, 'stored.chain_resi.add((chain, int(resi)))')
+                stored.coords = dict()
+                stored.tmp = ""
+                cmd.iterate_state(state=state, selection=obj,
+                                  expression='stored.tmp = stored.coords.setdefault("{}/{}/{}"'
+                                             '.format(chain, resi, name), [x,y,z])',
+                                  )
 
-            stored.coords = dict()
-            stored.tmp = ""
-            cmd.iterate_state(state=state, selection=obj,
-                              expression='stored.tmp = stored.coords.setdefault("{}/{}/{}"'
-                                         '.format(chain, resi, name), [x,y,z])',
-                              )
+                interactions_per_type = dict()
 
-            interactions_per_type = dict()
+                for (nodeId1, interaction, nodeId2, _, _, _, atom1, atom2, *_) in df.itertuples(index=False):
+                    intType = interaction.split(":")[0]
+                    node1 = Node(nodeId1)
+                    node2 = Node(nodeId2)
+                    edge = Edge(node1, node2)
 
-            for (nodeId1, interaction, nodeId2, _, _, _, atom1, atom2, *_) in df.itertuples(index=False):
-                intType = interaction.split(":")[0]
-                node1 = Node(nodeId1)
-                node2 = Node(nodeId2)
-                edge = Edge(node1, node2)
+                    try:
+                        freq = conn_freq[intType][edge] * 100
+                    except KeyError:
+                        freq = 0.5 * 100
 
-                try:
-                    freq = conn_freq[intType][edge] * 100
-                except KeyError:
-                    freq = 0.5 * 100
+                    if not selection:
+                        if self.widg.interchain.isChecked() and node1.chain == node2.chain:
+                            continue
+                        if self.widg.intrachain.isChecked() and node1.chain != node2.chain:
+                            continue
 
-                if not selection:
-                    if self.widg.interchain.isChecked() and node1.chain == node2.chain:
-                        continue
-                    if self.widg.intrachain.isChecked() and node1.chain != node2.chain:
-                        continue
+                    if node1.id_tuple() in stored.chain_resi and node2.id_tuple() in stored.chain_resi \
+                            and (selection or self.widg.min_freq.value() <= freq <= self.widg.max_freq.value()) \
+                            and ((selection and (int_type == intType or int_type == "ALL") and
+                                  edge in edge_set) or not selection):
+                        interactions_per_type.setdefault(intType, [])
 
-                if node1.id_tuple() in stored.chain_resi and node2.id_tuple() in stored.chain_resi \
-                        and (self.widg.min_freq.value() <= freq <= self.widg.max_freq.value() or selection) \
-                        and ((selection and (int_type == intType or int_type == "ALL") and
-                              edge in pair_set) or not selection):
-                    interactions_per_type.setdefault(intType, [])
-
-                    if intType == "PIPISTACK" or intType == "IONIC":
                         t = tuple()
                         if "," in atom1:
                             t += (atom1,)
@@ -372,43 +367,23 @@ class MainDialog(QtWidgets.QDialog):
                         else:
                             t += ("{}/{}/{}".format(node2.chain, str(node2.resi), atom2),)
                         interactions_per_type[intType].append(t)
-                    else:
-                        interactions_per_type[intType].append(
-                                ("{}/{}/{}".format(node1.chain, str(node1.resi), atom1),
-                                 "{}/{}/{}".format(node2.chain, str(node2.resi), atom2)))
 
-            not_present = 0
-            for intType, interactions in interactions_per_type.items():
-                not_present += draw_links(interactions,
-                                          object_name=obj + "_" + intType + "_cgo" if not selection else selection + "_cgo",
-                                          color=intTypeMap[intType] if not color or int_type == "ALL" else color,
-                                          coords=stored.coords,
-                                          state=state)
+                for intType, interactions in interactions_per_type.items():
+                    draw_links(interactions,
+                               object_name=obj + "_" + intType + "_cgo" if not selection else selection + "_cgo",
+                               color=intTypeMap[intType] if not color or int_type == "ALL" else color,
+                               coords=stored.coords,
+                               state=state)
 
-            if log_iter:
-                log_s = "Interactions state {}: ".format(state)
-                other = ""
-                for intType in sorted(interactions_per_type.keys()):
-                    other += "{} {}, ".format(intType, len(interactions_per_type[intType]))
-                log_s += other if len(other) > 1 else "No interaction for this state, maybe check the filters?"
-                self.log(log_s.rstrip(', '), timed=False, process=False, warning=len(other) == 0)
+            cmd.hide(selection="*_edges")
+            if not selection:
+                self.create_node_edges_sele(stored.model, is_sele, obj)
 
-            if not_present > 0:
-                self.log("{} connections not displayed because atoms not present".format(not_present), warning=True,
-                         process=False)
+            # Set transp and radius after updating the CGOs
+            self.slider_radius_change()
+            self.slider_transp_change()
 
-        cmd.hide(selection="*_edges")
-        if not selection:
-            self.create_node_edges_sele(stored.model, is_sele, obj)
-
-        # Set transp and radius after updating the CGOs
-        self.slider_radius_change()
-        self.slider_transp_change()
-
-        self.log("Drawing completed")
-
-        if block:
-            self.enable_window()
+        cmd.async_(draw)
 
     def create_node_edges_sele(self, model_name, is_sele, obj):
         members = ""
@@ -495,14 +470,15 @@ class MainDialog(QtWidgets.QDialog):
             self.enable_window()
             return
         try:
-            for inter in list(intTypeMap.keys()) + ["ALL"]:
+            for i, inter in enumerate(list(intTypeMap.keys()) + ["ALL"]):
+                self.progress(i / (len(intTypeMap) + 1) * 100)
                 edges, corr_matr, p_matr = calculate_correlation(obj, states, int_type=inter,
                                                                  coeff_thresh=coeff_thr,
                                                                  p_thresh=p_thr, max_presence=max_presence,
                                                                  min_presence=min_presence)
                 self.correlations.setdefault(obj, dict())
                 self.correlations[obj][inter] = (edges, corr_matr, p_matr)
-
+            self.close_progress()
         except TypeError:
             self.log("Run ring on all the states first!", error=True)
             self.enable_window()
@@ -544,7 +520,7 @@ class MainDialog(QtWidgets.QDialog):
         edge1 = Edge(sorted([node1, node2]))
         interaction_distance = dict()
 
-        interactions_per_state = pd.read_csv(file_pth, sep='\t')
+        interactions_per_state = read_csv(file_pth, sep='\t')
         for state in range(1, states + 1):
             df = interactions_per_state[interactions_per_state.Model == state]
             for (nodeId1, interaction, nodeId2, distance, _, _, atom1, atom2, *_) in df.itertuples(index=False):
@@ -561,7 +537,7 @@ class MainDialog(QtWidgets.QDialog):
         for inter in interaction_distance.keys():
             interaction_distance[inter] = list(map(lambda x: x if x != 999 else np.nan, interaction_distance[inter]))
 
-        plt.close()
+        plt.figure()
         plt.style.use('default')
         something = False
         for inter in interaction_distance.keys():
@@ -642,11 +618,12 @@ class MainDialog(QtWidgets.QDialog):
                     matr[j, i] = contact_freq[Edge(node1, node2)]
                 except KeyError:
                     pass
-        plt.close()
+        plt.figure()
         plt.style.use('default')
         ax = plt.subplot()
         str_order = [str(x) for x in order]
-        sn.heatmap(matr, vmin=0, vmax=1, xticklabels=str_order, yticklabels=str_order, cmap='viridis', ax=ax)
+        sn.heatmap(matr, square=True, vmin=0, vmax=1, xticklabels=str_order, yticklabels=str_order, cmap='viridis',
+                   ax=ax)
         change_chain = dict()
         for i, x in enumerate(order):
             change_chain.setdefault(x.chain, i)
@@ -683,9 +660,9 @@ class MainDialog(QtWidgets.QDialog):
         if cmd.get_chains(model) == 1:
             self.log("Only one chain is present in the selected object", warning=True)
 
-        G = nx.MultiGraph()
+        G = MultiGraph()
         edges = dict()
-        df = pd.read_csv(file_pth, sep='\t')
+        df = read_csv(file_pth, sep='\t')
         for (nodeId1, interaction, nodeId2, *_) in df.itertuples(index=False):
             chain1, *_ = nodeId1.split(":")
             chain2, *_ = nodeId2.split(":")
@@ -741,12 +718,13 @@ class MainDialog(QtWidgets.QDialog):
                         is_prev_ss = 2
 
                 ss_id[chain_resi] = "{} α{}".format(chain, n_alpha[chain]) if is_alpha else "{} β{}".format(chain,
-                                                                                                            n_beta[chain])
+                                                                                                            n_beta[
+                                                                                                                chain])
             else:
                 is_prev_ss = 0
 
-        G = nx.MultiGraph()
-        interactions = pd.read_csv(file_pth, sep='\t')
+        G = MultiGraph()
+        interactions = read_csv(file_pth, sep='\t')
         frequency = dict()
         max_model = 0
         for (nodeId1, interaction, nodeId2, *_, n_model) in interactions.itertuples(index=False):
@@ -785,9 +763,9 @@ class MainDialog(QtWidgets.QDialog):
     def draw_multigraph(G, title, shrink=12, node_size=700, text_size=12):
         seen = dict()
         present_interaction = set()
-        pos = nx.kamada_kawai_layout(G, center=(20, 20))
+        pos = kamada_kawai_layout(G, center=(20, 20))
 
-        plt.close()
+        plt.figure()
         plt.style.use('default')
         ax = plt.gca()
 
@@ -799,11 +777,11 @@ class MainDialog(QtWidgets.QDialog):
                 cont += 1
             chain_id.setdefault(chain, cont)
 
-        nx.draw_networkx_nodes(G, pos, nodelist=G.nodes,
-                               node_color=[default_colors[chain_id[c] % len(default_colors)] for n, c in
-                                           G.nodes(data='chain')],
-                               node_size=node_size, ax=ax)
-        nx.draw_networkx_labels(G, pos, font_color='white', font_size=text_size, ax=ax)
+        draw_networkx_nodes(G, pos, nodelist=G.nodes,
+                            node_color=[default_colors[chain_id[c] % len(default_colors)] for n, c in
+                                        G.nodes(data='chain')],
+                            node_size=node_size, ax=ax)
+        draw_networkx_labels(G, pos, font_color='white', font_size=text_size, ax=ax)
         for e in G.edges(data=True):
             seen.setdefault((e[0], e[1]), 0)
             present_interaction.add(e[2]["type"])
@@ -873,7 +851,7 @@ class MainDialog(QtWidgets.QDialog):
         file_pth = "/tmp/ring/" + obj + ".npy"
 
         # TODO: remove comment for deployment
-        if not os.path.exists(file_pth): # or obj not in self.clustering_runned_ids:
+        if not os.path.exists(file_pth):  # or obj not in self.clustering_runned_ids:
             self.calculate_clustering()
             self.clustering_runned_ids.add(obj)
         method = self.widg.clustering_method.currentText()

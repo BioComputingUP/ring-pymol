@@ -7,6 +7,7 @@ import numpy as np
 import seaborn as sn
 from Bio.SVDSuperimposer import SVDSuperimposer
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from pymol import cmd
 from scipy import cluster
 from scipy.spatial.distance import squareform
@@ -14,10 +15,8 @@ from sklearn.metrics import silhouette_score
 
 from utilities import generate_colormap
 
-n_best = 20
 structure_coords = dict()
 counter: mp.Value
-window = None
 
 
 def cm_to_inch(x):
@@ -34,7 +33,7 @@ def hierarchy_optimization(X, logger, height, desired_clusters, method='complete
     centroid_clusters = []
     names = range(len(X))
     clusters = cluster.hierarchy.cut_tree(Z, n_clusters=range_n_clusters)
-    
+
     if desired_clusters is not None:
         cluster_labels = clusters[:, desired_clusters - 2].flatten()
 
@@ -62,13 +61,14 @@ def hierarchy_optimization(X, logger, height, desired_clusters, method='complete
             last_h = min(list(filter(lambda x: x != 0, [item for sublist in tmp['dcoord'] for item in sublist])))
             cut_heights.setdefault(n_clusters, last_h)
 
-            if last_h <= height or n_clusters == len(range_n_clusters) - 1:
+            if last_h <= height or n_clusters == len(X) - 1:
                 for cluster_id in range(n_clusters):
                     nameList = list(zip(names, cluster_labels))
                     mask = np.array([i == cluster_id for i in cluster_labels])
                     idx = np.argmin(sum(X[:, mask][mask, :]))
                     sublist = [name for (name, label) in nameList if label == cluster_id]
                     centroid_clusters.append(sublist[idx])
+                logger.progress(100)
                 break
 
     logger.close_progress()
@@ -80,11 +80,17 @@ def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_
 
     X = load_rmsd_dis_matrix(logger, pdb_id)
 
+    if desired_clusters is not None and desired_clusters < 2:
+        logger.log("The number of cluster has to be greater than 2", error=True)
+        logger.enable_window()
+        return
+
     labels, Z, cut_heights, centroid_cluster = hierarchy_optimization(X, logger, height=rmsd_val,
                                                                       desired_clusters=desired_clusters, method=method)
 
     if desired_clusters is not None and desired_clusters not in labels:
         logger.log("The number of cluster has to be in the range 2 - {} (inclusive)".format(max(labels)))
+        logger.enable_window()
         return
     else:
         logger.log('Number of clusters for selected RMSD cut: {}'.format(len(centroid_cluster)), warning=True)
@@ -99,9 +105,9 @@ def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_
         ax.spines['left'].set_color('none')
         ax.spines['bottom'].set_color('none')
 
-    plt.close()
+    fig = plt.figure(figsize=(13, 6), dpi=70)
     plt.style.use('default')
-    fig, ax1 = plt.subplots(dpi=70)
+    ax1 = plt.subplot()
 
     pad_size = x_len - len(labels) % x_len if len(labels) % x_len != 0 else 0
     labels = labels.astype('float32')
@@ -111,31 +117,68 @@ def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_
     cmap = generate_colormap(n_clusters)
 
     sn.set(font_scale=0.8)
-    ax1 = sn.heatmap(best, cmap=cmap, linewidths=.5, linecolor='white', ax=ax1, square=True, cbar=True, annot=False)
+    ax1: Axes = sn.heatmap(best, cmap=cmap, linewidths=.5, linecolor='white', ax=ax1, square=True, cbar=False,
+                           annot=False)
     ax1.set_yticks(np.arange(0.5, best.shape[0] + 0.5))
     ax1.set_yticklabels(np.arange(1, best.size + 1, x_len), rotation=0, fontsize=10)
     ax1.set_xticks(np.arange(4.5, best.shape[1] + 0.5, 5))
     ax1.set_xticklabels(range(5, best.shape[1] + 1, 5))
 
     handles = []
-    labels = []
+    handles_labels = []
     for i in range(n_clusters):
         handles.append(mpatches.Patch(color=cmap.colors[i]))
-        labels.append(centroid_cluster[i] + 1)
+        handles_labels.append(centroid_cluster[i] + 1)
 
     def flip(items, ncol):
         return itertools.chain(*[items[i::ncol] for i in range(ncol)])
 
-    plt.legend(handles=flip(handles, 20), labels=flip(labels, 20), bbox_to_anchor=(0., 0., 1., -.2), loc='upper left',
-               ncol=20, mode="expand", borderaxespad=0., facecolor="white", handlelength=1.2, handleheight=1.2,
-               fontsize='large')
+    plt.xlabel('States', fontdict={'size': 13, })
+    plt.title("Structure {} - {} clusters".format(pdb_id, len(set(handles_labels))),
+              fontsize=14)
+
+    def legend(ax, x0=0.01, y0=0, pad=0.5, **kwargs):
+        otrans = ax.figure.transFigure
+        t = ax.legend(bbox_to_anchor=(x0, y0, .98, 1), loc='lower center', bbox_transform=otrans, **kwargs)
+        ax.figure.tight_layout(pad=pad)
+        ax.figure.canvas.draw()
+        tbox = t.get_window_extent().transformed(ax.figure.transFigure.inverted())
+        bbox = ax.get_position()
+        ax.set_position([bbox.x0, bbox.y0 + tbox.height, bbox.width, bbox.height - tbox.height])
+
+    legend(ax1, y0=0.03, pad=0, borderaxespad=0., handles=flip(handles, 20), labels=flip(handles_labels, 20), ncol=20,
+           facecolor="white", handlelength=1.2, handleheight=1.2, mode='expand',
+           fontsize='large', fancybox=True, shadow=True, handletextpad=0.15)
+
+    annot = ax1.annotate("", xy=(0, 0), xycoords="figure points",
+                         xytext=(10, 20), textcoords="offset points",
+                         bbox=dict(boxstyle="round", fc="white", alpha=0.6))
+    annot.set_visible(False)
+
+    def update_annot(label, x, y):
+        annot.xy = (x, y)
+        annot.set_text(label)
+
+    def on_hover(event):
+        visible = annot.get_visible()
+        is_outside_of_stackplot = True
+        inv = ax1.transData.inverted()
+        x, y = inv.transform((event.x, event.y))
+        if event.inaxes == ax1 and x <= labels.size:
+            state_id = int(x) + x_len * int(y) + 1
+            relative_cluster = centroid_cluster[int(labels[state_id - 1])] + 1
+            update_annot("{} - cl. {}".format(state_id, relative_cluster), event.x, event.y)
+            annot.set_visible(True)
+            is_outside_of_stackplot = False
+        if is_outside_of_stackplot and visible:
+            annot.set_visible(False)
+        fig.canvas.draw_idle()
+
+    plt.connect('motion_notify_event', on_hover)
 
     remove_spines(ax1)
     logger.enable_window()
 
-    plt.xlabel('States', fontdict={'size': 13, })
-    plt.title("Structure {} - {} clusters".format(pdb_id, len(set(labels))),
-              fontsize=14)
     plt.tight_layout()
     plt.grid(False)
     plt.show(block=False)
@@ -143,6 +186,10 @@ def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_
 
 def hierarchy_cut_plot(logger, pdb_id, method, rmsd_val=None, desired_clusters=None):
     X = load_rmsd_dis_matrix(logger, pdb_id)
+
+    if desired_clusters is not None and desired_clusters < 2:
+        logger.log("The number of cluster has to be greater than 2", error=True)
+        return
 
     result_labels, Z, cut_heights, centroids = hierarchy_optimization(X, logger, rmsd_val, desired_clusters,
                                                                       method=method)
@@ -160,21 +207,36 @@ def hierarchy_cut_plot(logger, pdb_id, method, rmsd_val=None, desired_clusters=N
         y_val = cut_heights[len(centroids)]
 
     n_clusters = desired_clusters if desired_clusters is not None else len(centroids)
-    plt.close()
+    result_labels = result_labels[n_clusters][1]
+    plt.figure()
     plt.style.use('default')
-    plt.figure(1, figsize=(12, 9))
     plt.axhline(y=y_val, linestyle="--", zorder=0, linewidth=1.3,
                 label="{} clusters, silh: {:.3f}".format(n_clusters, silh_val))
 
-    R = cluster.hierarchy.dendrogram(Z, no_plot=True, p=n_clusters, truncate_mode='lastp')
+    R = cluster.hierarchy.dendrogram(Z, no_plot=True, p=n_clusters, truncate_mode='lastp', )
 
-    temp = {R["leaves"][ii]: (centroids[ii] + 1, R["ivl"][ii] if '(' in R["ivl"][ii] else '(1)') for ii in range(len(R["leaves"]))}
+    my_map = dict()
+    for i in range(len(Z) + 1):
+        my_map[i] = i
+    for i in range(len(Z)):
+        my_map[len(Z) + 1 + i] = [int(Z[i, 0]), int(Z[i, 1])]
+
+    def f(m_id):
+        if m_id <= len(Z):
+            return [m_id]
+        return f(my_map[m_id][0]) + f(my_map[m_id][1])
+
+    temp = {R["leaves"][ii]: (
+            centroids[result_labels[f(label)[0]]] + 1,
+            R["ivl"][ii] if '(' in R["ivl"][ii] else '(1)') for ii, label in
+            enumerate(R["leaves"])}
 
     def llf(xx):
         return "{} - {}".format(*temp[xx])
 
-    cluster.hierarchy.dendrogram(Z, p=n_clusters, truncate_mode='lastp', leaf_label_func=llf)
+    cluster.hierarchy.dendrogram(Z, p=n_clusters, truncate_mode='lastp', leaf_label_func=llf, leaf_rotation=90)
 
+    plt.xlabel("Cluster center state - (n° states in cluster)")
     plt.ylim(bottom=y_val - 0.5)
     plt.ylabel('RMSD (Å)')
     plt.suptitle("RMSD clustering", fontsize=14, fontweight='bold')
@@ -318,4 +380,7 @@ if __name__ == '__main__':
 
 
     temporary = Logger()
-    cluster_distribution_heatmap(temporary, "trj_ca", 'complete', desired_clusters=25)
+    # cluster_distribution_heatmap(temporary, "trj_ca", 'complete', desired_clusters=20)
+    cluster_distribution_heatmap(temporary, "2h9r_ca", 'complete', desired_clusters=9)
+    hierarchy_cut_plot(temporary, "2h9r_ca", 'complete', desired_clusters=9)
+    # hierarchy_cut_plot(temporary, "trj_ca", 'complete', desired_clusters=20)

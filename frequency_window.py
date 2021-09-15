@@ -1,10 +1,8 @@
+from os import path
+
 from pymol import cmd
-
-from pymol.Qt import QtWidgets
-from pymol.Qt import QtCore
+from pymol.Qt import QtCore, QtWidgets
 from pymol.Qt.utils import loadUi
-
-import os
 
 from utilities import get_bg_fg_colors, get_freq_combined, intTypeMap
 
@@ -16,7 +14,7 @@ class FreqDialog(QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowMinimizeButtonHint)
 
         # populate the Window from our *.ui file which was created with the Qt Designer
-        uifile = os.path.join(os.path.dirname(__file__), 'GUIs/frequency.ui')
+        uifile = path.join(path.dirname(__file__), 'GUIs/frequency.ui')
         loadUi(uifile, self)
         self.parent = main_dialog
 

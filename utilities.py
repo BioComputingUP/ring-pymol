@@ -3,9 +3,11 @@ from typing import Dict, List, Union
 
 import matplotlib.cm as cm
 import numpy as np
+import pandas as pd
 from PyQt5.QtGui import QColor
 from matplotlib.colors import ListedColormap
 from pymol.cgo import *
+from scipy.stats import pearsonr
 
 intTypeMap = {
         "IONIC"    : "blue",
@@ -34,6 +36,7 @@ class Node:
             self.init_string(*args)
         else:
             self.init_args(*args)
+        self.atom = None
 
     def init_string(self, string_id: str):
         if ':' in string_id:
@@ -114,6 +117,8 @@ class Node:
 
 class Edge:
     def __init__(self, *args):
+        self.node1 = None
+        self.node2 = None
         if len(args) == 2:
             self.init_nodes(*args)
         else:
@@ -249,48 +254,34 @@ def draw_links(interactions, color, object_name, coords, state):
     elif type(color) is list or type(color) is tuple:
         tup_color = list(color)
 
-    not_present = 0
-    obj = [BEGIN, END]
-    if len(interactions) > 0:
-        obj = [BEGIN, LINES, COLOR] + tup_color
-        for interaction in interactions:
-            valid = True
-            if "," in interaction[0]:
-                coord1 = ([float(x) for x in interaction[0].split(',')],)
-            else:
-                try:
-                    coord1 = (coords[interaction[0]],)
-                except KeyError:
-                    valid = False
+    obj = [BEGIN, LINES, COLOR] + tup_color
+    for interaction in interactions:
+        valid = True
+        if "," in interaction[0]:
+            coord1 = ([float(x) for x in interaction[0].split(',')],)
+        else:
+            try:
+                coord1 = (coords[interaction[0]],)
+            except KeyError:
+                valid = False
 
-            if "," in interaction[1]:
-                coord2 = ([float(x) for x in interaction[1].split(',')],)
-            else:
-                try:
-                    coord2 = (coords[interaction[1]],)
-                except KeyError:
-                    valid = False
+        if "," in interaction[1]:
+            coord2 = ([float(x) for x in interaction[1].split(',')],)
+        else:
+            try:
+                coord2 = (coords[interaction[1]],)
+            except KeyError:
+                valid = False
 
-            if valid:
-                for x, y in zip(coord1, coord2):
-                    obj.extend([VERTEX] + x + [VERTEX] + y)
-            else:
-                not_present += 1
-        obj.append(END)
+        if valid:
+            for x, y in zip(coord1, coord2):
+                obj.extend([VERTEX] + x + [VERTEX] + y)
+    obj.append(END)
     cmd.load_cgo(obj, object_name, state=state, zoom=False)
-    return not_present
 
 
 def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coeff_thresh=0.5, p_thresh=0.3,
                           int_type="HBOND"):
-    try:
-        import pandas as pd
-        import numpy as np
-        from scipy.stats import pearsonr
-    except ImportError:
-        print("To run this you have to install pandas, numpy and scipy in python")
-        return
-
     all_cm = dict()
     try:
         if int_type == "ALL":
@@ -326,7 +317,7 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
     to_pop = []
     for k, v in contacts_sparse.items():
         presence = len(v) / frames
-        if max_presence < presence or presence < min_presence:
+        if not min_presence < presence < max_presence:
             to_pop.append(k)
 
     for k in to_pop:
@@ -348,7 +339,6 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
                     coeffs_matr[i, j] = corr_coeff
                     p_matr[i, j] = p_val
 
-    ticks = [str(edge) for edge in contacts_sparse.keys()]
     return list(contacts_sparse.keys()), coeffs_matr, p_matr
 
 
@@ -372,11 +362,11 @@ def generate_colormap(number_of_distinct_colors: int = 80):
     if number_of_distinct_colors == 0:
         number_of_distinct_colors = 80
 
-    number_of_distinct_colors = max(8, number_of_distinct_colors)
+    number_of_distinct_colors_min = max(8, number_of_distinct_colors)
 
     number_of_shades = 7
     number_of_distinct_colors_with_multiply_of_shades = int(
-            math.ceil(number_of_distinct_colors / number_of_shades) * number_of_shades)
+            math.ceil(number_of_distinct_colors_min / number_of_shades) * number_of_shades)
 
     # Create an array with uniformly drawn floats taken from <0, 1) partition
     linearly_distributed_nums = np.arange(

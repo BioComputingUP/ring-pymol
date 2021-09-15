@@ -1,5 +1,5 @@
 import math
-import os
+from os import path
 
 from PyQt5.QtGui import QColor
 from pymol import cmd
@@ -16,7 +16,7 @@ class CorrelationDialog(QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowMinimizeButtonHint)
 
         # populate the Window from our *.ui file which was created with the Qt Designer
-        uifile = os.path.join(os.path.dirname(__file__), 'GUIs/correlated.ui')
+        uifile = path.join(path.dirname(__file__), 'GUIs/correlated.ui')
         loadUi(uifile, self)
         self.parent = main_dialog
 
@@ -135,19 +135,23 @@ class CorrelationDialog(QtWidgets.QDialog):
             edge2 = Edge([Node(node) for node in edge2.split(' - ')])
 
             cmd.select("edge1", "/{}//{}/{} or /{}//{}/{}".format(self.current_obj, edge1.node1.chain, edge1.node1.resi,
-                                                                  self.current_obj, edge1.node2.chain, edge1.node2.resi), merge=1)
+                                                                  self.current_obj, edge1.node2.chain,
+                                                                  edge1.node2.resi), merge=1)
             sele_set.add(edge1)
 
             cmd.select("edge2", "/{}//{}/{} or /{}//{}/{}".format(self.current_obj, edge2.node1.chain, edge2.node1.resi,
-                                                                  self.current_obj, edge2.node2.chain, edge2.node2.resi), merge=1)
+                                                                  self.current_obj, edge2.node2.chain,
+                                                                  edge2.node2.resi), merge=1)
             if corr_val > 0:
                 corr_set.add(edge2)
             else:
                 anti_set.add(edge2)
 
-        self.parent.visualize(selection="edge1", color="white", int_type=inter, pair_set=sele_set, block=False)
-        self.parent.visualize(selection="edge2", color="blue", int_type=inter, pair_set=corr_set, block=False)
-        self.parent.visualize(selection="edge2", color="red", int_type=inter, pair_set=anti_set, block=False)
+        self.parent.visualize(selection="edge1", color="white", int_type=inter, pair_set=sele_set)
+        if len(corr_set) > 0:
+            self.parent.visualize(selection="edge2", color="blue", int_type=inter, pair_set=corr_set)
+        if len(anti_set) > 0:
+            self.parent.visualize(selection="edge2", color="red", int_type=inter, pair_set=anti_set)
         self.parent.log("Selection edge1 contains all the residues from the edges selected in the first column",
                         timed=False)
         self.parent.log("Selection edge2 contains all the residues from the edges selected in the second column",
