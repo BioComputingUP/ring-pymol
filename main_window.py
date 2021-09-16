@@ -288,7 +288,7 @@ class MainDialog(QtWidgets.QDialog):
         else:
             self.widg.visualize_btn.setText("Execute Ring")
 
-    def visualize(self, selection=None, color=None, int_type=None, edge_set=None):
+    def visualize(self, selection=None, color=None, int_type=None):
         from pymol import stored
 
         if selection:
@@ -332,8 +332,7 @@ class MainDialog(QtWidgets.QDialog):
                 stored.tmp = ""
                 cmd.iterate_state(state=state, selection=obj,
                                   expression='stored.tmp = stored.coords.setdefault("{}/{}/{}"'
-                                             '.format(chain, resi, name), [x,y,z])',
-                                  )
+                                             '.format(chain, resi, name), [x,y,z])')
 
                 interactions_per_type = dict()
 
@@ -343,33 +342,41 @@ class MainDialog(QtWidgets.QDialog):
                     node2 = Node(nodeId2)
                     edge = Edge(node1, node2)
 
-                    try:
-                        freq = conn_freq[intType][edge] * 100
-                    except KeyError:
-                        freq = 0.5 * 100
+                    # Global filters
+                    if node1.id_tuple() not in stored.chain_resi or node2.id_tuple() not in stored.chain_resi:
+                        continue
 
+                    # Apply filters if selection is not present
                     if not selection:
+                        try:
+                            freq = conn_freq[intType][edge] * 100
+                        except KeyError:
+                            freq = 0.5 * 100
+                        # Interchain
                         if self.widg.interchain.isChecked() and node1.chain == node2.chain:
                             continue
+                        # Intrachain
                         if self.widg.intrachain.isChecked() and node1.chain != node2.chain:
                             continue
+                        # Frequency
+                        if not self.widg.min_freq.value() <= freq <= self.widg.max_freq.value():
+                            continue
+                    else:
+                        # Apply filter if selection is present
+                        if not (int_type == intType or int_type == "ALL"):
+                            continue
 
-                    if node1.id_tuple() in stored.chain_resi and node2.id_tuple() in stored.chain_resi \
-                            and (selection or self.widg.min_freq.value() <= freq <= self.widg.max_freq.value()) \
-                            and ((selection and (int_type == intType or int_type == "ALL") and
-                                  edge in edge_set) or not selection):
-                        interactions_per_type.setdefault(intType, [])
-
-                        t = tuple()
-                        if "," in atom1:
-                            t += (atom1,)
-                        else:
-                            t += ("{}/{}/{}".format(node1.chain, str(node1.resi), atom1),)
-                        if "," in atom2:
-                            t += (atom2,)
-                        else:
-                            t += ("{}/{}/{}".format(node2.chain, str(node2.resi), atom2),)
-                        interactions_per_type[intType].append(t)
+                    interactions_per_type.setdefault(intType, [])
+                    t = tuple()
+                    if "," in atom1:
+                        t += (atom1,)
+                    else:
+                        t += ("{}/{}/{}".format(node1.chain, str(node1.resi), atom1),)
+                    if "," in atom2:
+                        t += (atom2,)
+                    else:
+                        t += ("{}/{}/{}".format(node2.chain, str(node2.resi), atom2),)
+                    interactions_per_type[intType].append(t)
 
                 for intType, interactions in interactions_per_type.items():
                     draw_links(interactions,
@@ -386,7 +393,10 @@ class MainDialog(QtWidgets.QDialog):
             self.slider_radius_change()
             self.slider_transp_change()
 
-        cmd.async_(draw)
+        if selection is None:
+            cmd.async_(draw)
+        else:
+            draw()
 
     def create_node_edges_sele(self, model_name, is_sele, obj):
         members = ""

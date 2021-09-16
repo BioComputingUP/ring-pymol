@@ -297,45 +297,35 @@ def draw_links(interactions, color, object_name, coords, state):
 def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coeff_thresh=0.5, p_thresh=0.3,
                           int_type="HBOND"):
     all_cm = dict()
-    try:
-        if int_type == "ALL":
-            for interaction in intTypeMap.keys():
-                all_cm[interaction] = pd.read_csv('/tmp/ring/md/{}.cm_{}'.format(obj, interaction), sep=' ',
-                                                  header=None)
-        else:
-            all_cm[int_type] = pd.read_csv('/tmp/ring/md/{}.cm_{}'.format(obj, int_type), sep=' ', header=None)
-    except FileNotFoundError:
-        return
+    nodes = []
+    if int_type == "ALL":
+        to_read = intTypeMap.keys()
+    else:
+        to_read = [int_type]
 
-    contacts_sparse = dict()
-    for j in range(1, frames + 1):
-        if int_type == "ALL":
-            interactions = intTypeMap.keys()
-        else:
-            interactions = [int_type]
-        for interaction in interactions:
-            df = all_cm[interaction][all_cm[interaction][0] == j]
-            nodes = df[1]
+    for interaction in to_read:
+        all_cm[interaction] = pd.read_csv('/tmp/ring/md/{}.cm_{}'.format(obj, interaction), sep=' ',
+                                          header=None)
+        if len(nodes) == 0:
+            nodes = all_cm[interaction][all_cm[interaction][0] == 1][1]
             nodes = [Node(x) for x in nodes]
+
+    conn_freq = get_freq(obj)
+    contacts_sparse = dict()
+    for frame in range(0, frames):
+        for interaction in to_read:
+            df = all_cm[interaction][all_cm[interaction][0] == frame + 1]
             df = df.iloc[:, 2:]
             matrix = df.values
             matrix[np.triu_indices(matrix.shape[0])] = 0
-            for i in np.argwhere(matrix > 0):
-                node1 = nodes[i[0]]
-                node2 = nodes[i[1]]
+            for i, j in np.argwhere(matrix > 0):
+                node1 = nodes[i]
+                node2 = nodes[j]
                 edge = Edge(sorted([node1, node2]))
-                contacts_sparse.setdefault(edge, dict())
-                contacts_sparse[edge].setdefault(j - 1, 0)
-                contacts_sparse[edge][j - 1] += 1
-
-    to_pop = []
-    for k, v in contacts_sparse.items():
-        presence = len(v) / frames
-        if not min_presence < presence < max_presence:
-            to_pop.append(k)
-
-    for k in to_pop:
-        contacts_sparse.pop(k)
+                if min_presence < conn_freq[interaction][edge] < max_presence:
+                    contacts_sparse.setdefault(edge, dict())
+                    contacts_sparse[edge].setdefault(frame, 0)
+                    contacts_sparse[edge][frame] += 1
 
     z = np.zeros((len(contacts_sparse), frames))
     for i, contacts_for_frame in enumerate(contacts_sparse.values()):
@@ -345,14 +335,15 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
     coeffs_matr = np.ones((z.shape[0], z.shape[0])) * np.nan
     p_matr = np.ones((z.shape[0], z.shape[0])) * np.nan
 
-    for i in range(z.shape[0]):
-        for j in range(z.shape[0]):
-            if i != j:
-                corr_coeff, p_val = pearsonr(z[i], z[j])
-                if p_val < p_thresh and (corr_coeff > coeff_thresh or corr_coeff < -coeff_thresh):
-                    coeffs_matr[i, j] = corr_coeff
-                    p_matr[i, j] = p_val
+    indexes = np.triu_indices(z.shape[0], k=1)
+    for i, j in zip(indexes[0], indexes[1]):
 
+        corr_coeff, p_val = pearsonr(z[i], z[j])
+        if p_val < p_thresh and (corr_coeff > coeff_thresh or corr_coeff < -coeff_thresh):
+            coeffs_matr[i, j] = corr_coeff
+            p_matr[i, j] = p_val
+    p_matr[np.tril_indices_from(p_matr)] = p_matr[np.triu_indices_from(p_matr)]
+    coeffs_matr[np.tril_indices_from(coeffs_matr)] = coeffs_matr[np.triu_indices_from(coeffs_matr)]
     return list(contacts_sparse.keys()), coeffs_matr, p_matr
 
 
@@ -476,4 +467,5 @@ def export_network_graph(model):
 
 
 if __name__ == '__main__':
-    export_network_graph('2h9r')
+    # export_network_graph('2h9r')
+    calculate_correlation("trj_cl", 20)

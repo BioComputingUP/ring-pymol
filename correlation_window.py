@@ -56,10 +56,10 @@ class CorrelationDialog(QtWidgets.QDialog):
             tableWidget.setSortingEnabled(False)
 
             rowPosition = tableWidget.rowCount()  # necessary even when there are no rows in the table
+            df_of_interacton = pd.DataFrame([edge1s, freqs1, inter_labels, edge2s, freqs2, corr_vals, p_vals]).transpose()
+            df = df.append(df_of_interacton)
 
-            df = df.append(pd.DataFrame([edge1s, freqs1, inter_labels, edge2s, freqs2, corr_vals, p_vals]).transpose())
-
-            self.parent.log("{} {} interactions correlates/anti-correlates".format(len(df), inter))
+            self.parent.log("{} {} interactions correlates/anti-correlates".format(len(df_of_interacton), inter))
 
         df = df.sort_values([0, 3, 5], ascending=(True, True, False))
 
@@ -147,11 +147,11 @@ class CorrelationDialog(QtWidgets.QDialog):
             else:
                 anti_set.add(edge2)
 
-        self.parent.visualize(selection="edge1", color="white", int_type=inter, edge_set=sele_set)
+        self.parent.visualize(selection="edge1", color="white", int_type=inter)
         if len(corr_set) > 0:
-            self.parent.visualize(selection="edge2", color="blue", int_type=inter, edge_set=corr_set)
+            self.parent.visualize(selection="edge2", color="blue", int_type=inter)
         if len(anti_set) > 0:
-            self.parent.visualize(selection="edge2", color="red", int_type=inter, edge_set=anti_set)
+            self.parent.visualize(selection="edge2", color="red", int_type=inter)
         self.parent.log("Selection edge1 contains all the residues from the edges selected in the first column",
                         timed=False)
         self.parent.log("Selection edge2 contains all the residues from the edges selected in the second column",
