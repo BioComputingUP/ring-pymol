@@ -165,8 +165,8 @@ def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_
         is_outside_of_stackplot = True
         inv = ax1.transData.inverted()
         x, y = inv.transform((event.x, event.y))
-        if event.inaxes == ax1 and x <= labels.size:
-            state_id = int(x) + x_len * int(y) + 1
+        state_id = int(x) + x_len * int(y) + 1
+        if event.inaxes == ax1 and state_id <= labels.size:
             relative_cluster = centroid_cluster[int(labels[state_id - 1])] + 1
             update_annot("{} - cl. {}".format(state_id, relative_cluster), event.x, event.y)
             annot.set_visible(True)

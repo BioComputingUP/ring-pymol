@@ -147,11 +147,11 @@ class CorrelationDialog(QtWidgets.QDialog):
             else:
                 anti_set.add(edge2)
 
-        self.parent.visualize(selection="edge1", color="white", int_type=inter, pair_set=sele_set)
+        self.parent.visualize(selection="edge1", color="white", int_type=inter, edge_set=sele_set)
         if len(corr_set) > 0:
-            self.parent.visualize(selection="edge2", color="blue", int_type=inter, pair_set=corr_set)
+            self.parent.visualize(selection="edge2", color="blue", int_type=inter, edge_set=corr_set)
         if len(anti_set) > 0:
-            self.parent.visualize(selection="edge2", color="red", int_type=inter, pair_set=anti_set)
+            self.parent.visualize(selection="edge2", color="red", int_type=inter, edge_set=anti_set)
         self.parent.log("Selection edge1 contains all the residues from the edges selected in the first column",
                         timed=False)
         self.parent.log("Selection edge2 contains all the residues from the edges selected in the second column",
