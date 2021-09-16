@@ -1,7 +1,10 @@
+import json
 import math
+from json import JSONEncoder
 from typing import Dict, List, Union
 
 import matplotlib.cm as cm
+import networkx as nx
 import numpy as np
 import pandas as pd
 from PyQt5.QtGui import QColor
@@ -28,6 +31,14 @@ intColorMap = {
         "VDW"      : "gray",
         "IAC"      : "black"
 }
+
+
+def _default(self, obj):
+    return getattr(obj.__class__, "to_json", _default.default)(obj)
+
+
+_default.default = JSONEncoder().default
+JSONEncoder.default = _default
 
 
 class Node:
@@ -113,6 +124,9 @@ class Node:
 
     def id_tuple(self):
         return self.chain, self.resi
+
+    def to_json(self):
+        return self.__repr__()
 
 
 class Edge:
@@ -413,3 +427,53 @@ def generate_colormap(number_of_distinct_colors: int = 80):
 
 def remap(value, low1, high1, low2, high2):
     return low2 + (value - low1) * (high2 - low2) / (high1 - low1)
+
+
+def export_network_graph(model):
+    G = nx.MultiGraph()
+
+    # Add the nodes to the graph
+    file_pth = "/tmp/ring/" + model + ".cif_ringNodes"
+    df = pd.read_csv(file_pth, sep='\t')
+    df = df.groupby('NodeId').mean()
+
+    for (nodeId, _, degree, *_) in df.itertuples(index=True):
+        node = Node(nodeId)
+        G.add_node(node, degree=round(degree, 3), chain=node.chain, resi=node.resi, resn=node.resn)
+
+    # Add the edges to the graph
+    file_pth = "/tmp/ring/" + model + ".cif_ringEdges"
+    df = pd.read_csv(file_pth, sep='\t')
+
+    distance_dict = dict()
+    mean_distance = df.groupby(['NodeId1', 'NodeId2', 'Interaction']).mean()
+    for (nodeId, distance, *_) in mean_distance.itertuples(index=True, name='Distance'):
+        nodeId1, nodeId2, interaction = nodeId
+        intType = interaction.split(":")[0]
+        node1 = Node(nodeId1)
+        node2 = Node(nodeId2)
+        edge = Edge(node1, node2)
+        distance_dict.setdefault(intType, dict()).setdefault(edge, distance)
+
+    conn_freq = get_freq(model)
+
+    sawn = set()
+    df = df.groupby(["NodeId1", "Interaction", "NodeId2"]).sum()
+    for (ids, *_) in df.itertuples(index=True):
+        nodeId1, interaction, nodeId2 = ids
+        intType = interaction.split(":")[0]
+        node1 = Node(nodeId1)
+        node2 = Node(nodeId2)
+        edge = Edge(node1, node2)
+        key = (edge, intType)
+        if key not in sawn:
+            G.add_edge(node1, node2, interaction=intType, frequency=round(conn_freq[intType][edge], 3),
+                       distance=round(distance_dict[intType][edge], 3))
+            sawn.add(key)
+
+    with open("/tmp/ring/{}.json".format(model), 'w+') as f:
+        json.dump(nx.cytoscape_data(G), f)
+
+
+if __name__ == '__main__':
+    export_network_graph('2h9r')

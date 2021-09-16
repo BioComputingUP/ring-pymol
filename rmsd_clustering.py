@@ -152,7 +152,8 @@ def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_
 
     annot = ax1.annotate("", xy=(0, 0), xycoords="figure points",
                          xytext=(10, 20), textcoords="offset points",
-                         bbox=dict(boxstyle="round", fc="white", alpha=0.6))
+                         bbox=dict(boxstyle="round", fc="white", alpha=0.6),
+                         fontsize=12)
     annot.set_visible(False)
 
     def update_annot(label, x, y):

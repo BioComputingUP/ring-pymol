@@ -250,8 +250,11 @@ class MainDialog(QtWidgets.QDialog):
                     if current_state > prev_state:
                         self.progress((current_state / n_states) * 100)
                         prev_state = current_state
+
+        export_network_graph(obj_name)
         self.close_progress()
         self.log("Ring generation finished")
+        self.log("Cytoscape network format saved as /tmp/ring/{}.json".format(obj_name))
         self.enable_window()
         self.visualize()
 
@@ -432,7 +435,9 @@ class MainDialog(QtWidgets.QDialog):
             inter = "SSBOND"
         if self.widg.iac.isChecked():
             inter = "IAC"
-        conn_freq = get_freq_combined(obj, inter, key_string=True)
+
+        conn_freq = get_freq_combined(obj, inter, interchain=self.widg.interchain.isChecked(),
+                                      intrachain=self.widg.intrachain.isChecked(), key_string=True)
 
         if conn_freq is not None:
             myspace = {'dict_freq': conn_freq}
