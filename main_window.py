@@ -865,8 +865,7 @@ class MainDialog(QtWidgets.QDialog):
             rmsd_val = float(self.widg.rmsd_val.value())
         file_pth = "/tmp/ring/" + obj + ".npy"
 
-        # TODO: remove comment for deployment
-        if not os.path.exists(file_pth):  # or obj not in self.clustering_runned_ids:
+        if not os.path.exists(file_pth) or obj not in self.clustering_runned_ids:
             self.calculate_clustering()
             self.clustering_runned_ids.add(obj)
         method = self.widg.clustering_method.currentText()
