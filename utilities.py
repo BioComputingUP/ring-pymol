@@ -13,13 +13,13 @@ from pymol.cgo import *
 from scipy.stats import pearsonr
 
 intTypeMap = {
-        "IONIC"    : "blue",
-        "SSBOND"   : "yellow",
-        "PIPISTACK": "orange",
-        "PICATION" : "red",
-        "HBOND"    : "cyan",
-        "VDW"      : "gray50",
-        "IAC"      : "white"
+        "IONIC"    : (0.0, 0.0, 1.0),
+        "SSBOND"   : (1.0, 1.0, 0.0),
+        "PIPISTACK": (1.0, 0.5, 0.0),
+        "PICATION" : (1.0, 0.0, 0.0),
+        "HBOND"    : (0.0, 1.0, 1.0),
+        "VDW"      : (0.5050504803657532, 0.5050504803657532, 0.5050504803657532),
+        "IAC"      : (1.0, 1.0, 1.0)
 }
 
 intColorMap = {
@@ -223,7 +223,7 @@ def get_freq_combined(obj, bond, interchain=False, intrachain=False, key_string=
     return conn_freq
 
 
-def get_freq_combined_all_interactions(obj):
+def get_freq_combined_all_interactions(obj, interchain=False):
     conn_freq = dict()
     for inter in intTypeMap.keys():
         with open("/tmp/ring/md/{}.gfreq_{}".format(obj, inter), 'r') as f:
@@ -232,9 +232,10 @@ def get_freq_combined_all_interactions(obj):
                 node1 = Node(node1)
                 node2 = Node(node2)
                 edge = Edge(node1, node2)
-                if node1.chain != node2.chain:
-                    conn_freq.setdefault(edge, [])
-                    conn_freq[edge].append(float(perc))
+                if interchain and node1.chain == node2.chain:
+                    pass
+                conn_freq.setdefault(edge, [])
+                conn_freq[edge].append(float(perc))
 
     all_freq = dict()
     for k, v in conn_freq.items():
@@ -420,12 +421,22 @@ def remap(value, low1, high1, low2, high2):
     return low2 + (value - low1) * (high2 - low2) / (high1 - low1)
 
 
+def discrete_mapping(value):
+    if value < 0.33:
+        return 0.7
+    if value < 0.66:
+        return 2.0
+    return 3.2
+
+
 def export_network_graph(model):
     G = nx.MultiGraph()
 
     # Add the nodes to the graph
     file_pth = "/tmp/ring/" + model + ".cif_ringNodes"
     df = pd.read_csv(file_pth, sep='\t')
+    if len(df) == 0:
+        return IndexError
     df = df.groupby('NodeId').mean()
 
     for (nodeId, _, degree, *_) in df.itertuples(index=True):
@@ -462,7 +473,7 @@ def export_network_graph(model):
                        distance=round(distance_dict[intType][edge], 3))
             sawn.add(key)
 
-    with open("/tmp/ring/{}.json".format(model), 'w+') as f:
+    with open("{}/{}.json".format(os.getcwd(), model), 'w+') as f:
         json.dump(nx.cytoscape_data(G), f)
 
 

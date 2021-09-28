@@ -2,7 +2,6 @@ import datetime
 import subprocess
 from os import environ
 
-from matplotlib.colors import to_rgba
 from networkx import MultiGraph, draw_networkx_labels, draw_networkx_nodes, kamada_kawai_layout
 from pandas import read_csv
 from pymol import stored
@@ -19,7 +18,7 @@ class MainDialog(QtWidgets.QDialog):
     def __init__(self, app=None, parent=None):
         super(MainDialog, self).__init__(parent)
 
-        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowMinimizeButtonHint)
+        self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinimizeButtonHint)
 
         # populate the Window from our *.ui file which was created with the Qt Designer
         uifile = os.path.join(os.path.dirname(__file__), 'GUIs/plugin.ui')
@@ -66,7 +65,17 @@ class MainDialog(QtWidgets.QDialog):
         self.widg.rmsd_box.toggled.connect(lambda: self.checked(rmsd=True))
         self.widg.cluster_box.toggled.connect(lambda: self.checked(rmsd=False))
 
+        # Interactions Color
+        self.widg.b_color_h.clicked.connect(lambda: self.pick_color("HBOND"))
+        self.widg.b_color_io.clicked.connect(lambda: self.pick_color("IONIC"))
+        self.widg.b_color_ss.clicked.connect(lambda: self.pick_color("SSBOND"))
+        self.widg.b_color_pipi.clicked.connect(lambda: self.pick_color("PIPISTACK"))
+        self.widg.b_color_pica.clicked.connect(lambda: self.pick_color("PICATION"))
+        self.widg.b_color_vdw.clicked.connect(lambda: self.pick_color("VDW"))
+        self.widg.b_color_iac.clicked.connect(lambda: self.pick_color("IAC"))
+
         # Misc
+        self.init_colors()
         self.widg.timer = QtCore.QTimer()
         self.widg.timer.timeout.connect(self.refresh_sele)
         self.widg.timer.start(1500)
@@ -167,10 +176,10 @@ class MainDialog(QtWidgets.QDialog):
                 "edges": edge_policy}
 
     def browse_ring_exe(self):
-        filename = QtWidgets.QFileDialog.getOpenFileNames(self, "Select Ring executable")[0][0]
+        filename = QtWidgets.QFileDialog.getOpenFileNames(self, "Select Ring executable")
 
-        if filename:
-            self.widg.ring_path.setText(filename)
+        if len(filename[0]) > 0:
+            self.widg.ring_path.setText(filename[0][0])
 
     # Ring related functions
     def run(self):
@@ -251,10 +260,17 @@ class MainDialog(QtWidgets.QDialog):
                         self.progress((current_state / n_states) * 100)
                         prev_state = current_state
 
-        export_network_graph(obj_name)
+        choice = QtWidgets.QMessageBox.question(self, 'Export',
+                                                "Do you want to export the contact network in cytoscape format?\n"
+                                                "It will be saved as:\n{}/{}.json".format(os.getcwd(), obj_name),
+                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+
+        if choice == QtWidgets.QMessageBox.Yes:
+            export_network_graph(obj_name)
+            self.log("Cytoscape network format saved as {}/{}.json".format(os.getcwd(), obj_name))
+
         self.close_progress()
         self.log("Ring generation finished")
-        self.log("Cytoscape network format saved as /tmp/ring/{}.json".format(obj_name))
         self.enable_window()
         self.visualize()
 
@@ -324,6 +340,10 @@ class MainDialog(QtWidgets.QDialog):
 
         def draw():
             interactions_per_state = pd.read_csv(file_pth, sep='\t')
+
+            if len(interactions_per_state) == 0:
+                self.log("No interactions found in the object", warning=True)
+                return
 
             for state in range(1, states + 1):
                 df = interactions_per_state[interactions_per_state.Model == state]
@@ -395,6 +415,8 @@ class MainDialog(QtWidgets.QDialog):
 
         if selection is None:
             cmd.async_(draw)
+            self.log("Created group {} for interaction edges".format(obj + "_edges"), timed=False)
+            self.log("Created group {} for interaction nodes".format(obj + "_nodes"), timed=False)
         else:
             draw()
 
@@ -403,7 +425,6 @@ class MainDialog(QtWidgets.QDialog):
         for k in intTypeMap.keys():
             members += " {}_{}_cgo".format(obj, k)
         cmd.group(obj + "_edges", members=members)
-        self.log("Created group {} for interaction edges".format(obj + "_edges"), timed=False)
         if not is_sele:
             members = ""
             for bond in intTypeMap.keys():
@@ -419,7 +440,6 @@ class MainDialog(QtWidgets.QDialog):
                                    selection="chain {} and resi {}".format(node.chain, node.resi),
                                    merge=1)
             cmd.group(obj + "_nodes", members=members)
-            self.log("Created group {} for interaction nodes".format(obj + "_edges"), timed=False)
 
     # Ring Analysis functions
     def inter_freq_analysis(self):
@@ -494,7 +514,7 @@ class MainDialog(QtWidgets.QDialog):
                 self.correlations.setdefault(obj, dict())
                 self.correlations[obj][inter] = (edges, corr_matr, p_matr)
             self.close_progress()
-        except TypeError:
+        except FileNotFoundError:
             self.log("Run ring on all the states first!", error=True)
             self.enable_window()
             return
@@ -615,7 +635,7 @@ class MainDialog(QtWidgets.QDialog):
 
         else:
             order = get_node_names_ordered(obj)
-            contact_freq = get_freq_combined_all_interactions(obj)
+            contact_freq = get_freq_combined_all_interactions(obj, interchain=True)
 
             tmp = [x.node1 for x in contact_freq.keys()]
             to_remove = []
@@ -637,7 +657,7 @@ class MainDialog(QtWidgets.QDialog):
         plt.style.use('default')
         ax = plt.subplot()
         str_order = [str(x) for x in order]
-        sn.heatmap(matr, square=True, vmin=0, vmax=1, xticklabels=str_order, yticklabels=str_order, cmap='viridis',
+        sn.heatmap(matr, square=True, vmin=0, vmax=1, xticklabels=str_order, yticklabels=str_order, cmap='OrRd',
                    ax=ax)
         change_chain = dict()
         for i, x in enumerate(order):
@@ -804,11 +824,10 @@ class MainDialog(QtWidgets.QDialog):
                         xy=pos[e[0]], xycoords='data',
                         xytext=pos[e[1]], textcoords='data',
                         arrowprops=dict(arrowstyle="<->",
-                                        color=to_rgba(intColorMap[e[2]["type"]],
-                                                      remap(e[2]["freq"], 0.0, 1.0, 0.15, 1.0)),
+                                        color=intColorMap[e[2]["type"]],
                                         shrinkA=shrink, shrinkB=shrink,
                                         patchA=None, patchB=None,
-                                        lw=1.8,
+                                        lw=discrete_mapping(e[2]["freq"]),
                                         connectionstyle="arc3,rad={}".format(0.2 * seen[(e[0], e[1])]),
                                         ),
                         )
@@ -882,3 +901,32 @@ class MainDialog(QtWidgets.QDialog):
     def create_cluster_obj(self):
         method, n_cluster, obj, rmsd_val = self.init_clustering()
         cluster_states_obj(self, obj, method, rmsd_val, n_cluster)
+
+    def init_colors(self):
+        for i in intTypeMap.keys():
+            self.set_inter_colors(i)
+
+    def pick_color(self, type):
+        color = QtWidgets.QColorDialog.getColor()
+        intTypeMap[type] = (float(color.red()) / 255.0, float(color.green()) / 255.0, float(color.blue()) / 255.0)
+        self.set_inter_colors(type)
+
+    def set_inter_colors(self, type):
+        color = intTypeMap[type]
+        color = color[0] * 255, color[1] * 255, color[2] * 255
+        style_sheet = "QLabel{{background: rgb({},{},{}); border: 1.3px solid black; border-radius: 8px; " \
+                      "min-height: 16px;min-width: 16px; max-height: 16px; max-width: 16px;}}".format(*color)
+        if type == "HBOND":
+            self.widg.color_h.setStyleSheet(style_sheet)
+        if type == "IONIC":
+            self.widg.color_io.setStyleSheet(style_sheet)
+        if type == "PIPISTACK":
+            self.widg.color_pipi.setStyleSheet(style_sheet)
+        if type == "PICATION":
+            self.widg.color_pica.setStyleSheet(style_sheet)
+        if type == "SSBOND":
+            self.widg.color_ss.setStyleSheet(style_sheet)
+        if type == "VDW":
+            self.widg.color_vdw.setStyleSheet(style_sheet)
+        if type == "IAC":
+            self.widg.color_iac.setStyleSheet(style_sheet)

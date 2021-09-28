@@ -1,12 +1,9 @@
-import math
 from os import path
 
-from PyQt5.QtGui import QColor
-from pymol import cmd
 from pymol.Qt import QtCore, QtWidgets
 from pymol.Qt.utils import loadUi
 
-from utilities import Edge, Node, get_bg_fg_colors, get_freq, intTypeMap
+from utilities import *
 
 
 class CorrelationDialog(QtWidgets.QDialog):
@@ -23,6 +20,7 @@ class CorrelationDialog(QtWidgets.QDialog):
         self.current_obj = None
 
         self.show_corr.clicked.connect(self.show_corr_fn)
+        self.text_filter.textChanged.connect(self.filter_table)
 
     def create_table(self, obj):
         try:
@@ -35,6 +33,7 @@ class CorrelationDialog(QtWidgets.QDialog):
         df = pd.DataFrame()
 
         freq_inter = get_freq(obj)
+        freq_combined = get_freq_combined_all_interactions(obj)
 
         self.current_obj = obj
 
@@ -45,10 +44,10 @@ class CorrelationDialog(QtWidgets.QDialog):
                 indexes = np.argwhere(~np.isnan(corr_matr))
 
             edge1s = [edges[x] for x in [y[0] for y in indexes]]
-            freqs1 = [freq_inter[inter][edge] if inter != 'ALL' else math.nan for edge in edge1s]
+            freqs1 = [freq_inter[inter][edge] if inter != 'ALL' else freq_combined[edge] for edge in edge1s]
             inter_labels = [inter for _ in edge1s]
             edge2s = [edges[x] for x in [y[1] for y in indexes]]
-            freqs2 = [freq_inter[inter][edge] if inter != 'ALL' else math.nan for edge in edge2s]
+            freqs2 = [freq_inter[inter][edge] if inter != 'ALL' else freq_combined[edge] for edge in edge2s]
             corr_vals = [corr_matr[i, j] for (i, j) in indexes]
             p_vals = [p_matr[i, j] for (i, j) in indexes]
 
@@ -56,7 +55,8 @@ class CorrelationDialog(QtWidgets.QDialog):
             tableWidget.setSortingEnabled(False)
 
             rowPosition = tableWidget.rowCount()  # necessary even when there are no rows in the table
-            df_of_interacton = pd.DataFrame([edge1s, freqs1, inter_labels, edge2s, freqs2, corr_vals, p_vals]).transpose()
+            df_of_interacton = pd.DataFrame(
+                    [edge1s, freqs1, inter_labels, edge2s, freqs2, corr_vals, p_vals]).transpose()
             df = df.append(df_of_interacton)
 
             self.parent.log("{} {} interactions correlates/anti-correlates".format(len(df_of_interacton), inter))
@@ -108,6 +108,26 @@ class CorrelationDialog(QtWidgets.QDialog):
         tableWidget.setSortingEnabled(True)
         tableWidget.viewport().update()
         self.show()
+
+    def filter_table(self):
+        filters = self.text_filter.toPlainText().strip().split(' ')
+        tableWidget = self.corrTable
+
+        if len(filters) > 0:
+            to_filter_total = set()
+
+            for f in filters:
+                to_filter = set()
+                items = tableWidget.findItems(f, QtCore.Qt.MatchContains)
+                for item in items:
+                    to_filter.add(item.row())
+                if len(to_filter_total) == 0:
+                    to_filter_total = to_filter
+                else:
+                    to_filter_total.intersection_update(to_filter)
+
+            for row in range(tableWidget.rowCount()):
+                tableWidget.setRowHidden(row, row not in to_filter_total)
 
     def show_corr_fn(self):
         self.parent.disable_window()
