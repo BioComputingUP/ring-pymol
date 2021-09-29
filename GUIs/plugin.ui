@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>675</width>
-    <height>845</height>
+    <width>620</width>
+    <height>815</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,8 +18,8 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>675</width>
-    <height>0</height>
+    <width>620</width>
+    <height>800</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -92,6 +92,9 @@
      <property name="selectionMode">
       <enum>QAbstractItemView::NoSelection</enum>
      </property>
+     <property name="viewMode">
+      <enum>QListView::ListMode</enum>
+     </property>
      <item>
       <property name="text">
        <string>Logger initialized</string>
@@ -118,7 +121,7 @@
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <property name="bottomMargin">
-       <number>0</number>
+       <number>9</number>
       </property>
       <property name="verticalSpacing">
        <number>0</number>
@@ -664,6 +667,12 @@
           <string>Correlation analysis</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
+          <property name="leftMargin">
+           <number>9</number>
+          </property>
+          <property name="rightMargin">
+           <number>9</number>
+          </property>
           <item>
            <widget class="QGroupBox" name="groupBox_12">
             <property name="sizePolicy">
@@ -902,6 +911,12 @@
           <string>Residue pair interaction analysis</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="leftMargin">
+           <number>9</number>
+          </property>
+          <property name="rightMargin">
+           <number>9</number>
+          </property>
           <item>
            <spacer name="horizontalSpacer_5">
             <property name="orientation">
@@ -965,6 +980,12 @@
           <string>Secondary structure interaction analysis</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <property name="leftMargin">
+           <number>9</number>
+          </property>
+          <property name="rightMargin">
+           <number>9</number>
+          </property>
           <item>
            <spacer name="horizontalSpacer_4">
             <property name="orientation">
@@ -1037,10 +1058,50 @@
           <bool>false</bool>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="2" column="0" colspan="4">
-           <widget class="QLabel" name="label_3">
+          <property name="leftMargin">
+           <number>9</number>
+          </property>
+          <property name="rightMargin">
+           <number>9</number>
+          </property>
+          <item row="0" column="0">
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="1" colspan="2">
+           <widget class="QPushButton" name="chain_graph">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>200</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="sizeIncrement">
+             <size>
+              <width>200</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Plot a graph of chains interaction</string>
+            </property>
             <property name="text">
-             <string>Visualize a frequency heatmap for interchain residues in contact for a specific interaction:</string>
+             <string>Chain interaction graph</string>
             </property>
            </widget>
           </item>
@@ -1097,38 +1158,17 @@
             </item>
            </widget>
           </item>
+          <item row="2" column="0" colspan="4">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Visualize a frequency heatmap for interchain residues in contact for a specific interaction:</string>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="0" colspan="4">
            <widget class="Line" name="line">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1" colspan="2">
-           <widget class="QPushButton" name="chain_graph">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>200</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="sizeIncrement">
-             <size>
-              <width>200</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Plot a graph of chains interaction</string>
-            </property>
-            <property name="text">
-             <string>Chain interaction graph</string>
             </property>
            </widget>
           </item>
@@ -1144,6 +1184,19 @@
              <string>Show heatmap</string>
             </property>
            </widget>
+          </item>
+          <item row="0" column="3">
+           <spacer name="horizontalSpacer_8">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>

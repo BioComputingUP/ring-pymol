@@ -34,7 +34,6 @@ def ring_plugin(test=False):
         app.setStyle('Fusion')
 
     dialog = MainDialog(app=app)
-    dialog.adjustSize()
     dialog.show()
     if test:
         sys.exit(app.exec_())

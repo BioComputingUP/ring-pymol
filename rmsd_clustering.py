@@ -11,9 +11,10 @@ from matplotlib.axes import Axes
 from pymol import cmd
 from scipy import cluster
 from scipy.spatial.distance import squareform
-from sklearn.metrics import silhouette_score
 
 from utilities import generate_colormap
+
+# from sklearn.metrics import silhouette_score
 
 structure_coords = dict()
 counter: mp.Value
@@ -37,7 +38,7 @@ def hierarchy_optimization(X, logger, height, desired_clusters, method='complete
     if desired_clusters is not None:
         cluster_labels = clusters[:, desired_clusters - 2].flatten()
 
-        silhouette_avg = silhouette_score(X, cluster_labels, metric='precomputed')
+        silhouette_avg = 1  # silhouette_score(X, cluster_labels, metric='precomputed')
         result_label.setdefault(desired_clusters, (silhouette_avg, cluster_labels))
         tmp = cluster.hierarchy.dendrogram(Z, p=desired_clusters, truncate_mode='lastp', no_plot=True)
         last_h = min(list(filter(lambda x: x != 0, [item for sublist in tmp['dcoord'] for item in sublist])))
@@ -54,7 +55,7 @@ def hierarchy_optimization(X, logger, height, desired_clusters, method='complete
             logger.progress((i / len(range_n_clusters)) * 100)
             cluster_labels = clusters[:, i].flatten()
 
-            silhouette_avg = silhouette_score(X, cluster_labels, metric='precomputed')
+            silhouette_avg = 1  # silhouette_score(X, cluster_labels, metric='precomputed')
             result_label.setdefault(n_clusters, (silhouette_avg, cluster_labels))
 
             tmp = cluster.hierarchy.dendrogram(Z, p=n_clusters, truncate_mode='lastp', no_plot=True)
@@ -212,7 +213,7 @@ def hierarchy_cut_plot(logger, pdb_id, method, rmsd_val=None, desired_clusters=N
     plt.figure()
     plt.style.use('default')
     plt.axhline(y=y_val, linestyle="--", zorder=0, linewidth=1.3,
-                label="{} clusters, silh: {:.3f}".format(n_clusters, silh_val))
+                label="{} clusters".format(n_clusters))
 
     R = cluster.hierarchy.dendrogram(Z, no_plot=True, p=n_clusters, truncate_mode='lastp', )
 
