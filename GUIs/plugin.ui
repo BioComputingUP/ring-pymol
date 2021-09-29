@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>620</width>
-    <height>800</height>
+    <height>790</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -188,7 +188,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab_1">
       <property name="enabled">
@@ -567,7 +567,7 @@
              </font>
             </property>
             <property name="text">
-             <string>SS bond</string>
+             <string>Disulfide bond</string>
             </property>
            </widget>
           </item>
@@ -579,7 +579,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Ionic</string>
+             <string>Ionic bonds</string>
             </property>
            </widget>
           </item>
@@ -1636,6 +1636,9 @@
              <property name="verticalSpacing">
               <number>12</number>
              </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
              <item row="0" column="0">
               <widget class="QLabel" name="label">
                <property name="sizePolicy">
@@ -2025,7 +2028,7 @@
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Salt bridges</string>
+                  <string>Ionic bonds</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -2170,37 +2173,39 @@
                 <number>10</number>
                </property>
                <property name="verticalSpacing">
-                <number>0</number>
+                <number>6</number>
                </property>
-               <item row="0" column="3">
-                <widget class="QLabel" name="label_15">
+               <item row="1" column="2">
+                <widget class="QSlider" name="radius_value">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
-                 <property name="text">
-                  <string>Transparency   </string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="3">
-                <widget class="QDoubleSpinBox" name="transp_value">
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="suffix">
-                  <string>%</string>
-                 </property>
-                 <property name="decimals">
-                  <number>0</number>
+                 <property name="minimum">
+                  <number>1</number>
                  </property>
                  <property name="maximum">
-                  <double>100.000000000000000</double>
+                  <number>5</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>1</number>
+                 </property>
+                 <property name="pageStep">
+                  <number>1</number>
+                 </property>
+                 <property name="value">
+                  <number>2</number>
+                 </property>
+                 <property name="sliderPosition">
+                  <number>2</number>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="tickPosition">
+                  <enum>QSlider::TicksAbove</enum>
                  </property>
                 </widget>
                </item>
@@ -2220,25 +2225,47 @@
                  </property>
                 </widget>
                </item>
-               <item row="1" column="2">
-                <widget class="QDoubleSpinBox" name="radius_value">
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="suffix">
-                  <string/>
-                 </property>
-                 <property name="minimum">
-                  <double>0.100000000000000</double>
-                 </property>
-                 <property name="maximum">
-                  <double>5.000000000000000</double>
+               <item row="1" column="3">
+                <widget class="QSlider" name="transp_value">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
                  <property name="singleStep">
-                  <double>0.100000000000000</double>
+                  <number>5</number>
                  </property>
-                 <property name="value">
-                  <double>1.000000000000000</double>
+                 <property name="pageStep">
+                  <number>5</number>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="invertedAppearance">
+                  <bool>false</bool>
+                 </property>
+                 <property name="invertedControls">
+                  <bool>false</bool>
+                 </property>
+                 <property name="tickPosition">
+                  <enum>QSlider::TicksAbove</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="QLabel" name="label_15">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Transparency   </string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
                  </property>
                 </widget>
                </item>
@@ -2568,7 +2595,7 @@
                       <string notr="true">border-width: 8px; border-color:red;</string>
                      </property>
                      <property name="text">
-                      <string>Salt bridges</string>
+                      <string>Ionic bonds</string>
                      </property>
                      <property name="flat">
                       <bool>true</bool>
