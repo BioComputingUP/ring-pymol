@@ -30,6 +30,9 @@ def ring_plugin(test=False):
 
     app = QtWidgets.QApplication([])
 
+    if "Fusion" in QtWidgets.QStyleFactory.keys():
+        app.setStyle('Fusion')
+
     dialog = MainDialog(app=app)
     dialog.adjustSize()
     dialog.show()
