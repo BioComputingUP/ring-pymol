@@ -154,6 +154,8 @@ class CorrelationDialog(QtWidgets.QDialog):
             edge1 = Edge([Node(node) for node in edge1.split(' - ')])
             edge2 = Edge([Node(node) for node in edge2.split(' - ')])
 
+            print(edge1, edge2)
+
             cmd.select("edge1", "/{}//{}/{} or /{}//{}/{}".format(self.current_obj, edge1.node1.chain, edge1.node1.resi,
                                                                   self.current_obj, edge1.node2.chain,
                                                                   edge1.node2.resi), merge=1)
@@ -167,20 +169,17 @@ class CorrelationDialog(QtWidgets.QDialog):
             else:
                 anti_set.add(edge2)
 
-        self.parent.visualize(selection="edge1", color="white", int_type=inter)
+        self.parent.visualize(selection="edge1", int_type=inter)
         if len(corr_set) > 0:
-            self.parent.visualize(selection="edge2", color="blue", int_type=inter)
+            self.parent.visualize(selection="edge2", int_type=inter)
         if len(anti_set) > 0:
-            self.parent.visualize(selection="edge2", color="red", int_type=inter)
+            self.parent.visualize(selection="edge2", int_type=inter)
         self.parent.log("Selection edge1 contains all the residues from the edges selected in the first column",
                         timed=False)
         self.parent.log("Selection edge2 contains all the residues from the edges selected in the second column",
                         timed=False)
         self.parent.log(
                 "CGO objects edge1_cgo and edge2_cgo are the selected edges from the first and second column respectively",
-                timed=False)
-        self.parent.log(
-                "Interactions in blue are the one correlating, and in red the ones that anti-correlates with the respective white interactions",
                 timed=False)
 
         self.parent.enable_window()

@@ -188,7 +188,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_1">
       <property name="enabled">
@@ -378,7 +378,7 @@
            <widget class="QRadioButton" name="pipistack">
             <property name="font">
              <font>
-              <family>Ubuntu</family>
+              <family>Sans Serif</family>
               <stylestrategy>PreferDefault</stylestrategy>
               <kerning>true</kerning>
              </font>
@@ -395,7 +395,7 @@
            <widget class="QRadioButton" name="pication">
             <property name="font">
              <font>
-              <family>Ubuntu</family>
+              <family>Sans Serif</family>
              </font>
             </property>
             <property name="text">
@@ -407,7 +407,7 @@
            <widget class="QRadioButton" name="hbond">
             <property name="font">
              <font>
-              <family>Ubuntu</family>
+              <family>Sans Serif</family>
              </font>
             </property>
             <property name="text">
@@ -422,7 +422,7 @@
            <widget class="QRadioButton" name="iac">
             <property name="font">
              <font>
-              <family>Ubuntu</family>
+              <family>Sans Serif</family>
              </font>
             </property>
             <property name="text">
@@ -563,7 +563,7 @@
            <widget class="QRadioButton" name="ssbond">
             <property name="font">
              <font>
-              <family>Ubuntu</family>
+              <family>Sans Serif</family>
              </font>
             </property>
             <property name="text">
@@ -575,7 +575,7 @@
            <widget class="QRadioButton" name="ionic">
             <property name="font">
              <font>
-              <family>Ubuntu</family>
+              <family>Sans Serif</family>
              </font>
             </property>
             <property name="text">
@@ -587,7 +587,7 @@
            <widget class="QRadioButton" name="vdw">
             <property name="font">
              <font>
-              <family>Ubuntu</family>
+              <family>Sans Serif</family>
              </font>
             </property>
             <property name="text">
@@ -706,6 +706,9 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
                <property name="prefix">
                 <string/>
                </property>
@@ -728,6 +731,9 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
                <property name="suffix">
                 <string>%</string>
                </property>
@@ -749,6 +755,9 @@
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
                <property name="decimals">
                 <number>15</number>
@@ -781,6 +790,9 @@
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
                <property name="suffix">
                 <string>%</string>
@@ -895,75 +907,6 @@
              </item>
             </layout>
            </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QGroupBox" name="groupBox_6">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="title">
-          <string>Residue pair interaction analysis</string>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <property name="leftMargin">
-           <number>9</number>
-          </property>
-          <property name="rightMargin">
-           <number>9</number>
-          </property>
-          <item>
-           <spacer name="horizontalSpacer_5">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="resi_plot">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>200</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;See how interactions chainges between different states. First create a selection of exactly &lt;span style=&quot; font-weight:600;&quot;&gt;two&lt;/span&gt; residues that are interacting and select the selection in the box above.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Residues interaction plot</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_6">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </widget>
@@ -1107,6 +1050,9 @@
           </item>
           <item row="3" column="0" colspan="2">
            <widget class="QComboBox" name="interaction_sele">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1115,6 +1061,9 @@
             </property>
             <property name="toolTip">
              <string>Interaction type</string>
+            </property>
+            <property name="editable">
+             <bool>false</bool>
             </property>
             <item>
              <property name="text">
@@ -1187,6 +1136,75 @@
           </item>
           <item row="0" column="3">
            <spacer name="horizontalSpacer_8">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string>Residue pair interaction analysis</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="leftMargin">
+           <number>9</number>
+          </property>
+          <property name="rightMargin">
+           <number>9</number>
+          </property>
+          <item>
+           <spacer name="horizontalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="resi_plot">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>200</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;See how interactions chainges between different states. First create a selection of exactly &lt;span style=&quot; font-weight:600;&quot;&gt;two&lt;/span&gt; residues that are interacting and select the selection in the box above.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Residues interaction plot</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_6">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -1287,6 +1305,9 @@
             <layout class="QVBoxLayout" name="verticalLayout_11">
              <item>
               <widget class="QDoubleSpinBox" name="rmsd_val">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
                <property name="suffix">
                 <string> Å</string>
                </property>
@@ -1324,6 +1345,9 @@
             <layout class="QVBoxLayout" name="verticalLayout_9">
              <item>
               <widget class="QSpinBox" name="n_cluster">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
                <property name="maximum">
                 <number>10000000</number>
                </property>
@@ -1718,7 +1742,7 @@
                   <string>Best</string>
                  </property>
                  <property name="checked">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                 </widget>
                </item>
@@ -1732,6 +1756,9 @@
                  </property>
                  <property name="text">
                   <string>Multi</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -1845,6 +1872,9 @@
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
                     <property name="suffix">
                      <string> Å</string>
                     </property>
@@ -1870,6 +1900,11 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="font">
+                  <font>
+                   <family>Sans Serif</family>
+                  </font>
+                 </property>
                  <property name="text">
                   <string>Disulfide bonds</string>
                  </property>
@@ -1894,6 +1929,9 @@
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
                     </property>
                     <property name="suffix">
                      <string> Å</string>
@@ -1929,6 +1967,9 @@
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
                     <property name="suffix">
                      <string> Å</string>
                     </property>
@@ -1954,6 +1995,11 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="font">
+                  <font>
+                   <family>Sans Serif</family>
+                  </font>
+                 </property>
                  <property name="text">
                   <string>π-cation</string>
                  </property>
@@ -1970,6 +2016,11 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="font">
+                  <font>
+                   <family>Sans Serif</family>
+                  </font>
+                 </property>
                  <property name="text">
                   <string>π-π stacks</string>
                  </property>
@@ -1985,6 +2036,11 @@
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Sans Serif</family>
+                  </font>
                  </property>
                  <property name="toolTip">
                   <string>Distance from the surfices of the atoms</string>
@@ -2011,6 +2067,11 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="font">
+                  <font>
+                   <family>Sans Serif</family>
+                  </font>
+                 </property>
                  <property name="text">
                   <string>Hydrogen bonds</string>
                  </property>
@@ -2026,6 +2087,11 @@
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Sans Serif</family>
+                  </font>
                  </property>
                  <property name="text">
                   <string>Ionic bonds</string>
@@ -2051,6 +2117,9 @@
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
                     </property>
                     <property name="suffix">
                      <string> Å</string>
@@ -2086,6 +2155,9 @@
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
                     <property name="suffix">
                      <string> Å</string>
                     </property>
@@ -2119,6 +2191,9 @@
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
                     </property>
                     <property name="suffix">
                      <string> Å</string>

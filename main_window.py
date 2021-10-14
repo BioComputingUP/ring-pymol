@@ -80,6 +80,7 @@ class MainDialog(QtWidgets.QDialog):
         self.widg.timer.timeout.connect(self.refresh_sele)
         self.widg.timer.start(1500)
         self.close_progress()
+        self.center_qcombobox()
 
     # Helper functions
     def processEvents(self):
@@ -180,6 +181,19 @@ class MainDialog(QtWidgets.QDialog):
 
         if len(filename[0]) > 0:
             self.widg.ring_path.setText(filename[0][0])
+
+    def center_qcombobox(self):
+        for item in [self.widg.interaction_sele, self.widg.clustering_method]:
+            item.setEditable(True)
+
+            # getting the line edit of combo box
+            line_edit = item.lineEdit()
+
+            # setting line edit alignment to the center
+            line_edit.setAlignment(QtCore.Qt.AlignCenter)
+
+            # setting line edit to read only
+            line_edit.setReadOnly(True)
 
     # Ring related functions
     def run(self):
@@ -401,7 +415,7 @@ class MainDialog(QtWidgets.QDialog):
                 for intType, interactions in interactions_per_type.items():
                     draw_links(interactions,
                                object_name=obj + "_" + intType + "_cgo" if not selection else selection + "_cgo",
-                               color=intTypeMap[intType] if not color or int_type == "ALL" else color,
+                               color=intTypeMap[intType],
                                coords=stored.coords,
                                state=state)
 
@@ -577,9 +591,9 @@ class MainDialog(QtWidgets.QDialog):
         something = False
         for inter in interaction_distance.keys():
             something = True
-            plt.scatter(np.arange(1, states + 1), interaction_distance[inter], label=inter, c=intColorMap[inter],
+            plt.scatter(np.arange(1, states + 1), interaction_distance[inter], label=inter, color=intTypeMap[inter],
                         marker='.', s=100)
-            plt.plot(np.arange(1, states + 1), interaction_distance[inter], label=inter, c=intColorMap[inter])
+            plt.plot(np.arange(1, states + 1), interaction_distance[inter], color=intTypeMap[inter])
 
         if something:
             plt.title("{} - {}".format(node1, node2))
@@ -657,7 +671,8 @@ class MainDialog(QtWidgets.QDialog):
         plt.style.use('default')
         ax = plt.subplot()
         str_order = [str(x) for x in order]
-        sn.heatmap(matr, square=True, vmin=0, vmax=1, xticklabels=str_order, yticklabels=str_order, cmap='OrRd',
+        sn.set(font_scale=0.6)
+        sn.heatmap(matr, square=False, vmin=0, vmax=1, xticklabels=str_order, yticklabels=str_order, cmap='OrRd',
                    ax=ax)
         change_chain = dict()
         for i, x in enumerate(order):
@@ -752,9 +767,8 @@ class MainDialog(QtWidgets.QDialog):
                         n_beta[chain] += 1
                         is_prev_ss = 2
 
-                ss_id[chain_resi] = "{} α{}".format(chain, n_alpha[chain]) if is_alpha else "{} β{}".format(chain,
-                                                                                                            n_beta[
-                                                                                                                chain])
+                ss_id[chain_resi] = "{} α{}".format(chain, n_alpha[chain]) \
+                    if is_alpha else "{} β{}".format(chain, n_beta[chain])
             else:
                 is_prev_ss = 0
 
@@ -824,7 +838,7 @@ class MainDialog(QtWidgets.QDialog):
                         xy=pos[e[0]], xycoords='data',
                         xytext=pos[e[1]], textcoords='data',
                         arrowprops=dict(arrowstyle="<->",
-                                        color=intColorMap[e[2]["type"]],
+                                        color=intTypeMap[e[2]["type"]],
                                         shrinkA=shrink, shrinkB=shrink,
                                         patchA=None, patchB=None,
                                         lw=discrete_mapping(e[2]["freq"]),
@@ -833,7 +847,7 @@ class MainDialog(QtWidgets.QDialog):
                         )
             seen[(e[0], e[1])] += 1
         handler_list = []
-        for k, v in intColorMap.items():
+        for k, v in intTypeMap.items():
             if k in present_interaction:
                 handler_list.append(mpatches.Patch(color=v, label=k))
         plt.legend(handles=handler_list, loc='best')

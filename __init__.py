@@ -50,8 +50,11 @@ if __name__ == '__main__':
 
     pymol.finish_launching()
     cmd.set("defer_builds_mode", 3)
-    cmd.fetch("2h9r")
-    # cmd.load("/home/alessio/dynamics/trj.cif")
+    # cmd.fetch("2h9r")
+    cmd.load("/home/alessio/dynamics/trj.cif")
+    cmd.remove("chain D")
+    cmd.remove("chain C")
+    cmd.set_name("trj", "md-sim")
     cmd.dss()
     cmd.show_as("cartoon")
     cmd.util.cbc()

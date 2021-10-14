@@ -22,16 +22,6 @@ intTypeMap = {
         "IAC"      : (1.0, 1.0, 1.0)
 }
 
-intColorMap = {
-        "IONIC"    : "blue",
-        "SSBOND"   : "yellow",
-        "PIPISTACK": "orange",
-        "PICATION" : "red",
-        "HBOND"    : "cyan",
-        "VDW"      : "gray",
-        "IAC"      : "black"
-}
-
 
 def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)
@@ -311,7 +301,10 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
             nodes = all_cm[interaction][all_cm[interaction][0] == 1][1]
             nodes = [Node(x) for x in nodes]
 
-    conn_freq = get_freq(obj)
+    if int_type != "ALL":
+        conn_freq = get_freq(obj)
+    else:
+        conn_freq = get_freq_combined_all_interactions(obj)
     contacts_sparse = dict()
     for frame in range(0, frames):
         for interaction in to_read:
@@ -323,28 +316,21 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
                 node1 = nodes[i]
                 node2 = nodes[j]
                 edge = Edge(sorted([node1, node2]))
-                if min_presence < conn_freq[interaction][edge] < max_presence:
-                    contacts_sparse.setdefault(edge, dict())
-                    contacts_sparse[edge].setdefault(frame, 0)
+                freq_val = conn_freq[interaction][edge] if int_type != "ALL" else conn_freq[edge]
+                if min_presence < freq_val < max_presence:
+                    contacts_sparse.setdefault(edge, np.zeros(frames))
                     contacts_sparse[edge][frame] += 1
 
-    z = np.zeros((len(contacts_sparse), frames))
-    for i, contacts_for_frame in enumerate(contacts_sparse.values()):
-        for j, contacts in contacts_for_frame.items():
-            z[i, j] = contacts
+    coeffs_matr = np.ones((len(contacts_sparse), len(contacts_sparse))) * np.nan
+    p_matr = np.ones((len(contacts_sparse), len(contacts_sparse))) * np.nan
 
-    coeffs_matr = np.ones((z.shape[0], z.shape[0])) * np.nan
-    p_matr = np.ones((z.shape[0], z.shape[0])) * np.nan
-
-    indexes = np.triu_indices(z.shape[0], k=1)
+    indexes = np.triu_indices(len(contacts_sparse), k=1)
+    keys = list(contacts_sparse.keys())
     for i, j in zip(indexes[0], indexes[1]):
-
-        corr_coeff, p_val = pearsonr(z[i], z[j])
+        corr_coeff, p_val = pearsonr(contacts_sparse[keys[i]], contacts_sparse[keys[j]])
         if p_val < p_thresh and (corr_coeff > coeff_thresh or corr_coeff < -coeff_thresh):
             coeffs_matr[i, j] = corr_coeff
             p_matr[i, j] = p_val
-    p_matr[np.tril_indices_from(p_matr)] = p_matr[np.triu_indices_from(p_matr)]
-    coeffs_matr[np.tril_indices_from(coeffs_matr)] = coeffs_matr[np.triu_indices_from(coeffs_matr)]
     return list(contacts_sparse.keys()), coeffs_matr, p_matr
 
 
