@@ -354,7 +354,7 @@ def cluster_states_obj(logger, pdb_id, method, rmsd_val=None, desired_clusters=N
         cmd.create(obj_name, pdb_id.strip('_ca'), source_state=state, target_state=-1, copy_properties=True)
 
     logger.log("Created new object with representative states from original object")
-    logger.log("States used from original object: {}".format(sorted(repr_labels)))
+    logger.log("States used from original object: {}".format(repr_labels))
     logger.enable_window()
 
 
