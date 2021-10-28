@@ -32,7 +32,7 @@ class MainDialog(QtWidgets.QDialog):
         self.freq_dialog = FreqDialog(self)
 
         if os.path.exists("{}/.ring/bin/Ring-md".format(environ['HOME'])):
-            self.widg.ring_path.setText("{}/.ring/bin/Ring-md".format(environ['HOME']))
+            self.widg.ring_path.setText("{}/.ring/bin/Ring".format(environ['HOME']))
         else:
             self.log("Ring-md path not found in current directory, please set it manually", warning=True)
 
@@ -257,7 +257,7 @@ class MainDialog(QtWidgets.QDialog):
                  "-a", current_run_config["-a"],
                  "-b", current_run_config["-b"],
                  "-w", current_run_config["-w"],
-                 "--all_chains", current_run_config["edges"], "--all_models"], stdout=subprocess.DEVNULL,
+                 "--all_chains", current_run_config["edges"], "--all_models", "--md"], stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE, universal_newlines=True)
 
         self.prev_launch_config[obj_name] = current_run_config
