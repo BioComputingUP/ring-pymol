@@ -31,10 +31,10 @@ class MainDialog(QtWidgets.QDialog):
         self.corr_dialog = CorrelationDialog(self)
         self.freq_dialog = FreqDialog(self)
 
-        if os.path.exists("{}/.ring/bin/Ring-md".format(environ['HOME'])):
+        if os.path.exists("{}/.ring/bin/Ring".format(environ['HOME'])):
             self.widg.ring_path.setText("{}/.ring/bin/Ring".format(environ['HOME']))
         else:
-            self.log("Ring-md path not found in current directory, please set it manually", warning=True)
+            self.log("RING path not found in current directory, please set it manually", warning=True)
 
         # Execute Ring
         self.widg.visualize_btn.clicked.connect(self.run)
@@ -316,7 +316,7 @@ class MainDialog(QtWidgets.QDialog):
                 and not self.widg.override_memory.isChecked():
             self.widg.visualize_btn.setText("Show")
         else:
-            self.widg.visualize_btn.setText("Execute Ring")
+            self.widg.visualize_btn.setText("Execute RING")
 
     def visualize(self, selection=None, color=None, int_type=None):
         from pymol import stored
@@ -553,7 +553,7 @@ class MainDialog(QtWidgets.QDialog):
 
         if not os.path.exists(file_pth):
             self.log(
-                    "Before this you need to run Ring-md on the whole object first. Select it above and press the Show button",
+                    "Before this you need to run RING on the whole object first. Select it above and press the Show button",
                     error=True)
             return
 
@@ -626,7 +626,7 @@ class MainDialog(QtWidgets.QDialog):
         if sele_inter != "ALL":
             file_pth = "/tmp/ring/md/" + stored.model + ".gfreq_{}".format(sele_inter)
             if not os.path.exists(file_pth):
-                self.log("Before this you need to run Ring-md on the object first!", error=True)
+                self.log("Before this you need to run RING on the object first!", error=True)
                 return
 
             contact_freq = dict()
@@ -695,7 +695,7 @@ class MainDialog(QtWidgets.QDialog):
         file_pth = "/tmp/ring/" + stored.model + ".cif_ringEdges"
         if not os.path.exists(file_pth):
             self.log(
-                    "Before this you need to run Ring-md on the object first. Select it above and press the Show button",
+                    "Before this you need to run RING on the object first. Select it above and press the Show button",
                     error=True)
             raise ValueError
 
