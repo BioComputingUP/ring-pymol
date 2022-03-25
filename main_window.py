@@ -433,7 +433,7 @@ class MainDialog(QtWidgets.QDialog):
                 for node, freq in freqs.items():
                     if self.widg.min_freq.value() <= freq * 100 <= self.widg.max_freq.value():
                         cmd.select(sele,
-                                   selection="model {} and chain {} and resi {}".format(obj, node.chain, node.resi),
+                                   selection="chain {} and resi {}".format(node.chain, node.resi),
                                    merge=1)
             cmd.group(obj + "_nodes", members=members)
 
