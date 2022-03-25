@@ -1,13 +1,16 @@
 import itertools
+import math
 import multiprocessing as mp
 import time
 
+import matplotlib
 import matplotlib.patches as mpatches
 import numpy as np
 import seaborn as sn
 from Bio.SVDSuperimposer import SVDSuperimposer
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.colors import ListedColormap
 from pymol import cmd
 from scipy import cluster
 from scipy.spatial.distance import squareform
@@ -81,8 +84,15 @@ def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_
 
     X = load_rmsd_dis_matrix(logger, pdb_id)
 
+    print(X.size, desired_clusters, math.sqrt(X.size))
+
     if desired_clusters is not None and desired_clusters < 2:
         logger.log("The number of cluster has to be greater than 2", error=True)
+        logger.enable_window()
+        return
+
+    if desired_clusters is not None and desired_clusters >= math.sqrt(X.size):
+        logger.log("The number of cluster has to smaller than the maximum number of models", error=True)
         logger.enable_window()
         return
 
@@ -115,7 +125,11 @@ def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_
     best = np.pad(labels, (0, pad_size), mode='constant', constant_values=np.nan)
     best = np.reshape(best, (int(len(best) / x_len), x_len))
 
-    cmap = generate_colormap(n_clusters)
+    if n_clusters < 11:
+        cmap = matplotlib.cm.get_cmap('tab10')
+        cmap = ListedColormap(cmap.colors[:n_clusters], N=n_clusters)
+    else:
+        cmap = generate_colormap(n_clusters)
 
     sn.set(font_scale=0.8)
     ax1: Axes = sn.heatmap(best, cmap=cmap, linewidths=.5, linecolor='white', ax=ax1, square=True, cbar=False,

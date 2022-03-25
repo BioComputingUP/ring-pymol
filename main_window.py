@@ -1,5 +1,4 @@
 import datetime
-import subprocess
 from os import environ
 
 from networkx import MultiGraph, draw_networkx_labels, draw_networkx_nodes, kamada_kawai_layout
@@ -10,6 +9,8 @@ from pymol.Qt.utils import loadUi
 
 from correlation_window import CorrelationDialog
 from frequency_window import FreqDialog
+from ring_api import run_ring_api
+from ring_local import run_ring_local
 from rmsd_clustering import *
 from utilities import *
 
@@ -248,31 +249,13 @@ class MainDialog(QtWidgets.QDialog):
             self.enable_window()
             return
 
-        p = subprocess.Popen(
-                [self.widg.ring_path.text(), "-i", file_pth, "--out_dir", "/tmp/ring/",
-                 "-g", current_run_config["-g"],
-                 "-o", current_run_config["-o"],
-                 "-s", current_run_config["-s"],
-                 "-k", current_run_config["-k"],
-                 "-a", current_run_config["-a"],
-                 "-b", current_run_config["-b"],
-                 "-w", current_run_config["-w"],
-                 "--all_chains", current_run_config["edges"], "--all_models", "--md"], stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE, universal_newlines=True)
-
-        self.prev_launch_config[obj_name] = current_run_config
-        self.log("Ring generation started")
-
-        n_states = cmd.count_states(obj_name)
-        prev_state = 0
-        while p.poll() is None:
-            line = p.stderr.readline()
-            if line != "":
-                if "model" in line:
-                    current_state = int(line.split("model ")[1].strip())
-                    if current_state > prev_state:
-                        self.progress((current_state / n_states) * 100)
-                        prev_state = current_state
+        if self.widg.ring_locally.isChecked():
+            run_ring_local(self.widg.ring_path.text(), file_pth, obj_name, current_run_config, self.log, self.progress)
+            self.prev_launch_config[obj_name] = current_run_config
+            self.log("Ring generation finished")
+        else:
+            run_ring_api(file_pth, current_run_config, self.log, self.progress)
+            self.prev_launch_config[obj_name] = current_run_config
 
         choice = QtWidgets.QMessageBox.question(self, 'Export',
                                                 "Do you want to export the contact network in cytoscape format?\n"
@@ -284,7 +267,6 @@ class MainDialog(QtWidgets.QDialog):
             self.log("Cytoscape network format saved as {}/{}.json".format(os.getcwd(), obj_name))
 
         self.close_progress()
-        self.log("Ring generation finished")
         self.enable_window()
         self.visualize()
 
@@ -611,11 +593,15 @@ class MainDialog(QtWidgets.QDialog):
             self.log("No interactions found between the two selected residues", warning=True)
 
     def inter_heatmap(self):
+        text_name_to_inter_name = {"All"      : "ALL", "H-bond": "HBOND", "π-π stack": "PIPISTACK",
+                                   "π cation" : "PICATION", "Van der Waals": "VDW", "IAC": "IAC",
+                                   "Disulfide": "SSBOND", "Ionic": "IONIC"}
+
         try:
             obj, model, _ = self.get_values_from_input()
         except ValueError:
             return
-        sele_inter = self.widg.interaction_sele.currentText()
+        sele_inter = text_name_to_inter_name[self.widg.interaction_sele.currentText()]
 
         stored.model = ""
         cmd.iterate(obj, 'stored.model = model')
