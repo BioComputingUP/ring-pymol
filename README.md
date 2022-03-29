@@ -12,6 +12,7 @@
   - `conda install -c schrodinger pymol`
 - Install python dependencies for the plugin
   - `conda install networkx numpy scipy seaborn pandas requests`
+  - `pip install qt-material`
 - Open pymol and go to Plugin > Plugin Manager > Settings
   - Add a new directory (/home/user/.pymol/startup)
 - Copy the plugin folder in the specified directory
