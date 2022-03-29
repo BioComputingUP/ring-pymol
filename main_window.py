@@ -1,6 +1,7 @@
 import datetime
 from os import environ
 
+from PyQt5.QtGui import QCursor
 from networkx import MultiGraph, draw_networkx_labels, draw_networkx_nodes, kamada_kawai_layout
 from pandas import read_csv
 from pymol import stored
@@ -40,6 +41,11 @@ class MainDialog(QtWidgets.QDialog):
         # Execute Ring
         self.widg.visualize_btn.clicked.connect(self.run)
         self.widg.ring_exec_button.clicked.connect(self.browse_ring_exe)
+        self.widg.save_network.clicked.connect(
+                lambda: export_network_graph(self.get_selection(), self.log, self.disable_window,
+                                             self.enable_window) if len(self.get_selection()) > 0 and
+                                                                    self.get_selection()[0] != "(" else
+                self.log("Please select an object on the left box to use this feature", error=True))
 
         # Update view
         self.widg.radius_value.valueChanged.connect(self.slider_radius_change)
@@ -83,7 +89,26 @@ class MainDialog(QtWidgets.QDialog):
         self.close_progress()
         self.center_qcombobox()
 
+        # Esthetics
+        for button_child in self.widg.findChildren(QtWidgets.QPushButton):
+            button_child.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
+            shadow = QtWidgets.QGraphicsDropShadowEffect(blurRadius=10, xOffset=2, yOffset=2, color=QColor(0, 0, 0, 50))
+            button_child.setGraphicsEffect(shadow)
+
+        for child in self.widg.findChildren(QtWidgets.QRadioButton):
+            child.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
+
+        for child in self.widg.findChildren(QtWidgets.QComboBox):
+            shadow = QtWidgets.QGraphicsDropShadowEffect(blurRadius=10, xOffset=2, yOffset=2, color=QColor(0, 0, 0, 50))
+            child.setGraphicsEffect(shadow)
+
+        self.widg.main.tabBar().setCursor(QtCore.Qt.PointingHandCursor)
+        self.widg.config.tabBar().setCursor(QtCore.Qt.PointingHandCursor)
+
     # Helper functions
+    def get_selection(self):
+        return self.widg.selections_list.currentText()
+
     def processEvents(self):
         self.app.processEvents()
 
@@ -152,7 +177,7 @@ class MainDialog(QtWidgets.QDialog):
 
     def get_current_run_config(self):
         edge_policy = ""
-        if self.widg.best_edge.isChecked():
+        if self.widg.one_edge.isChecked():
             edge_policy = "--best_edge"
         if self.widg.multi_edge.isChecked():
             edge_policy = "--multi_edge"
@@ -257,14 +282,7 @@ class MainDialog(QtWidgets.QDialog):
             run_ring_api(file_pth, current_run_config, self.log, self.progress)
             self.prev_launch_config[obj_name] = current_run_config
 
-        choice = QtWidgets.QMessageBox.question(self, 'Export',
-                                                "Do you want to export the contact network in cytoscape format?\n"
-                                                "It will be saved as:\n{}/{}.json".format(os.getcwd(), obj_name),
-                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-
-        if choice == QtWidgets.QMessageBox.Yes:
-            export_network_graph(obj_name)
-            self.log("Cytoscape network format saved as {}/{}.json".format(os.getcwd(), obj_name))
+        self.widg.save_network.setEnabled(True)
 
         self.close_progress()
         self.enable_window()
@@ -272,8 +290,23 @@ class MainDialog(QtWidgets.QDialog):
 
     def refresh_sele(self):
         self.widg.selections_list.blockSignals(True)
+        self.widg.resi_selection.blockSignals(True)
+
         present = set(self.widg.selections_list.itemText(i) for i in range(self.widg.selections_list.count()))
         selections = set(map(lambda x: "(" + x + ")", cmd.get_names('public_selections')))
+
+        prev_sele_num = self.widg.resi_selection.count()
+        actual_sele_num = len(cmd.get_names('public_selections'))
+
+        if prev_sele_num != actual_sele_num:
+            self.widg.resi_selection.clear()
+            self.widg.resi_selection.addItems(cmd.get_names('public_selections'))
+
+        if actual_sele_num == 0:
+            self.widg.resi_selection.setEnabled(False)
+        else:
+            self.widg.resi_selection.setEnabled(True)
+
         selections.update(list(filter(lambda x: x.split('_')[-1][-3:] != 'cgo',
                                       cmd.get_names('public_nongroup_objects'))))
         not_present_anymore = present - selections
@@ -331,7 +364,7 @@ class MainDialog(QtWidgets.QDialog):
         self.log("Drawing started")
 
         stored.chain_resi = set()
-        cmd.iterate(obj, 'stored.chain_resi.add((chain, int(resi)))')
+        cmd.iterate(obj, 'stored.chain_resi.add((chain, resi))')
         conn_freq = get_freq(stored.model)
 
         def draw():
@@ -430,11 +463,15 @@ class MainDialog(QtWidgets.QDialog):
                 freqs = get_freq_combined(model_name, bond, interchain=self.widg.interchain.isChecked(),
                                           intrachain=self.widg.intrachain.isChecked())
 
+                of_chain = dict()
                 for node, freq in freqs.items():
                     if self.widg.min_freq.value() <= freq * 100 <= self.widg.max_freq.value():
-                        cmd.select(sele,
-                                   selection="chain {} and resi {}".format(node.chain, node.resi),
-                                   merge=1)
+                        of_chain.setdefault(node.chain, [])
+                        of_chain[node.chain].append(node.resi)
+
+                for key, value in of_chain.items():
+                    cmd.select(sele, "chain {} and resi {}".format(key, "+".join(value)), merge=1)
+
             cmd.group(obj + "_nodes", members=members)
 
     # Ring Analysis functions
@@ -519,10 +556,7 @@ class MainDialog(QtWidgets.QDialog):
         self.enable_window()
 
     def resi_plot_fn(self):
-        obj = self.widg.selections_list.currentText()
-        if len(obj) == 0 or obj[0] != "(" or obj[-1] != ")":
-            self.log("Please select a selection on the box above to use this feature", error=True)
-            return
+        obj = self.widg.resi_selection.currentText()
 
         states = int(cmd.count_states(selection=obj))
         if states == 1:
@@ -540,7 +574,7 @@ class MainDialog(QtWidgets.QDialog):
             return
 
         stored.chain_resi = set()
-        cmd.iterate(obj, 'stored.chain_resi.add((chain, int(resi), resn))')
+        cmd.iterate(obj, 'stored.chain_resi.add((chain, resi, resn))')
         if len(stored.chain_resi) != 2:
             self.log("You need to create a selection with exactly two residues to use this feature", error=True)
             return
@@ -584,6 +618,7 @@ class MainDialog(QtWidgets.QDialog):
                                               [item for sublist in list(interaction_distance.values()) for item in
                                                sublist])) + 1)
             plt.xlim(left=0, right=states + 1)
+            plt.xticks(np.arange(1, states + 1))
             plt.xlabel("State")
             plt.ylabel("Distance (Å)")
             plt.legend()
@@ -724,8 +759,8 @@ class MainDialog(QtWidgets.QDialog):
         stored.sec_struct = dict()
         ss_id = dict()
         stored.order = []
-        cmd.iterate(obj, 'stored.sec_struct.setdefault((chain, int(resi)), set()).add(ss)')
-        cmd.iterate(obj, 'stored.order.append((chain, int(resi)))')
+        cmd.iterate(obj, 'stored.sec_struct.setdefault((chain, resi), set()).add(ss)')
+        cmd.iterate(obj, 'stored.order.append((chain, resi))')
 
         seen = set()
         stored.order = [x for x in stored.order if not (x in seen or seen.add(x))]
@@ -891,10 +926,18 @@ class MainDialog(QtWidgets.QDialog):
         return method, n_cluster, obj, rmsd_val
 
     def hierarchy_plot_fn(self):
+        obj = self.widg.selections_list.currentText()
+        if cmd.count_states(obj) < 3:
+            self.log("Please select a structure with at least 3 states", error=True)
+            return None
         method, n_cluster, obj, rmsd_val = self.init_clustering()
         hierarchy_cut_plot(self, obj, method, rmsd_val, n_cluster)
 
     def cluster_plot_fn(self):
+        obj = self.widg.selections_list.currentText()
+        if cmd.count_states(obj) < 3:
+            self.log("Please select a structure with at least 3 states", error=True)
+            return None
         method, n_cluster, obj, rmsd_val = self.init_clustering()
         cluster_distribution_heatmap(self, obj, method, rmsd_val, n_cluster)
 
@@ -908,8 +951,9 @@ class MainDialog(QtWidgets.QDialog):
 
     def pick_color(self, type):
         color = QtWidgets.QColorDialog.getColor()
-        intTypeMap[type] = (float(color.red()) / 255.0, float(color.green()) / 255.0, float(color.blue()) / 255.0)
-        self.set_inter_colors(type)
+        if color.isValid():
+            intTypeMap[type] = (float(color.red()) / 255.0, float(color.green()) / 255.0, float(color.blue()) / 255.0)
+            self.set_inter_colors(type)
 
     def set_inter_colors(self, type):
         color = intTypeMap[type]

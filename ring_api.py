@@ -150,6 +150,26 @@ def download_results(task, extract_pth):
         _log_f(err)
 
 
+def config_to_parameters(config):
+    convert = {"-g"   : "seq_sep",
+               "-o"   : "len_salt",
+               "-s"   : "len_ss",
+               "-k"   : "len_pipi",
+               "-a"   : "len_pica",
+               "-b"   : "len_hbond",
+               "-w"   : "len_vdw",
+               "edges": "edges"}
+
+    new_config = {}
+
+    for key, value in config.items():
+        # replace key of config with value
+        if key in convert:
+            new_config[convert[key]] = value.strip("--")
+
+    return new_config
+
+
 def run_ring_api(file_pth, run_config, log_f, progress_f):
     global _log_f
 
@@ -163,6 +183,8 @@ def run_ring_api(file_pth, run_config, log_f, progress_f):
     parameters = {"task_name"    : "ring-plugin-api",
                   "original_name": file_name
                   }
+
+    parameters.update(config_to_parameters(run_config))
 
     _log_f("Remote RING generation started")
     _log_f("Sending task to remote server")

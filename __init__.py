@@ -1,5 +1,7 @@
 # Avoid importing "expensive" modules here (e.g. scipy), since this code is
 # executed on PyMOL's startup. Only import such modules inside functions.
+import os
+import shutil
 import sys
 
 from pymol import cmd
@@ -23,17 +25,39 @@ dialog = None
 
 @cmd.extend
 def ring_plugin(test=False):
-    from pymol.Qt import QtWidgets
+    from pymol import Qt
+    from qt_material import apply_stylesheet
+
     from main_window import MainDialog
 
     global dialog
 
-    app = QtWidgets.QApplication([])
+    app = Qt.QtWidgets.QApplication([])
 
-    if "Fusion" in QtWidgets.QStyleFactory.keys():
+    if "Fusion" in Qt.QtWidgets.QStyleFactory.keys():
         app.setStyle('Fusion')
 
+    extra = {
+            # Density Scale
+            'density_scale': '-1',
+
+            'font_family'  : 'Roboto',
+
+            # environ
+            'pyside6'      : False,
+            'linux'        : True,
+    }
+
     dialog = MainDialog(app=app)
+
+    apply_stylesheet(dialog, theme='light_blue.xml', extra=extra, invert_secondary=False)
+
+    stylesheet = dialog.styleSheet()
+    with open("GUIs/custom.scss") as file:
+        dialog.setStyleSheet(stylesheet + file.read().format(**os.environ))
+
+    shutil.rmtree("/tmp/ring", ignore_errors=True)
+
     dialog.show()
     if test:
         sys.exit(app.exec_())
@@ -50,7 +74,7 @@ if __name__ == '__main__':
 
     pymol.finish_launching()
     cmd.set("defer_builds_mode", 3)
-    cmd.fetch("1cu4")
+    cmd.fetch("2h9r")
     # cmd.load("/home/alessio/dynamics/trj.cif")
     # cmd.remove("chain D")
     # cmd.remove("chain C")

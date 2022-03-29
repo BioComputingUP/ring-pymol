@@ -1,5 +1,6 @@
 import json
 import math
+import os.path
 from json import JSONEncoder
 from typing import Dict, List, Union
 
@@ -32,12 +33,16 @@ JSONEncoder.default = _default
 
 
 class Node:
+    chain: [str, None] = None
+    # resi can contain the insertion code like 27A
+    resi: [str, None] = None
+    resn: [str, None] = None
+
     def __init__(self, *args):
         if len(args) == 1:
             self.init_string(*args)
         else:
             self.init_args(*args)
-        self.atom = None
 
     def init_string(self, string_id: str):
         if ':' in string_id:
@@ -46,32 +51,23 @@ class Node:
             ids = string_id.strip().split('/')
 
         self.chain: str = ids[0]
-        self.resi: int = int(ids[1])
-        self.ins = None
+        self.resi: str = ids[1]
         self.resn = None
 
         if len(ids) > 2:
             if len(ids[2]) == 3:
                 self.resn: str = ids[2]
-            else:
-                self.ins: str = ids[2]
+            elif ids[2] != '_':
+                self.resi += ids[2]
             if len(ids) > 3:
                 self.resn: str = ids[3]
 
-        if self.ins == '_':
-            self.ins = None
-
-    def init_args(self, chain: str, resi: Union[int, str], resn: str = None, ins: str = None):
+    def init_args(self, chain: str, resi: Union[int, str], resn: str = None):
         self.chain: str = chain
-        self.resi: int = int(resi)
-        self.ins: str = ins
+        self.resi: str = resi
         self.resn: str = resn
 
     def __lt__(self, other):
-        if self.ins:
-            return self.chain < other.chain or \
-                   self.chain == other.chain and self.resi < other.resi or \
-                   self.chain == other.chain and self.resi == other.resi and self.ins < other.ins
         return self.chain < other.chain or self.chain == other.chain and self.resi < other.resi
 
     def __le__(self, other):
@@ -86,7 +82,7 @@ class Node:
     def __eq__(self, other):
         if not other:
             return False
-        base = self.chain == other.chain and self.resi == other.resi and self.ins == other.ins
+        base = self.chain == other.chain and self.resi == other.resi
         if self.resn and other.resn:
             base = base and self.resn == other.resn
         return base
@@ -96,17 +92,10 @@ class Node:
 
     def __repr__(self):
         if self.resn:
-            if self.ins:
-                return "{}/{}/{}/{}".format(self.chain, self.resi, self.ins, self.resn)
-            else:
-                return "{}/{}/{}".format(self.chain, self.resi, self.resn)
-        elif self.ins:
-            return "{}/{}/{}".format(self.chain, self.resi, self.ins)
+            return "{}/{}/{}".format(self.chain, self.resi, self.resn)
         return "{}/{}".format(self.chain, self.resi)
 
     def __hash__(self):
-        if self.ins is not None:
-            return hash((self.chain, self.resi, self.ins))
         return hash((self.chain, self.resi))
 
     def id_repr(self):
@@ -415,11 +404,17 @@ def discrete_mapping(value):
     return 3.2
 
 
-def export_network_graph(model):
+def export_network_graph(model, log_f, disable_f, enable_f):
+    disable_f()
     G = nx.MultiGraph()
 
     # Add the nodes to the graph
     file_pth = "/tmp/ring/" + model + ".cif_ringNodes"
+    if not os.path.exists(file_pth):
+        log_f("RING output files not found, run RING on the object first!", error=True)
+        enable_f()
+        return
+
     df = pd.read_csv(file_pth, sep='\t')
     if len(df) == 0:
         return IndexError
@@ -461,6 +456,10 @@ def export_network_graph(model):
 
     with open("{}/{}.json".format(os.getcwd(), model), 'w+') as f:
         json.dump(nx.cytoscape_data(G), f)
+
+    enable_f()
+
+    log_f("Cytoscape network format saved as {}/{}.json".format(os.getcwd(), model))
 
 
 if __name__ == '__main__':
