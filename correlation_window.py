@@ -1,7 +1,7 @@
 from os import path
 
-from pymol.Qt import QtCore, QtWidgets
-from pymol.Qt.utils import loadUi
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.uic import loadUi
 
 from utilities import *
 
@@ -32,8 +32,8 @@ class CorrelationDialog(QtWidgets.QDialog):
 
         df = pd.DataFrame()
 
-        freq_inter = get_freq(obj)
-        freq_combined = get_freq_combined_all_interactions(obj)
+        freq_inter = get_freq(obj, self.parent.temp_dir.name)
+        freq_combined = get_freq_combined_all_interactions(obj, self.parent.temp_dir.name)
 
         self.current_obj = obj
 

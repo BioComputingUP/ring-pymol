@@ -1,12 +1,14 @@
 import datetime
+import tempfile
 from os import environ
 
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QWidget
+from PyQt5.uic import loadUi
 from networkx import MultiGraph, draw_networkx_labels, draw_networkx_nodes, kamada_kawai_layout
 from pandas import read_csv
 from pymol import stored
-from pymol.Qt import QtCore, QtWidgets
-from pymol.Qt.utils import loadUi
 
 from correlation_window import CorrelationDialog
 from frequency_window import FreqDialog
@@ -15,8 +17,19 @@ from ring_local import run_ring_local
 from rmsd_clustering import *
 from utilities import *
 
+extra = {
+        # Density Scale
+        'density_scale': '-1',
 
-class MainDialog(QtWidgets.QDialog):
+        'font_family'  : 'Roboto',
+
+        # environ
+        'pyside6'      : False,
+        'linux'        : True,
+}
+
+
+class MainDialog(QWidget):
     def __init__(self, app=None, parent=None):
         super(MainDialog, self).__init__(parent)
 
@@ -32,6 +45,9 @@ class MainDialog(QtWidgets.QDialog):
 
         self.corr_dialog = CorrelationDialog(self)
         self.freq_dialog = FreqDialog(self)
+
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.log("Setting temp directory {}".format(self.temp_dir.name))
 
         if os.path.exists("{}/.ring/bin/Ring".format(environ['HOME'])):
             self.widg.ring_path.setText("{}/.ring/bin/Ring".format(environ['HOME']))
@@ -124,11 +140,16 @@ class MainDialog(QtWidgets.QDialog):
             out_s += "WARNING: "
         out_s += s
 
-        self.widg.console_log.insertItem(0, out_s)
+        nestedLabel = QtWidgets.QLabel(out_s)
+        item = QtWidgets.QListWidgetItem()
+        self.widg.console_log.insertItem(0, item)
+
         if error:
-            self.widg.console_log.item(0).setForeground(QColor(237, 67, 55))
+            nestedLabel.setProperty("class", "danger")
         if warning:
-            self.widg.console_log.item(0).setForeground(QColor(255, 146, 13))
+            nestedLabel.setProperty("class", "warning")
+
+        self.widg.console_log.setItemWidget(item, nestedLabel)
 
         if process:
             self.widg.console_log.repaint()
@@ -221,6 +242,10 @@ class MainDialog(QtWidgets.QDialog):
             # setting line edit to read only
             line_edit.setReadOnly(True)
 
+    def closeEvent(self, event):
+        self.temp_dir.cleanup()
+        event.accept()
+
     # Ring related functions
     def run(self):
         obj_name = self.widg.selections_list.currentText()
@@ -233,9 +258,6 @@ class MainDialog(QtWidgets.QDialog):
         if is_selection(obj_name):
             self.visualize()
             return
-
-        if not os.path.exists('/tmp/ring'):
-            os.mkdir('/tmp/ring')
 
         stored.chains = ""
         cmd.iterate(obj_name, 'stored.chains += chain')
@@ -261,7 +283,7 @@ class MainDialog(QtWidgets.QDialog):
 
         self.disable_window()
 
-        file_pth = "/tmp/ring/" + obj_name + ".cif"
+        file_pth = os.path.join(self.temp_dir.name, obj_name + ".cif")
 
         self.log("Exporting pymol object {} in cif format ({})".format(obj_name, file_pth))
 
@@ -275,11 +297,11 @@ class MainDialog(QtWidgets.QDialog):
             return
 
         if self.widg.ring_locally.isChecked():
-            run_ring_local(self.widg.ring_path.text(), file_pth, obj_name, current_run_config, self.log, self.progress)
+            run_ring_local(self.widg.ring_path.text(), file_pth, obj_name, current_run_config, self.temp_dir.name, self.log, self.progress)
             self.prev_launch_config[obj_name] = current_run_config
             self.log("Ring generation finished")
         else:
-            run_ring_api(file_pth, current_run_config, self.log, self.progress)
+            run_ring_api(file_pth, current_run_config, self.temp_dir.name, self.log, self.progress)
             self.prev_launch_config[obj_name] = current_run_config
 
         self.widg.save_network.setEnabled(True)
@@ -302,10 +324,8 @@ class MainDialog(QtWidgets.QDialog):
             self.widg.resi_selection.clear()
             self.widg.resi_selection.addItems(cmd.get_names('public_selections'))
 
-        if actual_sele_num == 0:
-            self.widg.resi_selection.setEnabled(False)
-        else:
-            self.widg.resi_selection.setEnabled(True)
+        self.widg.resi_selection.setEnabled(actual_sele_num > 0)
+        self.widg.resi_plot.setEnabled(actual_sele_num > 0 and cmd.count_states(self.widg.resi_selection.currentText()) > 1)
 
         selections.update(list(filter(lambda x: x.split('_')[-1][-3:] != 'cgo',
                                       cmd.get_names('public_nongroup_objects'))))
@@ -333,6 +353,14 @@ class MainDialog(QtWidgets.QDialog):
         else:
             self.widg.visualize_btn.setText("Execute RING")
 
+        current_selection = self.widg.selections_list.currentText()
+
+        if len(current_selection) > 0 and current_selection[0] != "(" and current_selection[-1] != ")":
+            is_multi_states = cmd.count_states(current_selection) > 1
+            for widget in [self.widg.min_freq, self.widg.max_freq, self.widg.tab_2, self.widg.min_presence,
+                           self.widg.max_presence, self.widg.p_thr, self.widg.coeff_thr, self.widg.calc_corr]:
+                widget.setEnabled(is_multi_states)
+
     def visualize(self, selection=None, color=None, int_type=None):
         from pymol import stored
 
@@ -355,7 +383,7 @@ class MainDialog(QtWidgets.QDialog):
         states = int(cmd.count_states(selection=obj))
         stored.model = ""
         cmd.iterate(obj, 'stored.model = model')
-        file_pth = "/tmp/ring/" + stored.model + ".cif_ringEdges"
+        file_pth = os.path.join(self.temp_dir.name, stored.model + ".cif_ringEdges")
 
         if not os.path.exists(file_pth):
             self.log("Please run Ring on the selected object first!", error=True)
@@ -365,7 +393,7 @@ class MainDialog(QtWidgets.QDialog):
 
         stored.chain_resi = set()
         cmd.iterate(obj, 'stored.chain_resi.add((chain, resi))')
-        conn_freq = get_freq(stored.model)
+        conn_freq = get_freq(stored.model, self.temp_dir.name)
 
         def draw():
             interactions_per_state = pd.read_csv(file_pth, sep='\t')
@@ -460,7 +488,7 @@ class MainDialog(QtWidgets.QDialog):
                 sele = "{}_{}_resi".format(obj, bond)
                 members += " {}".format(sele)
 
-                freqs = get_freq_combined(model_name, bond, interchain=self.widg.interchain.isChecked(),
+                freqs = get_freq_combined(model_name, bond, self.temp_dir.name, interchain=self.widg.interchain.isChecked(),
                                           intrachain=self.widg.intrachain.isChecked())
 
                 of_chain = dict()
@@ -499,7 +527,7 @@ class MainDialog(QtWidgets.QDialog):
         if self.widg.iac.isChecked():
             inter = "IAC"
 
-        conn_freq = get_freq_combined(obj, inter, interchain=self.widg.interchain.isChecked(),
+        conn_freq = get_freq_combined(obj, inter, self.temp_dir.name, interchain=self.widg.interchain.isChecked(),
                                       intrachain=self.widg.intrachain.isChecked(), key_string=True)
 
         if conn_freq is not None:
@@ -540,7 +568,7 @@ class MainDialog(QtWidgets.QDialog):
         try:
             for i, inter in enumerate(list(intTypeMap.keys()) + ["ALL"]):
                 self.progress(i / (len(intTypeMap) + 1) * 100)
-                edges, corr_matr, p_matr = calculate_correlation(obj, states, int_type=inter,
+                edges, corr_matr, p_matr = calculate_correlation(obj, states, self.temp_dir.name, int_type=inter,
                                                                  coeff_thresh=coeff_thr,
                                                                  p_thresh=p_thr, max_presence=max_presence,
                                                                  min_presence=min_presence)
@@ -565,7 +593,7 @@ class MainDialog(QtWidgets.QDialog):
 
         stored.model = ""
         cmd.iterate(obj, 'stored.model = model')
-        file_pth = "/tmp/ring/" + stored.model + ".cif_ringEdges"
+        file_pth = os.path.join(self.temp_dir.name, stored.model + ".cif_ringEdges")
 
         if not os.path.exists(file_pth):
             self.log(
@@ -645,7 +673,7 @@ class MainDialog(QtWidgets.QDialog):
             return
 
         if sele_inter != "ALL":
-            file_pth = "/tmp/ring/md/" + stored.model + ".gfreq_{}".format(sele_inter)
+            file_pth = os.path.join(self.temp_dir.name, "md", stored.model + ".gfreq_{}".format(sele_inter))
             if not os.path.exists(file_pth):
                 self.log("Before this you need to run RING on the object first!", error=True)
                 return
@@ -669,8 +697,8 @@ class MainDialog(QtWidgets.QDialog):
                 return
 
         else:
-            order = get_node_names_ordered(obj)
-            contact_freq = get_freq_combined_all_interactions(obj, interchain=True)
+            order = get_node_names_ordered(obj, self.temp_dir.name)
+            contact_freq = get_freq_combined_all_interactions(obj, self.temp_dir.name, interchain=True)
 
             tmp = [x.node1 for x in contact_freq.keys()]
             to_remove = []
@@ -713,7 +741,7 @@ class MainDialog(QtWidgets.QDialog):
 
         stored.model = ""
         cmd.iterate(obj, 'stored.model = model')
-        file_pth = "/tmp/ring/" + stored.model + ".cif_ringEdges"
+        file_pth = os.path.join(self.temp_dir.name, stored.model + ".cif_ringEdges")
         if not os.path.exists(file_pth):
             self.log(
                     "Before this you need to run RING on the object first. Select it above and press the Show button",
@@ -885,23 +913,20 @@ class MainDialog(QtWidgets.QDialog):
             self.log("Please select an object to use this feature", error=True)
             raise ValueError
 
-        if not os.path.exists('/tmp/ring'):
-            os.mkdir('/tmp/ring')
-
         if self.widg.CA_atoms.isChecked():
             sele = '{} and name CA'.format(obj)
             obj = '{}_ca'.format(obj)
-            file_pth = "/tmp/ring/" + obj + ".xyz"
+            file_pth = os.path.join(self.temp_dir.name, obj + ".xyz")
         else:
             sele = obj
-            file_pth = "/tmp/ring/" + obj + ".xyz"
+            file_pth = os.path.join(self.temp_dir.name, obj + ".xyz")
 
         self.log("Distance matrix for structure {} not found, creation started".format(obj), warning=True)
         self.log("Exporting pymol object {} in xyz format ({})".format(sele, file_pth))
         self.disable_window()
         cmd.save(filename=file_pth, selection=sele, state=0, format='xyz')
         self.log("Exporting done")
-        compute_rmsd_dist_matrix(self, obj)
+        compute_rmsd_dist_matrix(self, obj, self.temp_dir.name)
         self.enable_window()
 
     def init_clustering(self):
@@ -917,7 +942,7 @@ class MainDialog(QtWidgets.QDialog):
             n_cluster = int(self.widg.n_cluster.value())
         else:
             rmsd_val = float(self.widg.rmsd_val.value())
-        file_pth = "/tmp/ring/" + obj + ".npy"
+        file_pth = os.path.join(self.temp_dir.name, obj + ".npy")
 
         if not os.path.exists(file_pth) or obj not in self.clustering_runned_ids:
             self.calculate_clustering()
@@ -931,7 +956,7 @@ class MainDialog(QtWidgets.QDialog):
             self.log("Please select a structure with at least 3 states", error=True)
             return None
         method, n_cluster, obj, rmsd_val = self.init_clustering()
-        hierarchy_cut_plot(self, obj, method, rmsd_val, n_cluster)
+        hierarchy_cut_plot(self, obj, method, self.temp_dir.name, rmsd_val, n_cluster)
 
     def cluster_plot_fn(self):
         obj = self.widg.selections_list.currentText()
@@ -939,11 +964,11 @@ class MainDialog(QtWidgets.QDialog):
             self.log("Please select a structure with at least 3 states", error=True)
             return None
         method, n_cluster, obj, rmsd_val = self.init_clustering()
-        cluster_distribution_heatmap(self, obj, method, rmsd_val, n_cluster)
+        cluster_distribution_heatmap(self, obj, method, self.temp_dir.name, rmsd_val, n_cluster)
 
     def create_cluster_obj(self):
         method, n_cluster, obj, rmsd_val = self.init_clustering()
-        cluster_states_obj(self, obj, method, rmsd_val, n_cluster)
+        cluster_states_obj(self, obj, method, self.temp_dir.name, rmsd_val, n_cluster)
 
     def init_colors(self):
         for i in intTypeMap.keys():

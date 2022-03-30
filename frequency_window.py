@@ -1,17 +1,19 @@
 from os import path
 
+import PyQt5.QtGui as QtGui
+import PyQt5.QtWidgets as QtWidgets
+from PyQt5 import QtCore
+from PyQt5.uic import loadUi
 from pymol import cmd
-from pymol.Qt import QtCore, QtWidgets
-from pymol.Qt.utils import loadUi
 
 from utilities import get_bg_fg_colors, get_freq_combined, intTypeMap
 
 
-class FreqDialog(QtWidgets.QDialog):
+class FreqDialog(QtWidgets.QWidget):
     def __init__(self, main_dialog, parent=None):
         super(FreqDialog, self).__init__(parent)
 
-        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowMinimizeButtonHint)
+        self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinimizeButtonHint)
 
         # populate the Window from our *.ui file which was created with the Qt Designer
         uifile = path.join(path.dirname(__file__), 'GUIs/frequency.ui')
@@ -38,7 +40,7 @@ class FreqDialog(QtWidgets.QDialog):
         for bondType in intTypeMap.keys():
             try:
                 freq_bond.setdefault(bondType,
-                                     get_freq_combined(obj, bondType,
+                                     get_freq_combined(obj, bondType, self.parent.temp_dir.name,
                                                        interchain=self.parent.widg.interchain.isChecked(),
                                                        intrachain=self.parent.widg.intrachain.isChecked()))
             except FileNotFoundError:

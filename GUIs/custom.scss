@@ -44,6 +44,14 @@
     border-radius: 8px;
 }}
 
+.QListWidget::item[text*='ERROR'] {{
+    color: red;
+}}
+
+.QGroupBox::title {{
+    color: #43474d;
+}}
+
 #frame_2 {{
     border: 1px solid #797981;
 }}

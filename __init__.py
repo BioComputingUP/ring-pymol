@@ -56,8 +56,6 @@ def ring_plugin(test=False):
     with open("GUIs/custom.scss") as file:
         dialog.setStyleSheet(stylesheet + file.read().format(**os.environ))
 
-    shutil.rmtree("/tmp/ring", ignore_errors=True)
-
     dialog.show()
     if test:
         sys.exit(app.exec_())

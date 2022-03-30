@@ -1,6 +1,7 @@
 import itertools
 import math
 import multiprocessing as mp
+import os
 import time
 
 import matplotlib
@@ -79,10 +80,10 @@ def hierarchy_optimization(X, logger, height, desired_clusters, method='complete
     return result_label, Z, cut_heights, centroid_clusters
 
 
-def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_clusters=None, x_len=50):
+def cluster_distribution_heatmap(logger, pdb_id, method, tmp_dir, rmsd_val=None, desired_clusters=None, x_len=50):
     logger.disable_window()
 
-    X = load_rmsd_dis_matrix(logger, pdb_id)
+    X = load_rmsd_dis_matrix(logger, pdb_id, tmp_dir)
 
     print(X.size, desired_clusters, math.sqrt(X.size))
 
@@ -200,8 +201,8 @@ def cluster_distribution_heatmap(logger, pdb_id, method, rmsd_val=None, desired_
     plt.show(block=False)
 
 
-def hierarchy_cut_plot(logger, pdb_id, method, rmsd_val=None, desired_clusters=None):
-    X = load_rmsd_dis_matrix(logger, pdb_id)
+def hierarchy_cut_plot(logger, pdb_id, method, tmp_dir, rmsd_val=None, desired_clusters=None):
+    X = load_rmsd_dis_matrix(logger, pdb_id, tmp_dir)
 
     if desired_clusters is not None and desired_clusters < 2:
         logger.log("The number of cluster has to be greater than 2", error=True)
@@ -300,12 +301,12 @@ def init(args):
     counter = args
 
 
-def compute_rmsd_dist_matrix(logger, pdb_id):
-    mtrx_file = "/tmp/ring/{}.npy".format(pdb_id)
+def compute_rmsd_dist_matrix(logger, pdb_id, tmp_dir):
+    mtrx_file = os.path.join(tmp_dir, "{}.npy".format(pdb_id))
 
     logger.log("Loading structure")
 
-    filename = "/tmp/ring/{}.xyz".format(pdb_id)
+    filename = os.path.join(tmp_dir, "{}.xyz".format(pdb_id))
 
     global structure_coords
 
@@ -338,16 +339,16 @@ def compute_rmsd_dist_matrix(logger, pdb_id):
     logger.log('Done')
 
 
-def load_rmsd_dis_matrix(logger, pdb_id):
-    mtrx_file = "/tmp/ring/{}.npy".format(pdb_id)
+def load_rmsd_dis_matrix(logger, pdb_id, tmp_dir):
+    mtrx_file = os.path.join(tmp_dir, "{}.npy".format(pdb_id))
     logger.log("Loading distance matrix")
     X = np.load(mtrx_file)
     return X
 
 
-def cluster_states_obj(logger, pdb_id, method, rmsd_val=None, desired_clusters=None):
+def cluster_states_obj(logger, pdb_id, method, tmp_dir, rmsd_val=None, desired_clusters=None):
     logger.disable_window()
-    X = load_rmsd_dis_matrix(logger, pdb_id)
+    X = load_rmsd_dis_matrix(logger, pdb_id, tmp_dir)
 
     logger.log("Operation started, please wait")
 

@@ -155,11 +155,11 @@ class Edge:
         return hash((self.node1, self.node2))
 
 
-def get_freq(obj, interchain=False, intrachain=False) -> Dict[str, Dict[Edge, float]]:
+def get_freq(obj, tmp_dir, interchain=False, intrachain=False) -> Dict[str, Dict[Edge, float]]:
     conn_freq = dict()
     for inter in intTypeMap.keys():
         conn_freq.setdefault(inter, dict())
-        with open("/tmp/ring/md/{}.gfreq_{}".format(obj, inter), 'r') as f:
+        with open(tmp_dir + "/md/{}.gfreq_{}".format(obj, inter), 'r') as f:
             for line in f:
                 node1, _, node2, perc = line.split('\t')
                 node1 = Node(node1)
@@ -175,10 +175,10 @@ def get_freq(obj, interchain=False, intrachain=False) -> Dict[str, Dict[Edge, fl
     return conn_freq
 
 
-def get_freq_combined(obj, bond, interchain=False, intrachain=False, key_string=False):
+def get_freq_combined(obj, bond, tmp_dir, interchain=False, intrachain=False, key_string=False):
     conn_freq = dict()
     try:
-        with open("/tmp/ring/md/{}.gfreq_{}".format(obj, bond), 'r') as f:
+        with open(tmp_dir + "/md/{}.gfreq_{}".format(obj, bond), 'r') as f:
             for line in f:
                 node1, _, node2, perc = line.split('\t')
                 node1 = Node(node1)
@@ -202,10 +202,10 @@ def get_freq_combined(obj, bond, interchain=False, intrachain=False, key_string=
     return conn_freq
 
 
-def get_freq_combined_all_interactions(obj, interchain=False):
+def get_freq_combined_all_interactions(obj, tmp_dir, interchain=False):
     conn_freq = dict()
     for inter in intTypeMap.keys():
-        with open("/tmp/ring/md/{}.gfreq_{}".format(obj, inter), 'r') as f:
+        with open(tmp_dir + "/md/{}.gfreq_{}".format(obj, inter), 'r') as f:
             for line in f:
                 node1, _, node2, perc = line.split('\t')
                 node1 = Node(node1)
@@ -223,9 +223,9 @@ def get_freq_combined_all_interactions(obj, interchain=False):
     return all_freq
 
 
-def get_node_names_ordered(obj):
+def get_node_names_ordered(obj, tmp_dir):
     node_list = []
-    with open("/tmp/ring/{}.cif_ringNodes".format(obj), 'r') as f:
+    with open(tmp_dir + "/{}.cif_ringNodes".format(obj), 'r') as f:
         f.readline()
         for line in f:
             node_id, *_, model = line.strip().split("\t")
@@ -274,7 +274,7 @@ def draw_links(interactions, color, object_name, coords, state):
     cmd.load_cgo(obj, object_name, state=state, zoom=False)
 
 
-def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coeff_thresh=0.5, p_thresh=0.3,
+def calculate_correlation(obj, frames, tmp_dir, min_presence=0.05, max_presence=0.95, coeff_thresh=0.5, p_thresh=0.3,
                           int_type="HBOND"):
     all_cm = dict()
     nodes = []
@@ -284,16 +284,16 @@ def calculate_correlation(obj, frames, min_presence=0.05, max_presence=0.95, coe
         to_read = [int_type]
 
     for interaction in to_read:
-        all_cm[interaction] = pd.read_csv('/tmp/ring/md/{}.cm_{}'.format(obj, interaction), sep=' ',
+        all_cm[interaction] = pd.read_csv(tmp_dir + '/md/{}.cm_{}'.format(obj, interaction), sep=' ',
                                           header=None)
         if len(nodes) == 0:
             nodes = all_cm[interaction][all_cm[interaction][0] == 1][1]
             nodes = [Node(x) for x in nodes]
 
     if int_type != "ALL":
-        conn_freq = get_freq(obj)
+        conn_freq = get_freq(obj, tmp_dir)
     else:
-        conn_freq = get_freq_combined_all_interactions(obj)
+        conn_freq = get_freq_combined_all_interactions(obj, tmp_dir)
     contacts_sparse = dict()
     for frame in range(0, frames):
         for interaction in to_read:
@@ -404,12 +404,12 @@ def discrete_mapping(value):
     return 3.2
 
 
-def export_network_graph(model, log_f, disable_f, enable_f):
+def export_network_graph(model, tmp_dir, log_f, disable_f, enable_f):
     disable_f()
     G = nx.MultiGraph()
 
     # Add the nodes to the graph
-    file_pth = "/tmp/ring/" + model + ".cif_ringNodes"
+    file_pth = os.path.join(tmp_dir, model + ".cif_ringNodes")
     if not os.path.exists(file_pth):
         log_f("RING output files not found, run RING on the object first!", error=True)
         enable_f()
@@ -425,7 +425,7 @@ def export_network_graph(model, log_f, disable_f, enable_f):
         G.add_node(node, degree=round(degree, 3), chain=node.chain, resi=node.resi, resn=node.resn)
 
     # Add the edges to the graph
-    file_pth = "/tmp/ring/" + model + ".cif_ringEdges"
+    file_pth = os.path.join(tmp_dir, model + ".cif_ringEdges")
     df = pd.read_csv(file_pth, sep='\t')
 
     distance_dict = dict()

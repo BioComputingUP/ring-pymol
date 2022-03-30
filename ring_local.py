@@ -3,11 +3,11 @@ import subprocess
 from pymol import cmd
 
 
-def run_ring_local(ring_pth, file_pth, obj_name, run_config, log_f, progress_f):
+def run_ring_local(ring_pth, file_pth, obj_name, run_config, tmp_dir, log_f, progress_f):
     progress_f(1)
 
     p = subprocess.Popen(
-            [ring_pth, "-i", file_pth, "--out_dir", "/tmp/ring/",
+            [ring_pth, "-i", file_pth, "--out_dir", tmp_dir,
              "-g", run_config["-g"],
              "-o", run_config["-o"],
              "-s", run_config["-s"],
