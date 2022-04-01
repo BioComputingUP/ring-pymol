@@ -36,8 +36,9 @@
 }}
 
 .QProgressBar {{
-    height: 16px;
-    border-radius: 8px;
+    height: 8px;
+    margin-bottom: 4px;
+    border-radius: 6px;
 }}
 
 .QProgressBar::chunk {{

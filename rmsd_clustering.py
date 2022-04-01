@@ -85,7 +85,6 @@ def cluster_distribution_heatmap(logger, pdb_id, method, tmp_dir, rmsd_val=None,
 
     X = load_rmsd_dis_matrix(logger, pdb_id, tmp_dir)
 
-    print(X.size, desired_clusters, math.sqrt(X.size))
 
     if desired_clusters is not None and desired_clusters < 2:
         logger.log("The number of cluster has to be greater than 2", error=True)

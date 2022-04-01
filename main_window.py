@@ -58,7 +58,7 @@ class MainDialog(QWidget):
         self.widg.visualize_btn.clicked.connect(self.run)
         self.widg.ring_exec_button.clicked.connect(self.browse_ring_exe)
         self.widg.save_network.clicked.connect(
-                lambda: export_network_graph(self.get_selection(), self.log, self.disable_window,
+                lambda: export_network_graph(self.get_selection(), self.temp_dir.name, self.log, self.disable_window,
                                              self.enable_window) if len(self.get_selection()) > 0 and
                                                                     self.get_selection()[0] != "(" else
                 self.log("Please select an object on the left box to use this feature", error=True))
@@ -277,10 +277,6 @@ class MainDialog(QWidget):
             self.visualize()
             return
 
-        if len(self.widg.ring_path.text()) == 0:
-            self.log("Ring path is not correct! Set it in the configuration tab", error=True)
-            return
-
         self.disable_window()
 
         file_pth = os.path.join(self.temp_dir.name, obj_name + ".cif")
@@ -290,14 +286,14 @@ class MainDialog(QWidget):
         cmd.save(filename=file_pth, selection=obj_name, state=0)
         self.log("Exporting done")
 
-        if not os.path.exists(self.widg.ring_path.text()):
-            self.log("Ring path is not correct! Set it in the configuration tab", error=True)
-            self.widg.visualize_btn.setText("Show")
-            self.enable_window()
-            return
-
         if self.widg.ring_locally.isChecked():
-            run_ring_local(self.widg.ring_path.text(), file_pth, obj_name, current_run_config, self.temp_dir.name, self.log, self.progress)
+            if not os.path.exists(self.widg.ring_path.text()):
+                self.log("Ring path is not correct! Set it in the configuration tab", error=True)
+                self.enable_window()
+                return
+
+            run_ring_local(self.widg.ring_path.text(), file_pth, obj_name, current_run_config, self.temp_dir.name,
+                           self.log, self.progress)
             self.prev_launch_config[obj_name] = current_run_config
             self.log("Ring generation finished")
         else:
@@ -325,7 +321,8 @@ class MainDialog(QWidget):
             self.widg.resi_selection.addItems(cmd.get_names('public_selections'))
 
         self.widg.resi_selection.setEnabled(actual_sele_num > 0)
-        self.widg.resi_plot.setEnabled(actual_sele_num > 0 and cmd.count_states(self.widg.resi_selection.currentText()) > 1)
+        self.widg.resi_plot.setEnabled(
+            actual_sele_num > 0 and cmd.count_states(self.widg.resi_selection.currentText()) > 1)
 
         selections.update(list(filter(lambda x: x.split('_')[-1][-3:] != 'cgo',
                                       cmd.get_names('public_nongroup_objects'))))
@@ -402,6 +399,8 @@ class MainDialog(QWidget):
                 self.log("No interactions found in the object", warning=True)
                 return
 
+            num_interaction_per_type = dict()
+
             for state in range(1, states + 1):
                 df = interactions_per_state[interactions_per_state.Model == state]
 
@@ -412,6 +411,9 @@ class MainDialog(QWidget):
                                              '.format(chain, resi, name), [x,y,z])')
 
                 interactions_per_type = dict()
+
+                for intType in intTypeMap.keys():
+                    interactions_per_type.setdefault(intType, list())
 
                 for (nodeId1, interaction, nodeId2, _, _, _, atom1, atom2, *_) in df.itertuples(index=False):
                     intType = interaction.split(":")[0]
@@ -456,11 +458,17 @@ class MainDialog(QWidget):
                     interactions_per_type[intType].append(t)
 
                 for intType, interactions in interactions_per_type.items():
+                    num_interaction_per_type.setdefault(intType, 0)
+                    num_interaction_per_type[intType] += len(interactions)
                     draw_links(interactions,
                                object_name=obj + "_" + intType + "_cgo" if not selection else selection + "_cgo",
                                color=intTypeMap[intType],
                                coords=stored.coords,
                                state=state)
+
+            for intType, num in num_interaction_per_type.items():
+                if num == 0:
+                    cmd.delete("{}_cgo".format(obj + "_" + intType))
 
             cmd.hide(selection="*_edges")
             if not selection:
@@ -488,7 +496,8 @@ class MainDialog(QWidget):
                 sele = "{}_{}_resi".format(obj, bond)
                 members += " {}".format(sele)
 
-                freqs = get_freq_combined(model_name, bond, self.temp_dir.name, interchain=self.widg.interchain.isChecked(),
+                freqs = get_freq_combined(model_name, bond, self.temp_dir.name,
+                                          interchain=self.widg.interchain.isChecked(),
                                           intrachain=self.widg.intrachain.isChecked())
 
                 of_chain = dict()

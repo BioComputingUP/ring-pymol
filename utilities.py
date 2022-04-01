@@ -438,7 +438,7 @@ def export_network_graph(model, tmp_dir, log_f, disable_f, enable_f):
         edge = Edge(node1, node2)
         distance_dict.setdefault(intType, dict()).setdefault(edge, distance)
 
-    conn_freq = get_freq(model)
+    conn_freq = get_freq(model, tmp_dir)
 
     sawn = set()
     df = df.groupby(["NodeId1", "Interaction", "NodeId2"]).sum()

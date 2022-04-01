@@ -6,26 +6,26 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>620</width>
-    <height>787</height>
+    <width>551</width>
+    <height>820</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
-    <width>620</width>
-    <height>740</height>
+    <width>200</width>
+    <height>300</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>620</width>
-    <height>787</height>
+    <height>837</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -38,34 +38,31 @@
    <property name="sizeConstraint">
     <enum>QLayout::SetMinimumSize</enum>
    </property>
-   <property name="horizontalSpacing">
+   <property name="spacing">
     <number>0</number>
-   </property>
-   <property name="verticalSpacing">
-    <number>8</number>
    </property>
    <item row="7" column="0">
     <widget class="QTabWidget" name="main">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="minimumSize">
       <size>
-       <width>0</width>
-       <height>480</height>
+       <width>300</width>
+       <height>450</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>16777215</width>
-       <height>500</height>
+       <width>700</width>
+       <height>450</height>
       </size>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_1">
       <property name="enabled">
@@ -132,15 +129,21 @@
            <item row="0" column="1">
             <widget class="QPushButton" name="bttn_table_freq">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
-               <width>188</width>
+               <width>0</width>
                <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>140</width>
+               <height>16777215</height>
               </size>
              </property>
              <property name="focusPolicy">
@@ -437,15 +440,21 @@
            <item>
             <widget class="QPushButton" name="bttn_color_resi_freq">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
-               <width>188</width>
+               <width>0</width>
                <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>140</width>
+               <height>16777215</height>
               </size>
              </property>
              <property name="focusPolicy">
@@ -521,15 +530,21 @@
            <item>
             <widget class="QPushButton" name="resi_plot">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
-               <width>188</width>
+               <width>0</width>
                <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>140</width>
+               <height>16777215</height>
               </size>
              </property>
              <property name="toolTip">
@@ -617,21 +632,33 @@
              <property name="spacing">
               <number>16</number>
              </property>
+             <property name="leftMargin">
+              <number>24</number>
+             </property>
              <property name="topMargin">
               <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>24</number>
              </property>
              <item>
               <widget class="QPushButton" name="chain_graph">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>277</width>
+                 <width>0</width>
                  <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>230</width>
+                 <height>16777215</height>
                 </size>
                </property>
                <property name="sizeIncrement">
@@ -651,15 +678,21 @@
              <item>
               <widget class="QPushButton" name="SS_interaction">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>277</width>
+                 <width>0</width>
                  <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>230</width>
+                 <height>16777215</height>
                 </size>
                </property>
                <property name="sizeIncrement">
@@ -724,15 +757,21 @@
                 <bool>true</bool>
                </property>
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>120</width>
+                 <width>0</width>
                  <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>120</width>
+                 <height>16777215</height>
                 </size>
                </property>
                <property name="toolTip">
@@ -814,6 +853,12 @@
                 <size>
                  <width>120</width>
                  <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>120</width>
+                 <height>16777215</height>
                 </size>
                </property>
                <property name="text">
@@ -902,7 +947,7 @@
               <item row="1" column="1">
                <widget class="QSpinBox" name="min_presence">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
@@ -911,6 +956,12 @@
                  <size>
                   <width>120</width>
                   <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>120</width>
+                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="alignment">
@@ -933,15 +984,21 @@
               <item row="1" column="2">
                <widget class="QSpinBox" name="max_presence">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>120</width>
+                  <width>0</width>
                   <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>120</width>
+                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="alignment">
@@ -977,15 +1034,21 @@
               <item row="2" column="1">
                <widget class="QDoubleSpinBox" name="coeff_thr">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>120</width>
+                  <width>0</width>
                   <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>120</width>
+                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="alignment">
@@ -1050,15 +1113,21 @@
               <item>
                <widget class="QPushButton" name="calc_corr">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>200</width>
+                  <width>0</width>
                   <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>120</width>
+                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="autoFillBackground">
@@ -1102,7 +1171,7 @@
      </widget>
      <widget class="QWidget" name="tab_2">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -1198,6 +1267,19 @@
             </widget>
            </item>
            <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
             <widget class="QLabel" name="label_11">
              <property name="text">
               <string>Clustering method:</string>
@@ -1207,15 +1289,21 @@
            <item>
             <widget class="QComboBox" name="clustering_method">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
-               <width>180</width>
+               <width>0</width>
                <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>140</width>
+               <height>10000</height>
               </size>
              </property>
              <item>
@@ -1290,8 +1378,9 @@
                </property>
                <property name="font">
                 <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
+                 <weight>50</weight>
+                 <italic>false</italic>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="title">
@@ -1400,15 +1489,21 @@
            <item row="2" column="1">
             <widget class="QPushButton" name="cluster_plot">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
-               <width>180</width>
+               <width>0</width>
                <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>140</width>
+               <height>16777215</height>
               </size>
              </property>
              <property name="styleSheet">
@@ -1436,15 +1531,21 @@
            <item row="0" column="1">
             <widget class="QPushButton" name="hierarchy_plot">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
-               <width>180</width>
+               <width>0</width>
                <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>140</width>
+               <height>16777215</height>
               </size>
              </property>
              <property name="text">
@@ -1462,15 +1563,21 @@
            <item row="3" column="1">
             <widget class="QPushButton" name="create_obj">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
-               <width>200</width>
+               <width>0</width>
                <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>140</width>
+               <height>16777215</height>
               </size>
              </property>
              <property name="font">
@@ -1530,7 +1637,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -1539,7 +1646,7 @@
      </widget>
      <widget class="QWidget" name="tab">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -1555,10 +1662,16 @@
         <number>16</number>
        </property>
        <property name="bottomMargin">
-        <number>16</number>
+        <number>0</number>
        </property>
        <item>
         <widget class="QTabWidget" name="config">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="tabPosition">
           <enum>QTabWidget::North</enum>
          </property>
@@ -1586,7 +1699,7 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <property name="topMargin">
-            <number>24</number>
+            <number>8</number>
            </property>
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_25">
@@ -1902,7 +2015,7 @@
                     </font>
                    </property>
                    <property name="text">
-                    <string>Disulfide bonds</string>
+                    <string>Disulfide</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -2034,7 +2147,7 @@
                  <item row="2" column="2">
                   <widget class="QLabel" name="label_21">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -2096,7 +2209,7 @@
                     </font>
                    </property>
                    <property name="text">
-                    <string>Ionic bonds</string>
+                    <string>Ionic</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -2237,7 +2350,7 @@
              <property name="sizeHint" stdset="0">
               <size>
                <width>20</width>
-               <height>40</height>
+               <height>0</height>
               </size>
              </property>
             </spacer>
@@ -2253,7 +2366,7 @@
             <number>24</number>
            </property>
            <property name="topMargin">
-            <number>24</number>
+            <number>8</number>
            </property>
            <property name="rightMargin">
             <number>24</number>
@@ -2920,7 +3033,7 @@ text-align: right;
              <property name="sizeHint" stdset="0">
               <size>
                <width>20</width>
-               <height>40</height>
+               <height>0</height>
               </size>
              </property>
             </spacer>
@@ -2932,6 +3045,12 @@ text-align: right;
       </layout>
      </widget>
      <widget class="QWidget" name="tab_6">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>About</string>
       </attribute>
@@ -3181,7 +3300,7 @@ text-align: right;
    <item row="2" column="0">
     <widget class="QFrame" name="frame_2">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -3202,16 +3321,22 @@ text-align: right;
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_10">
         <property name="spacing">
-         <number>16</number>
+         <number>8</number>
         </property>
         <property name="topMargin">
          <number>0</number>
         </property>
         <item>
          <widget class="QLabel" name="label_28">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="minimumSize">
            <size>
-            <width>100</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -3303,7 +3428,7 @@ text-align: right;
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_27">
         <property name="spacing">
-         <number>16</number>
+         <number>8</number>
         </property>
         <property name="topMargin">
          <number>0</number>
@@ -3318,7 +3443,7 @@ text-align: right;
           </property>
           <property name="minimumSize">
            <size>
-            <width>100</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -3339,7 +3464,7 @@ text-align: right;
            <number>36</number>
           </property>
           <property name="sizeConstraint">
-           <enum>QLayout::SetMinimumSize</enum>
+           <enum>QLayout::SetNoConstraint</enum>
           </property>
           <item>
            <widget class="QRadioButton" name="all_inter">
@@ -3403,7 +3528,7 @@ text-align: right;
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_8">
         <property name="spacing">
-         <number>16</number>
+         <number>8</number>
         </property>
         <property name="topMargin">
          <number>0</number>
@@ -3418,7 +3543,7 @@ text-align: right;
           </property>
           <property name="minimumSize">
            <size>
-            <width>100</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -3525,7 +3650,7 @@ text-align: right;
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>100</height>
+       <height>45</height>
       </size>
      </property>
      <property name="maximumSize">
@@ -3568,10 +3693,13 @@ text-align: right;
       <number>16</number>
      </property>
      <property name="sizeConstraint">
-      <enum>QLayout::SetFixedSize</enum>
+      <enum>QLayout::SetMinimumSize</enum>
      </property>
      <property name="topMargin">
       <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>8</number>
      </property>
      <item>
       <widget class="QLabel" name="label_7">

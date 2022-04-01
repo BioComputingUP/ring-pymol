@@ -1,10 +1,12 @@
 # Avoid importing "expensive" modules here (e.g. scipy), since this code is
 # executed on PyMOL's startup. Only import such modules inside functions.
 import os
-import shutil
 import sys
+from pathlib import Path
 
 from pymol import cmd
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 def __init_plugin__(app=None):
@@ -53,7 +55,7 @@ def ring_plugin(test=False):
     apply_stylesheet(dialog, theme='light_blue.xml', extra=extra, invert_secondary=False)
 
     stylesheet = dialog.styleSheet()
-    with open("GUIs/custom.scss") as file:
+    with open(os.path.join(BASE_DIR, "GUIs", "custom.scss")) as file:
         dialog.setStyleSheet(stylesheet + file.read().format(**os.environ))
 
     dialog.show()
