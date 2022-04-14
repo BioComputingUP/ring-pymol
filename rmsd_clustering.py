@@ -117,6 +117,7 @@ def cluster_distribution_heatmap(logger, pdb_id, method, tmp_dir, rmsd_val=None,
         ax.spines['bottom'].set_color('none')
 
     fig = plt.figure(figsize=(13, 6), dpi=70)
+    plt.get_current_fig_manager().set_window_title("State clusters")
     plt.style.use('default')
     ax1 = plt.subplot()
 
@@ -225,6 +226,8 @@ def hierarchy_cut_plot(logger, pdb_id, method, tmp_dir, rmsd_val=None, desired_c
     n_clusters = desired_clusters if desired_clusters is not None else len(centroids)
     result_labels = result_labels[n_clusters][1]
     plt.figure()
+    plt.get_current_fig_manager().set_window_title("Hierarchical clusters")
+
     plt.style.use('default')
     plt.axhline(y=y_val, linestyle="--", zorder=0, linewidth=1.3,
                 label="{} clusters".format(n_clusters))
@@ -255,7 +258,7 @@ def hierarchy_cut_plot(logger, pdb_id, method, tmp_dir, rmsd_val=None, desired_c
     plt.xlabel("Cluster center state - (n° states in cluster)")
     plt.ylim(bottom=y_val - 0.5)
     plt.ylabel('RMSD (Å)')
-    plt.suptitle("RMSD clustering", fontsize=14, fontweight='bold')
+    plt.suptitle("Hierarchical clusters", fontsize=12)
     plt.legend(loc='upper right', framealpha=1, prop={'size': 9})
     plt.tight_layout()
     plt.show(block=False)

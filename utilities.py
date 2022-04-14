@@ -23,6 +23,16 @@ intTypeMap = {
         "IAC"      : (1.0, 1.0, 1.0)
 }
 
+originalIntTypeMap = {
+        "IONIC"    : (0.0, 0.0, 1.0),
+        "SSBOND"   : (1.0, 1.0, 0.0),
+        "PIPISTACK": (1.0, 0.5, 0.0),
+        "PICATION" : (1.0, 0.0, 0.0),
+        "HBOND"    : (0.0, 1.0, 1.0),
+        "VDW"      : (0.5050504803657532, 0.5050504803657532, 0.5050504803657532),
+        "IAC"      : (1.0, 1.0, 1.0)
+}
+
 
 def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)

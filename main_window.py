@@ -3,7 +3,8 @@ import tempfile
 from os import environ
 
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtGui import QCursor
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QCursor, QFont
 from PyQt5.QtWidgets import QWidget
 from PyQt5.uic import loadUi
 from networkx import MultiGraph, draw_networkx_labels, draw_networkx_nodes, kamada_kawai_layout
@@ -97,13 +98,21 @@ class MainDialog(QWidget):
         self.widg.b_color_vdw.clicked.connect(lambda: self.pick_color("VDW"))
         self.widg.b_color_iac.clicked.connect(lambda: self.pick_color("IAC"))
 
+        self.widg.strict.toggled.connect(lambda: self.distances(type="strict"))
+        self.widg.relaxed.toggled.connect(lambda: self.distances(type="relaxed"))
+        self.widg.manual.toggled.connect(lambda: self.distances(type="manual"))
+
+        # self.widg.colormap.clicked.connect(lambda : print("colormap"))
+
         # Misc
-        self.init_colors()
+        self.init_colors(original=True)
         self.widg.timer = QtCore.QTimer()
         self.widg.timer.timeout.connect(self.refresh_sele)
         self.widg.timer.start(1500)
         self.close_progress()
         self.center_qcombobox()
+
+        self.widg.reset_colors.clicked.connect(lambda : self.init_colors(original=True))
 
         # Esthetics
         for button_child in self.widg.findChildren(QtWidgets.QPushButton):
@@ -142,6 +151,7 @@ class MainDialog(QWidget):
 
         nestedLabel = QtWidgets.QLabel(out_s)
         item = QtWidgets.QListWidgetItem()
+        item.setSizeHint(QSize(0, 24))
         self.widg.console_log.insertItem(0, item)
 
         if error:
@@ -154,6 +164,31 @@ class MainDialog(QWidget):
         if process:
             self.widg.console_log.repaint()
             self.processEvents()
+
+    def distances(self, type):
+        widgets = [self.widg.len_pipi, self.widg.len_pica, self.widg.len_vdw, self.widg.len_ss, self.widg.len_hbond, self.widg.len_salt]
+        if type == "manual":
+            for widget in widgets:
+                widget.setEnabled(True)
+        elif type == "relaxed":
+            for widget in widgets:
+                widget.setEnabled(False)
+            self.widg.len_pipi.setValue(7.0)
+            self.widg.len_pica.setValue(7.0)
+            self.widg.len_hbond.setValue(5.5)
+            self.widg.len_ss.setValue(3.0)
+            self.widg.len_salt.setValue(5.0)
+            self.widg.len_vdw.setValue(0.8)
+        else:
+            for widget in widgets:
+                widget.setEnabled(False)
+            self.widg.len_pipi.setValue(6.5)
+            self.widg.len_pica.setValue(5.0)
+            self.widg.len_hbond.setValue(3.5)
+            self.widg.len_ss.setValue(2.5)
+            self.widg.len_salt.setValue(4.0)
+            self.widg.len_vdw.setValue(0.5)
+
 
     def progress(self, p):
         if not self.widg.progress_bar.isVisible():
@@ -354,7 +389,7 @@ class MainDialog(QWidget):
 
         if len(current_selection) > 0 and current_selection[0] != "(" and current_selection[-1] != ")":
             is_multi_states = cmd.count_states(current_selection) > 1
-            for widget in [self.widg.min_freq, self.widg.max_freq, self.widg.tab_2, self.widg.min_presence,
+            for widget in [self.widg.min_freq, self.widg.max_freq, self.widg.clustering, self.widg.min_presence,
                            self.widg.max_presence, self.widg.p_thr, self.widg.coeff_thr, self.widg.calc_corr]:
                 widget.setEnabled(is_multi_states)
 
@@ -544,7 +579,7 @@ class MainDialog(QWidget):
             express = "b=dict_freq['{}/{}/{}'.format(chain,resi,resn)] if '{}/{}/{}'.format(chain,resi,resn) " \
                       "in dict_freq.keys() else 0.001"
             cmd.alter_state(-1, obj, expression=express, space=myspace)
-            cmd.spectrum("b", "white yellow orange red", obj, minimum=0.001, maximum=1.0)
+            cmd.spectrum("b", "white lightblue marine blue", obj, minimum=0.001, maximum=1.0)
 
         self.log("Residues with interaction of type {} colored based on the frequency of contact".format(inter))
         self.enable_window()
@@ -640,6 +675,7 @@ class MainDialog(QWidget):
             interaction_distance[inter] = list(map(lambda x: x if x != 999 else np.nan, interaction_distance[inter]))
 
         plt.figure()
+        plt.get_current_fig_manager().set_window_title("Pairwise interaction plot")
         plt.style.use('default')
         something = False
         for inter in interaction_distance.keys():
@@ -726,6 +762,7 @@ class MainDialog(QWidget):
                 except KeyError:
                     pass
         plt.figure()
+        plt.get_current_fig_manager().set_window_title("Probabilistic inter-chain residue contact map")
         plt.style.use('default')
         ax = plt.subplot()
         str_order = [str(x) for x in order]
@@ -873,6 +910,7 @@ class MainDialog(QWidget):
         pos = kamada_kawai_layout(G, center=(20, 20))
 
         plt.figure()
+        plt.get_current_fig_manager().set_window_title("Interaction plot")
         plt.style.use('default')
         ax = plt.gca()
 
@@ -979,9 +1017,9 @@ class MainDialog(QWidget):
         method, n_cluster, obj, rmsd_val = self.init_clustering()
         cluster_states_obj(self, obj, method, self.temp_dir.name, rmsd_val, n_cluster)
 
-    def init_colors(self):
+    def init_colors(self, original):
         for i in intTypeMap.keys():
-            self.set_inter_colors(i)
+            self.set_inter_colors(i, original)
 
     def pick_color(self, type):
         color = QtWidgets.QColorDialog.getColor()
@@ -989,8 +1027,8 @@ class MainDialog(QWidget):
             intTypeMap[type] = (float(color.red()) / 255.0, float(color.green()) / 255.0, float(color.blue()) / 255.0)
             self.set_inter_colors(type)
 
-    def set_inter_colors(self, type):
-        color = intTypeMap[type]
+    def set_inter_colors(self, type, original=False):
+        color = originalIntTypeMap[type] if original else intTypeMap[type]
         color = color[0] * 255, color[1] * 255, color[2] * 255
         style_sheet = "QLabel{{background: rgb({},{},{}); border: 1.3px solid black; border-radius: 8px; " \
                       "min-height: 16px;min-width: 16px; max-height: 16px; max-width: 16px;}}".format(*color)

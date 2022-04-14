@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>Form</class>
  <widget class="QWidget" name="Form">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>551</width>
-    <height>820</height>
+    <width>558</width>
+    <height>770</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -25,7 +28,7 @@
   <property name="maximumSize">
    <size>
     <width>620</width>
-    <height>837</height>
+    <height>770</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -62,9 +65,9 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
-     <widget class="QWidget" name="tab_1">
+     <widget class="QWidget" name="nodes">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -79,14 +82,111 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
        <property name="spacing">
-        <number>24</number>
+        <number>12</number>
        </property>
        <property name="topMargin">
         <number>24</number>
        </property>
        <property name="bottomMargin">
-        <number>24</number>
+        <number>12</number>
        </property>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="spacing">
+          <number>24</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_29">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Pairwise interaction plot</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="pair_interaction">
+           <property name="spacing">
+            <number>16</number>
+           </property>
+           <property name="leftMargin">
+            <number>24</number>
+           </property>
+           <property name="rightMargin">
+            <number>24</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="label_30">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Selection</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="resi_selection">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="resi_plot">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>140</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;See how interactions chainges between different states. First create a selection of exactly &lt;span style=&quot; font-weight:600;&quot;&gt;two&lt;/span&gt; residues that are interacting and select the selection in the box above.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Show</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_12">
          <property name="spacing">
@@ -171,6 +271,13 @@
           </layout>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -360,7 +467,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_24">
+              <widget class="QLabel" name="colormap">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                  <horstretch>0</horstretch>
@@ -374,7 +481,7 @@
                 </size>
                </property>
                <property name="styleSheet">
-                <string notr="true">QLabel{ background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 255), stop:0.315789 rgba(255, 255, 0, 255), stop:0.688995 rgba(255, 125, 0, 255), stop:1 rgba(224, 0, 0, 255));
+                <string notr="true">QLabel{ background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 255), stop:0.315789 rgba(191, 191, 255, 255), stop:0.688995 rgba(0, 128, 255, 255), stop:1 rgba(0, 0, 255, 255));
   border-radius: 10px;
   min-height: 25px;
   min-width: 20px;
@@ -383,6 +490,9 @@
                </property>
                <property name="text">
                 <string/>
+               </property>
+               <property name="textInteractionFlags">
+                <set>Qt::TextSelectableByMouse</set>
                </property>
               </widget>
              </item>
@@ -470,96 +580,6 @@
         </layout>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <property name="spacing">
-          <number>24</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="label_29">
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Residue pair interaction</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="pair_interaction">
-           <property name="spacing">
-            <number>16</number>
-           </property>
-           <property name="leftMargin">
-            <number>24</number>
-           </property>
-           <property name="rightMargin">
-            <number>24</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="label_30">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Selection</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="resi_selection">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>100</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="resi_plot">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>140</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;See how interactions chainges between different states. First create a selection of exactly &lt;span style=&quot; font-weight:600;&quot;&gt;two&lt;/span&gt; residues that are interacting and select the selection in the box above.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>Plot</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </item>
-       <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -577,7 +597,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_4">
+     <widget class="QWidget" name="edges">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
         <horstretch>0</horstretch>
@@ -589,13 +609,13 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <property name="spacing">
-        <number>24</number>
+        <number>12</number>
        </property>
        <property name="topMargin">
         <number>24</number>
        </property>
        <property name="bottomMargin">
-        <number>24</number>
+        <number>12</number>
        </property>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -623,7 +643,7 @@
               </font>
              </property>
              <property name="text">
-              <string>Chain interaction analysis</string>
+              <string>Interaction plots</string>
              </property>
             </widget>
            </item>
@@ -671,7 +691,7 @@
                 <string>Plot a graph of chains interaction</string>
                </property>
                <property name="text">
-                <string>Chain interaction</string>
+                <string>Chain interactions</string>
                </property>
               </widget>
              </item>
@@ -702,167 +722,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>Secondary structure interaction</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_15">
-           <property name="spacing">
-            <number>16</number>
-           </property>
-           <property name="sizeConstraint">
-            <enum>QLayout::SetFixedSize</enum>
-           </property>
-           <item>
-            <widget class="QLabel" name="label_3">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Frequency heatmap for interchain residues</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QGridLayout" name="gridLayout_5">
-             <property name="leftMargin">
-              <number>24</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>24</number>
-             </property>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="interaction_sele">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>120</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="toolTip">
-                <string>Interaction type</string>
-               </property>
-               <property name="editable">
-                <bool>false</bool>
-               </property>
-               <item>
-                <property name="text">
-                 <string>All</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>H-bond</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Ionic</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>π-π stack</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>π cation</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Disulfide</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Van der Waals</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>IAC</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_35">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>195</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Interaction type</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <widget class="QPushButton" name="show_inter_heatmap">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>120</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>120</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Show</string>
+                <string>Secondary structure interactions</string>
                </property>
               </widget>
              </item>
@@ -871,6 +731,180 @@
           </layout>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_15">
+         <property name="spacing">
+          <number>16</number>
+         </property>
+         <property name="sizeConstraint">
+          <enum>QLayout::SetFixedSize</enum>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Probabilistic inter-chain residue contact map</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QGridLayout" name="gridLayout_5">
+           <property name="leftMargin">
+            <number>24</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>24</number>
+           </property>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="interaction_sele">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>120</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Interaction type</string>
+             </property>
+             <property name="editable">
+              <bool>false</bool>
+             </property>
+             <item>
+              <property name="text">
+               <string>All</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>H-bond</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ionic</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>π-π stack</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>π cation</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Disulfide</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Van der Waals</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>IAC</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_35">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>195</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Interaction type</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QPushButton" name="show_inter_heatmap">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>120</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>120</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Show</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QWidget" name="correlation" native="true">
@@ -910,7 +944,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Interaction correlation table</string>
+               <string>Pairwise interaction correlation analysis</string>
               </property>
              </widget>
             </item>
@@ -925,25 +959,6 @@
               <property name="rightMargin">
                <number>0</number>
               </property>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_34">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>195</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Frequency</string>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="1">
                <widget class="QSpinBox" name="min_presence">
                 <property name="sizePolicy">
@@ -978,6 +993,38 @@
                 </property>
                 <property name="value">
                  <number>5</number>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_34">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>195</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Frequency</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_37">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Correlation  (|x| &gt; threshold )</string>
                 </property>
                </widget>
               </item>
@@ -1018,19 +1065,6 @@
                 </property>
                </widget>
               </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_37">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Correlation  (|x| &gt; threshold )</string>
-                </property>
-               </widget>
-              </item>
               <item row="2" column="1">
                <widget class="QDoubleSpinBox" name="coeff_thr">
                 <property name="sizePolicy">
@@ -1068,14 +1102,7 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>Correlation P-value</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1" colspan="2">
+              <item row="3" column="1">
                <widget class="QDoubleSpinBox" name="p_thr">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -1087,7 +1114,7 @@
                  <set>Qt::AlignCenter</set>
                 </property>
                 <property name="decimals">
-                 <number>15</number>
+                 <number>5</number>
                 </property>
                 <property name="maximum">
                  <double>1.000000000000000</double>
@@ -1097,6 +1124,20 @@
                 </property>
                 <property name="value">
                  <double>0.100000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="2">
+               <widget class="QLabel" name="label_50">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>Correlation P-value cutoff</string>
                 </property>
                </widget>
               </item>
@@ -1169,7 +1210,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_2">
+     <widget class="QWidget" name="clustering">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
         <horstretch>0</horstretch>
@@ -1193,7 +1234,7 @@
         <number>24</number>
        </property>
        <property name="bottomMargin">
-        <number>24</number>
+        <number>12</number>
        </property>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -1215,7 +1256,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Genarate clusters</string>
+            <string>Generate clusters</string>
            </property>
           </widget>
          </item>
@@ -1510,21 +1551,21 @@
               <string notr="true"/>
              </property>
              <property name="text">
-              <string>Plot</string>
+              <string>Show</string>
              </property>
             </widget>
            </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_4">
              <property name="text">
-              <string>Hierarchical clustering</string>
+              <string>Hierarchical clusters</string>
              </property>
             </widget>
            </item>
            <item row="2" column="0">
             <widget class="QLabel" name="label_44">
              <property name="text">
-              <string>State clustering</string>
+              <string>State clusters</string>
              </property>
             </widget>
            </item>
@@ -1549,14 +1590,14 @@
               </size>
              </property>
              <property name="text">
-              <string>Plot</string>
+              <string>Show</string>
              </property>
             </widget>
            </item>
            <item row="3" column="0">
             <widget class="QLabel" name="label_45">
              <property name="text">
-              <string>Create object</string>
+              <string>Representative conformations</string>
              </property>
             </widget>
            </item>
@@ -1597,7 +1638,7 @@
               <string notr="true"/>
              </property>
              <property name="text">
-              <string>Create</string>
+              <string>Create object</string>
              </property>
              <property name="checkable">
               <bool>false</bool>
@@ -1644,7 +1685,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="configuration">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
         <horstretch>0</horstretch>
@@ -1679,7 +1720,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <property name="usesScrollButtons">
           <bool>true</bool>
@@ -1704,7 +1745,7 @@
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_25">
              <property name="spacing">
-              <number>16</number>
+              <number>12</number>
              </property>
              <property name="topMargin">
               <number>0</number>
@@ -1757,7 +1798,7 @@
                   <item>
                    <widget class="QRadioButton" name="ring_remote">
                     <property name="text">
-                     <string>Run remote</string>
+                     <string>Run remotely via server API</string>
                     </property>
                    </widget>
                   </item>
@@ -1843,7 +1884,7 @@
                <item row="1" column="0">
                 <widget class="QLabel" name="edgesOptionsLabel">
                  <property name="text">
-                  <string>Edges options</string>
+                  <string>Edges</string>
                  </property>
                 </widget>
                </item>
@@ -1908,43 +1949,21 @@
                  </item>
                 </layout>
                </item>
-               <item row="2" column="0">
+               <item row="3" column="0">
                 <widget class="QLabel" name="sequenceSeparationLabel">
                  <property name="text">
                   <string>Sequence separation</string>
                  </property>
                 </widget>
                </item>
-               <item row="2" column="1">
-                <widget class="QSpinBox" name="seq_separation">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="minimum">
-                  <number>1</number>
-                 </property>
-                 <property name="maximum">
-                  <number>30</number>
-                 </property>
-                 <property name="value">
-                  <number>3</number>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
+               <item row="4" column="0">
                 <widget class="QLabel" name="distanceThresholdsLabel">
                  <property name="text">
                   <string>Distance thresholds</string>
                  </property>
                 </widget>
                </item>
-               <item row="3" column="1">
+               <item row="4" column="1">
                 <layout class="QGridLayout" name="gridLayout_2">
                  <property name="sizeConstraint">
                   <enum>QLayout::SetMinimumSize</enum>
@@ -1955,74 +1974,7 @@
                  <property name="verticalSpacing">
                   <number>9</number>
                  </property>
-                 <item row="1" column="0">
-                  <widget class="QWidget" name="widget_2" native="true">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_7">
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <widget class="QDoubleSpinBox" name="len_hbond">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                      <property name="suffix">
-                       <string> Å</string>
-                      </property>
-                      <property name="maximum">
-                       <double>10.000000000000000</double>
-                      </property>
-                      <property name="singleStep">
-                       <double>0.500000000000000</double>
-                      </property>
-                      <property name="value">
-                       <double>3.500000000000000</double>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QLabel" name="label_17">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <family>Sans Serif</family>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Disulfide</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
+                 <item row="2" column="1">
                   <widget class="QWidget" name="widget_8" native="true">
                    <layout class="QVBoxLayout" name="verticalLayout_17">
                     <property name="leftMargin">
@@ -2036,8 +1988,11 @@
                     </property>
                     <item>
                      <widget class="QDoubleSpinBox" name="len_ss">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
@@ -2062,9 +2017,30 @@
                    </layout>
                   </widget>
                  </item>
-                 <item row="1" column="2">
-                  <widget class="QWidget" name="widget_6" native="true">
-                   <layout class="QVBoxLayout" name="verticalLayout_18">
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_16">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>Sans Serif</family>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>H-Bonds</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QWidget" name="widget_5" native="true">
+                   <layout class="QVBoxLayout" name="verticalLayout_34">
                     <property name="leftMargin">
                      <number>0</number>
                     </property>
@@ -2075,9 +2051,12 @@
                      <number>0</number>
                     </property>
                     <item>
-                     <widget class="QDoubleSpinBox" name="len_salt">
+                     <widget class="QDoubleSpinBox" name="len_pica">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
@@ -2095,56 +2074,106 @@
                        <double>0.500000000000000</double>
                       </property>
                       <property name="value">
-                       <double>4.000000000000000</double>
+                       <double>5.000000000000000</double>
                       </property>
                      </widget>
                     </item>
                    </layout>
                   </widget>
                  </item>
-                 <item row="2" column="1">
-                  <widget class="QLabel" name="label_20">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <family>Sans Serif</family>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>π-cation</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                   </property>
+                 <item row="4" column="2">
+                  <widget class="QWidget" name="widget_7" native="true">
+                   <layout class="QVBoxLayout" name="verticalLayout_33">
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QDoubleSpinBox" name="len_vdw">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                      <property name="suffix">
+                       <string> Å</string>
+                      </property>
+                      <property name="maximum">
+                       <double>2.000000000000000</double>
+                      </property>
+                      <property name="singleStep">
+                       <double>0.500000000000000</double>
+                      </property>
+                      <property name="value">
+                       <double>0.500000000000000</double>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </widget>
                  </item>
                  <item row="2" column="0">
-                  <widget class="QLabel" name="label_19">
+                  <widget class="QWidget" name="widget_2" native="true">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
-                   <property name="font">
-                    <font>
-                     <family>Sans Serif</family>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>π-π stacks</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_7">
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QDoubleSpinBox" name="len_hbond">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                      <property name="suffix">
+                       <string> Å</string>
+                      </property>
+                      <property name="maximum">
+                       <double>10.000000000000000</double>
+                      </property>
+                      <property name="singleStep">
+                       <double>0.500000000000000</double>
+                      </property>
+                      <property name="value">
+                       <double>3.500000000000000</double>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </widget>
                  </item>
-                 <item row="2" column="2">
+                 <item row="3" column="2">
                   <widget class="QLabel" name="label_21">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -2174,28 +2203,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="label_16">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <family>Sans Serif</family>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>H-Bonds</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="2">
+                 <item row="1" column="2">
                   <widget class="QLabel" name="label_18">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -2216,7 +2224,49 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="0">
+                 <item row="3" column="1">
+                  <widget class="QLabel" name="label_20">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>Sans Serif</family>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>π-cation</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QLabel" name="label_17">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>Sans Serif</family>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Disulfide</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
                   <widget class="QWidget" name="widget_4" native="true">
                    <layout class="QVBoxLayout" name="verticalLayout_35">
                     <property name="leftMargin">
@@ -2230,8 +2280,11 @@
                     </property>
                     <item>
                      <widget class="QDoubleSpinBox" name="len_pipi">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
@@ -2256,9 +2309,30 @@
                    </layout>
                   </widget>
                  </item>
-                 <item row="3" column="1">
-                  <widget class="QWidget" name="widget_5" native="true">
-                   <layout class="QVBoxLayout" name="verticalLayout_34">
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_19">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>Sans Serif</family>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>π-π stacks</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="2">
+                  <widget class="QWidget" name="widget_6" native="true">
+                   <layout class="QVBoxLayout" name="verticalLayout_18">
                     <property name="leftMargin">
                      <number>0</number>
                     </property>
@@ -2269,9 +2343,12 @@
                      <number>0</number>
                     </property>
                     <item>
-                     <widget class="QDoubleSpinBox" name="len_pica">
+                     <widget class="QDoubleSpinBox" name="len_salt">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
@@ -2289,16 +2366,34 @@
                        <double>0.500000000000000</double>
                       </property>
                       <property name="value">
-                       <double>5.000000000000000</double>
+                       <double>4.000000000000000</double>
                       </property>
                      </widget>
                     </item>
                    </layout>
                   </widget>
                  </item>
-                 <item row="3" column="2">
-                  <widget class="QWidget" name="widget_7" native="true">
-                   <layout class="QVBoxLayout" name="verticalLayout_33">
+                 <item row="0" column="0" colspan="3">
+                  <widget class="QFrame" name="frame_4">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>12</height>
+                    </size>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::NoFrame</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Plain</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_6">
                     <property name="leftMargin">
                      <number>0</number>
                     </property>
@@ -2309,27 +2404,26 @@
                      <number>0</number>
                     </property>
                     <item>
-                     <widget class="QDoubleSpinBox" name="len_vdw">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
+                     <widget class="QRadioButton" name="strict">
+                      <property name="text">
+                       <string>Strict</string>
                       </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
+                      <property name="checked">
+                       <bool>true</bool>
                       </property>
-                      <property name="suffix">
-                       <string> Å</string>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QRadioButton" name="relaxed">
+                      <property name="text">
+                       <string>Relaxed</string>
                       </property>
-                      <property name="maximum">
-                       <double>2.000000000000000</double>
-                      </property>
-                      <property name="singleStep">
-                       <double>0.500000000000000</double>
-                      </property>
-                      <property name="value">
-                       <double>0.500000000000000</double>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QRadioButton" name="manual">
+                      <property name="text">
+                       <string>Manual</string>
                       </property>
                      </widget>
                     </item>
@@ -2338,22 +2432,49 @@
                  </item>
                 </layout>
                </item>
+               <item row="3" column="1">
+                <layout class="QHBoxLayout" name="horizontalLayout_7">
+                 <item>
+                  <widget class="QSpinBox" name="seq_separation">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                   <property name="minimum">
+                    <number>1</number>
+                   </property>
+                   <property name="maximum">
+                    <number>30</number>
+                   </property>
+                   <property name="value">
+                    <number>3</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_51">
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_52">
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
               </layout>
              </item>
             </layout>
-           </item>
-           <item>
-            <spacer name="verticalSpacer_5">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>0</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </widget>
@@ -2379,6 +2500,9 @@
              <item>
               <layout class="QGridLayout" name="gridLayout_10">
                <property name="leftMargin">
+                <number>24</number>
+               </property>
+               <property name="topMargin">
                 <number>24</number>
                </property>
                <property name="rightMargin">
@@ -2461,7 +2585,7 @@
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Edges width     </string>
+                  <string>Interaction width     </string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -2477,7 +2601,7 @@
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Edges transparency   </string>
+                  <string>Interaction transparency   </string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -2500,12 +2624,83 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>Connection colors</string>
+                  <string>Interaction colors</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <layout class="QGridLayout" name="gridLayout_4">
+                 <item row="3" column="1">
+                  <widget class="QWidget" name="widget_19" native="true">
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton {text-align: right;}</string>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_21">
+                    <property name="spacing">
+                     <number>8</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QPushButton" name="b_color_iac">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">border-width: 8px; border-color:red;</string>
+                      </property>
+                      <property name="text">
+                       <string>Inter-atomic</string>
+                      </property>
+                      <property name="flat">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="color_iac">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>16</width>
+                        <height>16</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QLabel{ background: red;
+  border-radius: 8px;
+  min-height: 16px;
+  min-width: 16px;
+  max-height: 16px;
+  max-width: 16px;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
                  <item row="1" column="0">
                   <widget class="QWidget" name="widget_3" native="true">
                    <property name="styleSheet">
@@ -2541,7 +2736,7 @@ text-align: right;
     }</string>
                       </property>
                       <property name="text">
-                       <string>Hydrogen bonds</string>
+                       <string>Hydrogen bond</string>
                       </property>
                       <property name="flat">
                        <bool>true</bool>
@@ -2570,148 +2765,6 @@ text-align: right;
   max-height: 16px;
   max-width: 16px;
   border: 1px solid black;
-}</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QWidget" name="widget_16" native="true">
-                   <property name="styleSheet">
-                    <string notr="true">QPushButton {text-align: right;}</string>
-                   </property>
-                   <layout class="QHBoxLayout" name="horizontalLayout_24">
-                    <property name="spacing">
-                     <number>8</number>
-                    </property>
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <widget class="QPushButton" name="b_color_pica">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">border-width: 8px; border-color:red;</string>
-                      </property>
-                      <property name="text">
-                       <string>π-cation</string>
-                      </property>
-                      <property name="flat">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLabel" name="color_pica">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>16</width>
-                        <height>16</height>
-                       </size>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">QLabel{ background: red;
-  border-radius: 8px;
-  min-height: 16px;
-  min-width: 16px;
-  max-height: 16px;
-  max-width: 16px;
-}</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QWidget" name="widget_15" native="true">
-                   <property name="styleSheet">
-                    <string notr="true">QPushButton {text-align: right;}</string>
-                   </property>
-                   <layout class="QHBoxLayout" name="horizontalLayout_23">
-                    <property name="spacing">
-                     <number>8</number>
-                    </property>
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <widget class="QPushButton" name="b_color_pipi">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">border-width: 8px; border-color:red;</string>
-                      </property>
-                      <property name="text">
-                       <string>π-π stacks</string>
-                      </property>
-                      <property name="flat">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLabel" name="color_pipi">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>16</width>
-                        <height>16</height>
-                       </size>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">QLabel{ background: red;
-  border-radius: 8px;
-  min-height: 16px;
-  min-width: 16px;
-  max-height: 16px;
-  max-width: 16px;
 }</string>
                       </property>
                       <property name="text">
@@ -2839,7 +2892,7 @@ text-align: right;
                        <string notr="true">border-width: 8px; border-color:red;</string>
                       </property>
                       <property name="text">
-                       <string>Disulfide bonds</string>
+                       <string>Disulfide bond</string>
                       </property>
                       <property name="flat">
                        <bool>true</bool>
@@ -2848,6 +2901,148 @@ text-align: right;
                     </item>
                     <item>
                      <widget class="QLabel" name="color_ss">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>16</width>
+                        <height>16</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QLabel{ background: red;
+  border-radius: 8px;
+  min-height: 16px;
+  min-width: 16px;
+  max-height: 16px;
+  max-width: 16px;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QWidget" name="widget_16" native="true">
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton {text-align: right;}</string>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_24">
+                    <property name="spacing">
+                     <number>8</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QPushButton" name="b_color_pica">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">border-width: 8px; border-color:red;</string>
+                      </property>
+                      <property name="text">
+                       <string>π-cation</string>
+                      </property>
+                      <property name="flat">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="color_pica">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>16</width>
+                        <height>16</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QLabel{ background: red;
+  border-radius: 8px;
+  min-height: 16px;
+  min-width: 16px;
+  max-height: 16px;
+  max-width: 16px;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QWidget" name="widget_15" native="true">
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton {text-align: right;}</string>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_23">
+                    <property name="spacing">
+                     <number>8</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QPushButton" name="b_color_pipi">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">border-width: 8px; border-color:red;</string>
+                      </property>
+                      <property name="text">
+                       <string>π-π stack</string>
+                      </property>
+                      <property name="flat">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="color_pipi">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                         <horstretch>0</horstretch>
@@ -2910,7 +3105,7 @@ text-align: right;
                        <string notr="true">border-width: 8px; border-color:red;</string>
                       </property>
                       <property name="text">
-                       <string>Ionic bonds</string>
+                       <string>Ionic bond</string>
                       </property>
                       <property name="flat">
                        <bool>true</bool>
@@ -2948,75 +3143,24 @@ text-align: right;
                    </layout>
                   </widget>
                  </item>
-                 <item row="3" column="1">
-                  <widget class="QWidget" name="widget_19" native="true">
-                   <property name="styleSheet">
-                    <string notr="true">QPushButton {text-align: right;}</string>
+                 <item row="3" column="2">
+                  <widget class="QPushButton" name="reset_colors">
+                   <property name="maximumSize">
+                    <size>
+                     <width>120</width>
+                     <height>16777215</height>
+                    </size>
                    </property>
-                   <layout class="QHBoxLayout" name="horizontalLayout_21">
-                    <property name="spacing">
-                     <number>8</number>
-                    </property>
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <widget class="QPushButton" name="b_color_iac">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">border-width: 8px; border-color:red;</string>
-                      </property>
-                      <property name="text">
-                       <string>IAC</string>
-                      </property>
-                      <property name="flat">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLabel" name="color_iac">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>16</width>
-                        <height>16</height>
-                       </size>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">QLabel{ background: red;
-  border-radius: 8px;
-  min-height: 16px;
-  min-width: 16px;
-  max-height: 16px;
-  max-width: 16px;
-}</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
+                   <property name="text">
+                    <string>Reset colors</string>
+                   </property>
+                   <property name="icon">
+                    <iconset>
+                     <normaloff>img/restart_alt_black_24dp.svg</normaloff>img/restart_alt_black_24dp.svg</iconset>
+                   </property>
+                   <property name="flat">
+                    <bool>true</bool>
+                   </property>
                   </widget>
                  </item>
                 </layout>
@@ -3107,8 +3251,17 @@ text-align: right;
                <pointsize>11</pointsize>
               </font>
              </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Plain</enum>
+             </property>
+             <property name="lineWidth">
+              <number>1</number>
+             </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;RING PyMOL plugin - developed by Alessio Del Conte @ BiocomputingUP lab, University of Padua&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;RING PyMOL plugin - developed by Alessio Del Conte @ BioComputing UP, University of Padua&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/BioComputingUP/ring-pymol&quot;&gt;&lt;span style=&quot;text-decoration:none; font-size:9pt; font-style:italic; color:#494949;&quot;&gt;GitHub repository&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="textFormat">
               <enum>Qt::AutoText</enum>
@@ -3116,8 +3269,8 @@ text-align: right;
              <property name="wordWrap">
               <bool>true</bool>
              </property>
-             <property name="indent">
-              <number>-1</number>
+             <property name="openExternalLinks">
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -3172,7 +3325,7 @@ text-align: right;
               </font>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;The RING-2.0 web server for high quality residue interaction networks&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Piovesan, D., Minervini, G., Tosatto, S.C.E.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;(2016) Nucleic Acids Research 44(W1), W367-74 &lt;/span&gt;&lt;a href=&quot;https://doi.org/10.1093/nar/gkw315&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;→&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;RING 3.0: fast generation of probabilistic residue interaction networks from structural ensembles&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt; font-style:italic;&quot;&gt;Damiano Clementel, Alessio Del Conte, Alexander Miguel Monzon, Giorgia F. Camagni, Giovanni Minervini, Damiano Piovesan and Silvio C.E. Tosatto&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="textFormat">
               <enum>Qt::AutoText</enum>
@@ -3232,14 +3385,14 @@ text-align: right;
            </property>
            <property name="minimumSize">
             <size>
-             <width>250</width>
-             <height>70</height>
+             <width>180</width>
+             <height>50</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>100</width>
-             <height>70</height>
+             <height>50</height>
             </size>
            </property>
            <property name="pixmap">
@@ -3263,8 +3416,8 @@ text-align: right;
            </property>
            <property name="maximumSize">
             <size>
-             <width>125</width>
-             <height>80</height>
+             <width>100</width>
+             <height>70</height>
             </size>
            </property>
            <property name="pixmap">
@@ -3297,10 +3450,29 @@ text-align: right;
      </widget>
     </widget>
    </item>
+   <item row="8" column="0">
+    <widget class="QProgressBar" name="progress_bar">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="textVisible">
+      <bool>false</bool>
+     </property>
+     <property name="format">
+      <string>%v%</string>
+     </property>
+    </widget>
+   </item>
    <item row="2" column="0">
     <widget class="QFrame" name="frame_2">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -3454,7 +3626,7 @@ text-align: right;
            </size>
           </property>
           <property name="text">
-           <string>Location</string>
+           <string>Interactions</string>
           </property>
          </widget>
         </item>
@@ -3491,7 +3663,7 @@ text-align: right;
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Interchain</string>
+             <string>Inter-chain</string>
             </property>
            </widget>
           </item>
@@ -3504,7 +3676,7 @@ text-align: right;
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Intrachain</string>
+             <string>Intra-chain</string>
             </property>
            </widget>
           </item>
@@ -3639,7 +3811,121 @@ text-align: right;
      </layout>
     </widget>
    </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_40">
+     <property name="spacing">
+      <number>16</number>
+     </property>
+     <property name="sizeConstraint">
+      <enum>QLayout::SetMinimumSize</enum>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>8</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="label_7">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>35</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap>img/ring_col.svg</pixmap>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_9">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_8">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <italic>false</italic>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>ArrowCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://protein.bio.unipd.it/&quot;&gt;&lt;span style=&quot;text-decoration:none; font-size:9pt; font-style:italic; color:#494949;&quot;&gt;Developed at BioComputing UP - University of Padua&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::AutoText</enum>
+       </property>
+       <property name="openExternalLinks">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
    <item row="9" column="0">
+    <widget class="Line" name="line_5">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <layout class="QVBoxLayout" name="verticalLayout_10">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <property name="leftMargin">
+      <number>12</number>
+     </property>
+     <property name="topMargin">
+      <number>8</number>
+     </property>
+     <property name="bottomMargin">
+      <number>8</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="label_49">
+       <property name="text">
+        <string>Log</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="12" column="0">
     <widget class="QListWidget" name="console_log">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -3674,93 +3960,26 @@ text-align: right;
      <property name="midLineWidth">
       <number>1</number>
      </property>
+     <property name="autoScrollMargin">
+      <number>0</number>
+     </property>
+     <property name="dragEnabled">
+      <bool>true</bool>
+     </property>
      <property name="selectionMode">
-      <enum>QAbstractItemView::NoSelection</enum>
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+     <property name="movement">
+      <enum>QListView::Static</enum>
      </property>
      <property name="viewMode">
       <enum>QListView::ListMode</enum>
      </property>
-     <item>
-      <property name="text">
-       <string>Logger initialized</string>
-      </property>
-     </item>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_40">
-     <property name="spacing">
-      <number>16</number>
+     <property name="uniformItemSizes">
+      <bool>true</bool>
      </property>
-     <property name="sizeConstraint">
-      <enum>QLayout::SetMinimumSize</enum>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>8</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="label_7">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="pixmap">
-        <pixmap>img/ring_gray.svg</pixmap>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_9">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_8">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Developed by Alessio Del Conte @ BiocomputingUP lab</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="8" column="0">
-    <widget class="QProgressBar" name="progress_bar">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="styleSheet">
-      <string notr="true"/>
-     </property>
-     <property name="textVisible">
-      <bool>false</bool>
-     </property>
-     <property name="format">
-      <string>%v%</string>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

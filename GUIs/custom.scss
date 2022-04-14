@@ -26,6 +26,11 @@
     min-height: 24px;
 }}
 
+.QDoubleSpinBox:disabled {{
+    color: #42494f;
+    min-height: 24px;
+}}
+
 .QComboBox {{
     color: #272d31;
     min-height: 24px;
@@ -45,10 +50,6 @@
     border-radius: 8px;
 }}
 
-.QListWidget::item[text*='ERROR'] {{
-    color: red;
-}}
-
 .QGroupBox::title {{
     color: #43474d;
 }}
@@ -57,6 +58,6 @@
     border: 1px solid #797981;
 }}
 
-#rmsd_box, #cluster_box, #frame_3, #frame {{
+#rmsd_box, #cluster_box, #frame_3,#frame_4, #frame {{
     border: unset;
 }}
