@@ -4,7 +4,7 @@ from os import environ
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QCursor, QFont
+from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
 from PyQt5.uic import loadUi
 from networkx import MultiGraph, draw_networkx_labels, draw_networkx_nodes, kamada_kawai_layout
@@ -112,7 +112,7 @@ class MainDialog(QWidget):
         self.close_progress()
         self.center_qcombobox()
 
-        self.widg.reset_colors.clicked.connect(lambda : self.init_colors(original=True))
+        self.widg.reset_colors.clicked.connect(lambda: self.init_colors(original=True))
 
         # Esthetics
         for button_child in self.widg.findChildren(QtWidgets.QPushButton):
@@ -166,7 +166,8 @@ class MainDialog(QWidget):
             self.processEvents()
 
     def distances(self, type):
-        widgets = [self.widg.len_pipi, self.widg.len_pica, self.widg.len_vdw, self.widg.len_ss, self.widg.len_hbond, self.widg.len_salt]
+        widgets = [self.widg.len_pipi, self.widg.len_pica, self.widg.len_vdw, self.widg.len_ss, self.widg.len_hbond,
+                   self.widg.len_salt]
         if type == "manual":
             for widget in widgets:
                 widget.setEnabled(True)
@@ -189,11 +190,10 @@ class MainDialog(QWidget):
             self.widg.len_salt.setValue(4.0)
             self.widg.len_vdw.setValue(0.5)
 
-
     def progress(self, p):
         if not self.widg.progress_bar.isVisible():
             self.widg.progress_bar.setVisible(True)
-        self.widg.progress_bar.setValue(p)
+        self.widg.progress_bar.setValue(int(p))
         self.widg.progress_bar.setFormat("%.02f %%" % p)
         self.processEvents()
 
@@ -357,7 +357,7 @@ class MainDialog(QWidget):
 
         self.widg.resi_selection.setEnabled(actual_sele_num > 0)
         self.widg.resi_plot.setEnabled(
-            actual_sele_num > 0 and cmd.count_states(self.widg.resi_selection.currentText()) > 1)
+                actual_sele_num > 0 and cmd.count_states(self.widg.resi_selection.currentText()) > 1)
 
         selections.update(list(filter(lambda x: x.split('_')[-1][-3:] != 'cgo',
                                       cmd.get_names('public_nongroup_objects'))))
