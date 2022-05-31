@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>558</width>
+    <width>620</width>
     <height>770</height>
    </rect>
   </property>
@@ -65,7 +65,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="nodes">
       <property name="enabled">
@@ -1469,8 +1469,8 @@
                </property>
                <property name="font">
                 <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
+                 <weight>50</weight>
+                 <bold>false</bold>
                  <kerning>true</kerning>
                 </font>
                </property>
@@ -1720,7 +1720,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <property name="usesScrollButtons">
           <bool>true</bool>
@@ -3633,7 +3633,7 @@ text-align: right;
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_28">
           <property name="spacing">
-           <number>36</number>
+           <number>24</number>
           </property>
           <property name="sizeConstraint">
            <enum>QLayout::SetNoConstraint</enum>
@@ -3677,6 +3677,13 @@ text-align: right;
             </property>
             <property name="text">
              <string>Intra-chain</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="sidechain">
+            <property name="text">
+             <string>Side-chain</string>
             </property>
            </widget>
           </item>

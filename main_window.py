@@ -392,6 +392,9 @@ class MainDialog(QWidget):
             for widget in [self.widg.min_freq, self.widg.max_freq, self.widg.clustering, self.widg.min_presence,
                            self.widg.max_presence, self.widg.p_thr, self.widg.coeff_thr, self.widg.calc_corr]:
                 widget.setEnabled(is_multi_states)
+            is_multi_chain = len(cmd.get_chains(current_selection)) > 1
+            for widget in [self.widg.chain_graph, self.widg.interaction_sele, self.widg.show_inter_heatmap]:
+                widget.setEnabled(is_multi_chain)
 
     def visualize(self, selection=None, color=None, int_type=None):
         from pymol import stored
@@ -435,6 +438,7 @@ class MainDialog(QWidget):
                 return
 
             num_interaction_per_type = dict()
+            possible_selected_nodes = dict()
 
             for state in range(1, states + 1):
                 df = interactions_per_state[interactions_per_state.Model == state]
@@ -451,7 +455,7 @@ class MainDialog(QWidget):
                     interactions_per_type.setdefault(intType, list())
 
                 for (nodeId1, interaction, nodeId2, _, _, _, atom1, atom2, *_) in df.itertuples(index=False):
-                    intType = interaction.split(":")[0]
+                    intType, intRegion = interaction.split(":")
                     node1 = Node(nodeId1)
                     node2 = Node(nodeId2)
                     edge = Edge(node1, node2)
@@ -466,6 +470,9 @@ class MainDialog(QWidget):
                             freq = conn_freq[intType][edge] * 100
                         except KeyError:
                             freq = 0.5 * 100
+                        # Sidechain
+                        if self.widg.sidechain.isChecked() and intRegion != 'SC_SC':
+                            continue
                         # Interchain
                         if self.widg.interchain.isChecked() and node1.chain == node2.chain:
                             continue
@@ -492,6 +499,11 @@ class MainDialog(QWidget):
                         t += ("{}/{}/{}".format(node2.chain, str(node2.resi), atom2),)
                     interactions_per_type[intType].append(t)
 
+                    # Update set of possible selected nodes
+                    possible_selected_nodes.setdefault(intType, set())
+                    possible_selected_nodes[intType].add(node1.id_tuple())
+                    possible_selected_nodes[intType].add(node2.id_tuple())
+
                 for intType, interactions in interactions_per_type.items():
                     num_interaction_per_type.setdefault(intType, 0)
                     num_interaction_per_type[intType] += len(interactions)
@@ -507,7 +519,7 @@ class MainDialog(QWidget):
 
             cmd.hide(selection="*_edges")
             if not selection:
-                self.create_node_edges_sele(stored.model, is_sele, obj)
+                self.create_node_edges_sele(possible_selected_nodes, stored.model, is_sele, obj)
 
             # Set transp and radius after updating the CGOs
             self.slider_radius_change()
@@ -520,7 +532,7 @@ class MainDialog(QWidget):
         else:
             draw()
 
-    def create_node_edges_sele(self, model_name, is_sele, obj):
+    def create_node_edges_sele(self, possible_selected_nodes, model_name, is_sele, obj):
         members = ""
         for k in intTypeMap.keys():
             members += " {}_{}_cgo".format(obj, k)
@@ -537,9 +549,10 @@ class MainDialog(QWidget):
 
                 of_chain = dict()
                 for node, freq in freqs.items():
-                    if self.widg.min_freq.value() <= freq * 100 <= self.widg.max_freq.value():
-                        of_chain.setdefault(node.chain, [])
-                        of_chain[node.chain].append(node.resi)
+                    if node.id_tuple() in possible_selected_nodes[bond] if bond in possible_selected_nodes else []:
+                        if self.widg.min_freq.value() <= freq * 100 <= self.widg.max_freq.value():
+                            of_chain.setdefault(node.chain, [])
+                            of_chain[node.chain].append(node.resi)
 
                 for key, value in of_chain.items():
                     cmd.select(sele, "chain {} and resi {}".format(key, "+".join(value)), merge=1)
@@ -713,7 +726,7 @@ class MainDialog(QWidget):
 
         stored.model = ""
         cmd.iterate(obj, 'stored.model = model')
-        if cmd.get_chains(stored.model) == 1:
+        if len(cmd.get_chains(stored.model)) == 1:
             self.log("Only one chain is present in the selected object, cannot use this tool", error=True)
             return
 
@@ -738,7 +751,7 @@ class MainDialog(QWidget):
                             order.append(node1)
 
             if len(order) == 0:
-                self.log("No interaction of this type found", error=True)
+                self.log("No inter-chain interaction of this type found", error=True)
                 return
 
         else:

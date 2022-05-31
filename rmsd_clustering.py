@@ -18,8 +18,6 @@ from scipy.spatial.distance import squareform
 
 from utilities import generate_colormap
 
-# from sklearn.metrics import silhouette_score
-
 structure_coords = dict()
 counter: mp.Value
 
@@ -42,7 +40,7 @@ def hierarchy_optimization(X, logger, height, desired_clusters, method='complete
     if desired_clusters is not None:
         cluster_labels = clusters[:, desired_clusters - 2].flatten()
 
-        silhouette_avg = 1  # silhouette_score(X, cluster_labels, metric='precomputed')
+        silhouette_avg = 1
         result_label.setdefault(desired_clusters, (silhouette_avg, cluster_labels))
         tmp = cluster.hierarchy.dendrogram(Z, p=desired_clusters, truncate_mode='lastp', no_plot=True)
         last_h = min(list(filter(lambda x: x != 0, [item for sublist in tmp['dcoord'] for item in sublist])))
@@ -59,7 +57,7 @@ def hierarchy_optimization(X, logger, height, desired_clusters, method='complete
             logger.progress((i / len(range_n_clusters)) * 100)
             cluster_labels = clusters[:, i].flatten()
 
-            silhouette_avg = 1  # silhouette_score(X, cluster_labels, metric='precomputed')
+            silhouette_avg = 1
             result_label.setdefault(n_clusters, (silhouette_avg, cluster_labels))
 
             tmp = cluster.hierarchy.dendrogram(Z, p=n_clusters, truncate_mode='lastp', no_plot=True)
@@ -84,7 +82,6 @@ def cluster_distribution_heatmap(logger, pdb_id, method, tmp_dir, rmsd_val=None,
     logger.disable_window()
 
     X = load_rmsd_dis_matrix(logger, pdb_id, tmp_dir)
-
 
     if desired_clusters is not None and desired_clusters < 2:
         logger.log("The number of cluster has to be greater than 2", error=True)

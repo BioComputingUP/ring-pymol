@@ -132,8 +132,7 @@ def config_to_parameters(config):
                "-k"   : "len_pipi",
                "-a"   : "len_pica",
                "-b"   : "len_hbond",
-               "-w"   : "len_vdw",
-               "edges": "edges"}
+               "-w"   : "len_vdw"}
 
     new_config = {}
 
@@ -141,6 +140,8 @@ def config_to_parameters(config):
         # replace key of config with value
         if key in convert:
             new_config[convert[key]] = value.strip("--")
+
+    new_config[config["edges"].strip("--")] = True
 
     return new_config
 
