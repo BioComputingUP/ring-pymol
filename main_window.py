@@ -1,6 +1,7 @@
 import datetime
 import tempfile
 from os import environ
+from shutil import which
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QSize
@@ -50,8 +51,10 @@ class MainDialog(QWidget):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.log("Setting temp directory {}".format(self.temp_dir.name))
 
-        if os.path.exists("{}/.ring/bin/Ring".format(environ['HOME'])):
-            self.widg.ring_path.setText("{}/.ring/bin/Ring".format(environ['HOME']))
+        if os.path.exists("{}/.ring/bin/ring".format(environ['HOME'])):
+            self.widg.ring_path.setText("{}/.ring/bin/ring".format(environ['HOME']))
+        elif which('ring') is not None:
+            self.widg.ring_path.setText(str(which('ring')))
         else:
             self.log("RING path not found in current directory, please set it manually", warning=True)
 
@@ -387,13 +390,15 @@ class MainDialog(QWidget):
 
         current_selection = self.widg.selections_list.currentText()
 
-        if len(current_selection) > 0 and current_selection[0] != "(" and current_selection[-1] != ")":
+        # If there is only one chain in the selected object, then disable the widgets for interaction
+        if current_selection:
             is_multi_states = cmd.count_states(current_selection) > 1
             for widget in [self.widg.min_freq, self.widg.max_freq, self.widg.clustering, self.widg.min_presence,
                            self.widg.max_presence, self.widg.p_thr, self.widg.coeff_thr, self.widg.calc_corr]:
                 widget.setEnabled(is_multi_states)
             is_multi_chain = len(cmd.get_chains(current_selection)) > 1
-            for widget in [self.widg.chain_graph, self.widg.interaction_sele, self.widg.show_inter_heatmap]:
+            for widget in [self.widg.chain_graph, self.widg.interaction_sele, self.widg.show_inter_heatmap,
+                           self.widg.interchain, self.widg.chain_graph]:
                 widget.setEnabled(is_multi_chain)
 
     def visualize(self, selection=None, color=None, int_type=None):
@@ -693,9 +698,8 @@ class MainDialog(QWidget):
         something = False
         for inter in interaction_distance.keys():
             something = True
-            plt.scatter(np.arange(1, states + 1), interaction_distance[inter], label=inter, color=intTypeMap[inter],
-                        marker='.', s=100)
-            plt.plot(np.arange(1, states + 1), interaction_distance[inter], color=intTypeMap[inter])
+            plt.plot(np.arange(1, states + 1), interaction_distance[inter], label=inter, color=intTypeMap[inter],
+                     marker='o', markersize=2, linewidth=1)
 
         if something:
             plt.title("{} - {}".format(node1, node2))
@@ -704,7 +708,7 @@ class MainDialog(QWidget):
                                               [item for sublist in list(interaction_distance.values()) for item in
                                                sublist])) + 1)
             plt.xlim(left=0, right=states + 1)
-            plt.xticks(np.arange(1, states + 1))
+            # plt.xticks(np.arange(1, states + 1))
             plt.xlabel("State")
             plt.ylabel("Distance (Å)")
             plt.legend()
@@ -787,7 +791,7 @@ class MainDialog(QWidget):
             change_chain.setdefault(x.chain, i)
         ax.hlines(list(change_chain.values())[1:], *ax.get_xlim(), colors=["k"])
         ax.vlines(list(change_chain.values())[1:], *ax.get_ylim(), colors=["k"])
-        plt.title("{} interchain interactions".format(sele_inter))
+        plt.title("{} interchain interactions".format(sele_inter), fontsize=15)
         plt.tight_layout()
         plt.show(block=False)
 
