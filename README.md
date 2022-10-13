@@ -134,7 +134,7 @@ Two different plots can be produced with the results of the clustering, giving t
 
 **TODO :  IMAGE**
 
-The first plot is the Hierarchical Clustering Plot, which shows the hierarchical tree of the computed clustering, relative to the cut that the user selected. In the $x$ axis the labels are composed by $cluster\ representative -(\#\ states\ in\ cluster)$, where the cluster representative is the state that has the lower sum of distances between all the other states in the same cluster.
+The first plot is the Hierarchical Clustering Plot, which shows the hierarchical tree of the computed clustering, relative to the cut that the user selected. In the **x** axis the labels are composed by **cluster representative -(# states in cluster)**, where the cluster representative is the state that has the lower sum of distances between all the other states in the same cluster.
 
 **TODO :  IMAGE**
 
