@@ -64,6 +64,9 @@
        <height>450</height>
       </size>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
@@ -145,6 +148,9 @@
                <width>100</width>
                <height>0</height>
               </size>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
             </widget>
            </item>
@@ -325,6 +331,9 @@
                <kerning>true</kerning>
               </font>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>π-π stacks</string>
              </property>
@@ -342,6 +351,9 @@
                <bold>false</bold>
               </font>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Ionic bonds</string>
              </property>
@@ -355,6 +367,9 @@
                <weight>50</weight>
                <bold>false</bold>
               </font>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="text">
               <string>H-bonds</string>
@@ -373,6 +388,9 @@
                <bold>false</bold>
               </font>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>π-cation</string>
              </property>
@@ -386,6 +404,9 @@
                <weight>50</weight>
                <bold>false</bold>
               </font>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="text">
               <string>Disulfide bond</string>
@@ -401,6 +422,9 @@
                <bold>false</bold>
               </font>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Van der Waals</string>
              </property>
@@ -414,6 +438,9 @@
                <weight>50</weight>
                <bold>false</bold>
               </font>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="text">
               <string>IAC</string>
@@ -642,6 +669,9 @@
                <bold>true</bold>
               </font>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Interaction plots</string>
              </property>
@@ -687,6 +717,9 @@
                  <height>0</height>
                 </size>
                </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
                <property name="toolTip">
                 <string>Plot a graph of chains interaction</string>
                </property>
@@ -721,6 +754,9 @@
                  <height>0</height>
                 </size>
                </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
                <property name="text">
                 <string>Secondary structure interactions</string>
                </property>
@@ -734,6 +770,9 @@
        </item>
        <item>
         <widget class="Line" name="line_3">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -760,6 +799,9 @@
              <weight>75</weight>
              <bold>true</bold>
             </font>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
            </property>
            <property name="text">
             <string>Probabilistic inter-chain residue contact map</string>
@@ -802,6 +844,9 @@
                <width>120</width>
                <height>16777215</height>
               </size>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="toolTip">
               <string>Interaction type</string>
@@ -865,6 +910,9 @@
                <height>0</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Interaction type</string>
              </property>
@@ -890,6 +938,9 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Show</string>
              </property>
@@ -901,6 +952,9 @@
        </item>
        <item>
         <widget class="Line" name="line_4">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -908,6 +962,9 @@
        </item>
        <item>
         <widget class="QWidget" name="correlation" native="true">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
          <layout class="QVBoxLayout" name="verticalLayout_16">
           <property name="spacing">
            <number>0</number>
@@ -942,6 +999,9 @@
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
               </property>
               <property name="text">
                <string>Pairwise interaction correlation analysis</string>
@@ -979,6 +1039,9 @@
                   <height>16777215</height>
                  </size>
                 </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
                 </property>
@@ -1010,6 +1073,9 @@
                   <height>0</height>
                  </size>
                 </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="text">
                  <string>Frequency</string>
                 </property>
@@ -1022,6 +1088,9 @@
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
                 </property>
                 <property name="text">
                  <string>Correlation  (|x| &gt; threshold )</string>
@@ -1047,6 +1116,9 @@
                   <width>120</width>
                   <height>16777215</height>
                  </size>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -1085,6 +1157,9 @@
                   <height>16777215</height>
                  </size>
                 </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
                 </property>
@@ -1110,6 +1185,9 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
                 </property>
@@ -1129,6 +1207,9 @@
               </item>
               <item row="3" column="2">
                <widget class="QLabel" name="label_50">
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="text">
                  <string/>
                 </property>
@@ -1136,6 +1217,9 @@
               </item>
               <item row="3" column="0">
                <widget class="QLabel" name="label_2">
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="text">
                  <string>Correlation P-value cutoff</string>
                 </property>
@@ -1171,6 +1255,9 @@
                   <height>16777215</height>
                  </size>
                 </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="autoFillBackground">
                  <bool>false</bool>
                 </property>
@@ -1197,6 +1284,9 @@
        </item>
        <item>
         <spacer name="verticalSpacer_2">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -1547,6 +1637,9 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="styleSheet">
               <string notr="true"/>
              </property>
@@ -1589,6 +1682,9 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Show</string>
              </property>
@@ -1630,6 +1726,9 @@
                <strikeout>false</strikeout>
                <kerning>true</kerning>
               </font>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="toolTip">
               <string>Create a new object containg all the representative states of the clustered object</string>
@@ -1713,6 +1812,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="focusPolicy">
+          <enum>Qt::ClickFocus</enum>
+         </property>
          <property name="tabPosition">
           <enum>QTabWidget::North</enum>
          </property>
@@ -1763,6 +1865,9 @@
                </property>
                <item>
                 <widget class="QFrame" name="frame">
+                 <property name="focusPolicy">
+                  <enum>Qt::ClickFocus</enum>
+                 </property>
                  <property name="frameShape">
                   <enum>QFrame::NoFrame</enum>
                  </property>
@@ -1787,6 +1892,9 @@
                   </property>
                   <item>
                    <widget class="QRadioButton" name="ring_locally">
+                    <property name="focusPolicy">
+                     <enum>Qt::ClickFocus</enum>
+                    </property>
                     <property name="text">
                      <string>Run locally</string>
                     </property>
@@ -1797,6 +1905,9 @@
                   </item>
                   <item>
                    <widget class="QRadioButton" name="ring_remote">
+                    <property name="focusPolicy">
+                     <enum>Qt::ClickFocus</enum>
+                    </property>
                     <property name="text">
                      <string>Run remotely via server API</string>
                     </property>
@@ -1817,6 +1928,9 @@
                </property>
                <item>
                 <widget class="QCheckBox" name="override_memory">
+                 <property name="focusPolicy">
+                  <enum>Qt::ClickFocus</enum>
+                 </property>
                  <property name="toolTip">
                   <string>Usefull when structure has been modified</string>
                  </property>
@@ -1840,6 +1954,9 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="rINGExecutableLabel">
+                 <property name="focusPolicy">
+                  <enum>Qt::ClickFocus</enum>
+                 </property>
                  <property name="text">
                   <string>RING executable</string>
                  </property>
@@ -1861,6 +1978,9 @@
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="text">
                     <string/>
                    </property>
@@ -1874,6 +1994,9 @@
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="text">
                     <string>Browse...</string>
                    </property>
@@ -1883,6 +2006,9 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="edgesOptionsLabel">
+                 <property name="focusPolicy">
+                  <enum>Qt::ClickFocus</enum>
+                 </property>
                  <property name="text">
                   <string>Edges</string>
                  </property>
@@ -1895,6 +2021,9 @@
                  </property>
                  <item>
                   <widget class="QFrame" name="frame_3">
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="frameShape">
                     <enum>QFrame::NoFrame</enum>
                    </property>
@@ -1922,6 +2051,9 @@
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
+                      </property>
                       <property name="text">
                        <string>Multiple</string>
                       </property>
@@ -1932,6 +2064,9 @@
                     </item>
                     <item>
                      <widget class="QRadioButton" name="one_edge">
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
+                      </property>
                       <property name="text">
                        <string>One</string>
                       </property>
@@ -1939,6 +2074,9 @@
                     </item>
                     <item>
                      <widget class="QRadioButton" name="all_edge">
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
+                      </property>
                       <property name="text">
                        <string>All</string>
                       </property>
@@ -1951,6 +2089,9 @@
                </item>
                <item row="3" column="0">
                 <widget class="QLabel" name="sequenceSeparationLabel">
+                 <property name="focusPolicy">
+                  <enum>Qt::ClickFocus</enum>
+                 </property>
                  <property name="text">
                   <string>Sequence separation</string>
                  </property>
@@ -1958,6 +2099,9 @@
                </item>
                <item row="4" column="0">
                 <widget class="QLabel" name="distanceThresholdsLabel">
+                 <property name="focusPolicy">
+                  <enum>Qt::ClickFocus</enum>
+                 </property>
                  <property name="text">
                   <string>Distance thresholds</string>
                  </property>
@@ -1976,6 +2120,9 @@
                  </property>
                  <item row="2" column="1">
                   <widget class="QWidget" name="widget_8" native="true">
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <layout class="QVBoxLayout" name="verticalLayout_17">
                     <property name="leftMargin">
                      <number>0</number>
@@ -1996,6 +2143,9 @@
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -2030,6 +2180,9 @@
                      <family>Sans Serif</family>
                     </font>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="text">
                     <string>H-Bonds</string>
                    </property>
@@ -2040,6 +2193,9 @@
                  </item>
                  <item row="4" column="1">
                   <widget class="QWidget" name="widget_5" native="true">
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <layout class="QVBoxLayout" name="verticalLayout_34">
                     <property name="leftMargin">
                      <number>0</number>
@@ -2060,6 +2216,9 @@
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -2083,6 +2242,9 @@
                  </item>
                  <item row="4" column="2">
                   <widget class="QWidget" name="widget_7" native="true">
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <layout class="QVBoxLayout" name="verticalLayout_33">
                     <property name="leftMargin">
                      <number>0</number>
@@ -2103,6 +2265,9 @@
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -2132,6 +2297,9 @@
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <layout class="QVBoxLayout" name="verticalLayout_7">
                     <property name="leftMargin">
                      <number>0</number>
@@ -2152,6 +2320,9 @@
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -2186,6 +2357,9 @@
                      <family>Sans Serif</family>
                     </font>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="toolTip">
                     <string>Distance from the surfices of the atoms</string>
                    </property>
@@ -2216,6 +2390,9 @@
                      <family>Sans Serif</family>
                     </font>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="text">
                     <string>Ionic</string>
                    </property>
@@ -2236,6 +2413,9 @@
                     <font>
                      <family>Sans Serif</family>
                     </font>
+                   </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
                    </property>
                    <property name="text">
                     <string>π-cation</string>
@@ -2258,6 +2438,9 @@
                      <family>Sans Serif</family>
                     </font>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="text">
                     <string>Disulfide</string>
                    </property>
@@ -2268,6 +2451,9 @@
                  </item>
                  <item row="4" column="0">
                   <widget class="QWidget" name="widget_4" native="true">
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <layout class="QVBoxLayout" name="verticalLayout_35">
                     <property name="leftMargin">
                      <number>0</number>
@@ -2288,6 +2474,9 @@
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -2322,6 +2511,9 @@
                      <family>Sans Serif</family>
                     </font>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="text">
                     <string>π-π stacks</string>
                    </property>
@@ -2332,6 +2524,9 @@
                  </item>
                  <item row="2" column="2">
                   <widget class="QWidget" name="widget_6" native="true">
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <layout class="QVBoxLayout" name="verticalLayout_18">
                     <property name="leftMargin">
                      <number>0</number>
@@ -2352,6 +2547,9 @@
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -2387,6 +2585,9 @@
                      <height>12</height>
                     </size>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="frameShape">
                     <enum>QFrame::NoFrame</enum>
                    </property>
@@ -2405,6 +2606,9 @@
                     </property>
                     <item>
                      <widget class="QRadioButton" name="strict">
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
+                      </property>
                       <property name="text">
                        <string>Strict</string>
                       </property>
@@ -2415,6 +2619,9 @@
                     </item>
                     <item>
                      <widget class="QRadioButton" name="relaxed">
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
+                      </property>
                       <property name="text">
                        <string>Relaxed</string>
                       </property>
@@ -2422,6 +2629,9 @@
                     </item>
                     <item>
                      <widget class="QRadioButton" name="manual">
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
+                      </property>
                       <property name="text">
                        <string>Manual</string>
                       </property>
@@ -2442,6 +2652,9 @@
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="alignment">
                     <set>Qt::AlignCenter</set>
                    </property>
@@ -2458,6 +2671,9 @@
                  </item>
                  <item>
                   <widget class="QLabel" name="label_51">
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="text">
                     <string/>
                    </property>
@@ -2465,6 +2681,9 @@
                  </item>
                  <item>
                   <widget class="QLabel" name="label_52">
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="text">
                     <string/>
                    </property>
@@ -3225,6 +3444,9 @@ text-align: right;
              <bold>true</bold>
             </font>
            </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
            <property name="text">
             <string>About</string>
            </property>
@@ -3250,6 +3472,9 @@ text-align: right;
               <font>
                <pointsize>11</pointsize>
               </font>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="frameShape">
               <enum>QFrame::NoFrame</enum>
@@ -3298,6 +3523,9 @@ text-align: right;
              <bold>true</bold>
             </font>
            </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
            <property name="text">
             <string>Cite</string>
            </property>
@@ -3323,6 +3551,9 @@ text-align: right;
               <font>
                <pointsize>11</pointsize>
               </font>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;RING 3.0: fast generation of probabilistic residue interaction networks from structural ensembles&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt; font-style:italic;&quot;&gt;Damiano Clementel, Alessio Del Conte, Alexander Miguel Monzon, Giorgia F. Camagni, Giovanni Minervini, Damiano Piovesan and Silvio C.E. Tosatto&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -3350,6 +3581,9 @@ text-align: right;
        </item>
        <item>
         <spacer name="verticalSpacer_6">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -3395,6 +3629,9 @@ text-align: right;
              <height>50</height>
             </size>
            </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
            <property name="pixmap">
             <pixmap>img/unipd800.png</pixmap>
            </property>
@@ -3420,6 +3657,9 @@ text-align: right;
              <height>70</height>
             </size>
            </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
            <property name="pixmap">
             <pixmap>img/biocompup.jpg</pixmap>
            </property>
@@ -3435,6 +3675,9 @@ text-align: right;
        </item>
        <item>
         <spacer name="verticalSpacer_7">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -3458,6 +3701,9 @@ text-align: right;
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
      <property name="styleSheet">
       <string notr="true"/>
      </property>
@@ -3476,6 +3722,9 @@ text-align: right;
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
      </property>
      <property name="styleSheet">
       <string notr="true"/>
@@ -3512,6 +3761,9 @@ text-align: right;
             <height>0</height>
            </size>
           </property>
+          <property name="focusPolicy">
+           <enum>Qt::ClickFocus</enum>
+          </property>
           <property name="text">
            <string>Select object</string>
           </property>
@@ -3530,6 +3782,9 @@ text-align: right;
             <width>0</width>
             <height>0</height>
            </size>
+          </property>
+          <property name="focusPolicy">
+           <enum>Qt::ClickFocus</enum>
           </property>
           <property name="styleSheet">
            <string notr="true"/>
@@ -3590,6 +3845,9 @@ text-align: right;
             <height>16777215</height>
            </size>
           </property>
+          <property name="focusPolicy">
+           <enum>Qt::ClickFocus</enum>
+          </property>
           <property name="text">
            <string>Save network</string>
           </property>
@@ -3625,6 +3883,9 @@ text-align: right;
             <height>16777215</height>
            </size>
           </property>
+          <property name="focusPolicy">
+           <enum>Qt::ClickFocus</enum>
+          </property>
           <property name="text">
            <string>Interactions</string>
           </property>
@@ -3646,6 +3907,9 @@ text-align: right;
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
             <property name="text">
              <string>All</string>
             </property>
@@ -3662,6 +3926,9 @@ text-align: right;
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
             <property name="text">
              <string>Inter-chain</string>
             </property>
@@ -3675,6 +3942,9 @@ text-align: right;
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
             <property name="text">
              <string>Intra-chain</string>
             </property>
@@ -3682,6 +3952,9 @@ text-align: right;
           </item>
           <item>
            <widget class="QRadioButton" name="sidechain">
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
             <property name="text">
              <string>Side-chain</string>
             </property>
@@ -3689,6 +3962,9 @@ text-align: right;
           </item>
           <item>
            <spacer name="horizontalSpacer_4">
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -3732,6 +4008,9 @@ text-align: right;
             <height>16777215</height>
            </size>
           </property>
+          <property name="focusPolicy">
+           <enum>Qt::ClickFocus</enum>
+          </property>
           <property name="text">
            <string>Frequency</string>
           </property>
@@ -3752,6 +4031,9 @@ text-align: right;
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -3778,6 +4060,9 @@ text-align: right;
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -3800,6 +4085,9 @@ text-align: right;
           </item>
           <item>
            <spacer name="horizontalSpacer_3">
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -3846,6 +4134,9 @@ text-align: right;
          <height>35</height>
         </size>
        </property>
+       <property name="focusPolicy">
+        <enum>Qt::ClickFocus</enum>
+       </property>
        <property name="styleSheet">
         <string notr="true"/>
        </property>
@@ -3862,6 +4153,9 @@ text-align: right;
      </item>
      <item>
       <spacer name="horizontalSpacer_9">
+       <property name="focusPolicy">
+        <enum>Qt::ClickFocus</enum>
+       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -3889,6 +4183,9 @@ text-align: right;
        <property name="cursor">
         <cursorShape>ArrowCursor</cursorShape>
        </property>
+       <property name="focusPolicy">
+        <enum>Qt::ClickFocus</enum>
+       </property>
        <property name="text">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://protein.bio.unipd.it/&quot;&gt;&lt;span style=&quot;text-decoration:none; font-size:9pt; font-style:italic; color:#494949;&quot;&gt;Developed at BioComputing UP - University of Padua&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -3904,6 +4201,9 @@ text-align: right;
    </item>
    <item row="9" column="0">
     <widget class="Line" name="line_5">
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -3925,6 +4225,9 @@ text-align: right;
      </property>
      <item>
       <widget class="QLabel" name="label_49">
+       <property name="focusPolicy">
+        <enum>Qt::ClickFocus</enum>
+       </property>
        <property name="text">
         <string>Log</string>
        </property>
@@ -3953,7 +4256,7 @@ text-align: right;
       </size>
      </property>
      <property name="focusPolicy">
-      <enum>Qt::NoFocus</enum>
+      <enum>Qt::ClickFocus</enum>
      </property>
      <property name="styleSheet">
       <string notr="true">QListWidget::item { border-bottom: 1px solid black;}</string>
@@ -3975,6 +4278,9 @@ text-align: right;
      </property>
      <property name="selectionMode">
       <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+     <property name="verticalScrollMode">
+      <enum>QAbstractItemView::ScrollPerItem</enum>
      </property>
      <property name="movement">
       <enum>QListView::Static</enum>

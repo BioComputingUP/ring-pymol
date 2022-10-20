@@ -34,6 +34,10 @@ def ring_plugin(test=False):
 
     global dialog
 
+    # don't let exceptions stop PyMOL
+    import traceback
+    sys.excepthook = traceback.print_exception
+
     app = Qt.QtWidgets.QApplication([])
 
     if "Fusion" in Qt.QtWidgets.QStyleFactory.keys():
