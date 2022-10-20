@@ -63,12 +63,6 @@ def ring_plugin(test=False):
         sys.exit(app.exec_())
 
 
-@cmd.extend
-def chain_label():
-    cmd.alter("resi 526-542", "chain='B'")
-    cmd.alter("not chain B", "chain='A'")
-
-
 if __name__ == '__main__':
     import pymol
 
