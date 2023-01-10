@@ -2,6 +2,7 @@
 # executed on PyMOL's startup. Only import such modules inside functions.
 import os
 import sys
+import time
 from pathlib import Path
 
 from pymol import cmd
@@ -40,14 +41,14 @@ def ring_plugin(test=False):
         app.setStyle('Fusion')
 
     extra = {
-            # Density Scale
-            'density_scale': '-1',
+        # Density Scale
+        'density_scale': '-1',
 
-            'font_family'  : 'Roboto',
+        'font_family': 'Roboto',
 
-            # environ
-            'pyside6'      : False,
-            'linux'        : True,
+        # environ
+        'pyside6': False,
+        'linux': True,
     }
 
     dialog = MainDialog(app=app)
@@ -61,12 +62,6 @@ def ring_plugin(test=False):
     dialog.show()
     if test:
         sys.exit(app.exec_())
-
-
-@cmd.extend
-def chain_label():
-    cmd.alter("resi 526-542", "chain='B'")
-    cmd.alter("not chain B", "chain='A'")
 
 
 if __name__ == '__main__':

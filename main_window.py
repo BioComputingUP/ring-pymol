@@ -1,4 +1,5 @@
 import datetime
+import os.path
 import tempfile
 from os import environ
 from shutil import which
@@ -20,14 +21,14 @@ from rmsd_clustering import *
 from utilities import *
 
 extra = {
-        # Density Scale
-        'density_scale': '-1',
+    # Density Scale
+    'density_scale': '-1',
 
-        'font_family'  : 'Roboto',
+    'font_family': 'Roboto',
 
-        # environ
-        'pyside6'      : False,
-        'linux'        : True,
+    # environ
+    'pyside6': False,
+    'linux': True,
 }
 
 
@@ -51,8 +52,8 @@ class MainDialog(QWidget):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.log("Setting temp directory {}".format(self.temp_dir.name))
 
-        if os.path.exists("{}/.ring/bin/ring".format(environ['HOME'])):
-            self.widg.ring_path.setText("{}/.ring/bin/ring".format(environ['HOME']))
+        if os.path.exists("{}/.ring/bin/ring".format(os.path.expanduser("~"))):
+            self.widg.ring_path.setText("{}/.ring/bin/ring".format(os.path.expanduser("~")))
         elif which('ring') is not None:
             self.widg.ring_path.setText(str(which('ring')))
         else:
@@ -62,10 +63,10 @@ class MainDialog(QWidget):
         self.widg.visualize_btn.clicked.connect(self.run)
         self.widg.ring_exec_button.clicked.connect(self.browse_ring_exe)
         self.widg.save_network.clicked.connect(
-                lambda: export_network_graph(self.get_selection(), self.temp_dir.name, self.log, self.disable_window,
-                                             self.enable_window) if len(self.get_selection()) > 0 and
-                                                                    self.get_selection()[0] != "(" else
-                self.log("Please select an object on the left box to use this feature", error=True))
+            lambda: export_network_graph(self.get_selection(), self.temp_dir.name, self.log, self.disable_window,
+                                         self.enable_window) if len(self.get_selection()) > 0 and
+                                                                self.get_selection()[0] != "(" else
+            self.log("Please select an object on the left box to use this feature", error=True))
 
         # Update view
         self.widg.radius_value.valueChanged.connect(self.slider_radius_change)
@@ -252,13 +253,13 @@ class MainDialog(QWidget):
         len_ss = str(self.widg.len_ss.value())
         len_vdw = str(self.widg.len_vdw.value())
 
-        return {"-g"   : seq_sep,
-                "-o"   : len_salt,
-                "-s"   : len_ss,
-                "-k"   : len_pipi,
-                "-a"   : len_pica,
-                "-b"   : len_hbond,
-                "-w"   : len_vdw,
+        return {"-g": seq_sep,
+                "-o": len_salt,
+                "-s": len_ss,
+                "-k": len_pipi,
+                "-a": len_pica,
+                "-b": len_hbond,
+                "-w": len_vdw,
                 "edges": edge_policy}
 
     def browse_ring_exe(self):
@@ -325,19 +326,19 @@ class MainDialog(QWidget):
         self.log("Exporting done")
 
         if self.widg.ring_locally.isChecked():
-            if not os.path.exists(self.widg.ring_path.text()):
-                self.log("Ring path is not correct! Set it in the configuration tab", error=True)
-                self.enable_window()
-                return
+            if os.path.exists(self.widg.ring_path.text()):
+                run_ring_local(self.widg.ring_path.text(), file_pth, obj_name, current_run_config, self.temp_dir.name,
+                               self.log, self.progress)
+            else:
+                self.log("Ring executable not found, running with the remote APIs ...", warning=True)
+                self.widg.ring_locally.setChecked(False)
+                self.widg.ring_remote.setChecked(True)
 
-            run_ring_local(self.widg.ring_path.text(), file_pth, obj_name, current_run_config, self.temp_dir.name,
-                           self.log, self.progress)
-            self.prev_launch_config[obj_name] = current_run_config
-            self.log("Ring generation finished")
-        else:
+        if self.widg.ring_remote.isChecked():
             run_ring_api(file_pth, current_run_config, self.temp_dir.name, self.log, self.progress)
-            self.prev_launch_config[obj_name] = current_run_config
 
+        self.log("Ring generation finished")
+        self.prev_launch_config[obj_name] = current_run_config
         self.widg.save_network.setEnabled(True)
 
         self.close_progress()
@@ -360,7 +361,7 @@ class MainDialog(QWidget):
 
         self.widg.resi_selection.setEnabled(actual_sele_num > 0)
         self.widg.resi_plot.setEnabled(
-                actual_sele_num > 0 and cmd.count_states(self.widg.resi_selection.currentText()) > 1)
+            actual_sele_num > 0 and cmd.count_states(self.widg.resi_selection.currentText()) > 1)
 
         selections.update(list(filter(lambda x: x.split('_')[-1][-3:] != 'cgo',
                                       cmd.get_names('public_nongroup_objects'))))
@@ -401,7 +402,7 @@ class MainDialog(QWidget):
                            self.widg.interchain, self.widg.chain_graph]:
                 widget.setEnabled(is_multi_chain)
 
-    def visualize(self, selection=None, color=None, int_type=None):
+    def visualize(self, selection=None, of_type=None):
         from pymol import stored
 
         if selection:
@@ -456,11 +457,11 @@ class MainDialog(QWidget):
 
                 interactions_per_type = dict()
 
-                for intType in intTypeMap.keys():
-                    interactions_per_type.setdefault(intType, list())
+                for int_type in intTypeMap.keys():
+                    interactions_per_type.setdefault(int_type, list())
 
                 for (nodeId1, interaction, nodeId2, _, _, _, atom1, atom2, *_) in df.itertuples(index=False):
-                    intType, intRegion = interaction.split(":")
+                    int_type, intRegion = interaction.split(":")
                     node1 = Node(nodeId1)
                     node2 = Node(nodeId2)
                     edge = Edge(node1, node2)
@@ -472,7 +473,7 @@ class MainDialog(QWidget):
                     # Apply filters if selection is not present
                     if not selection:
                         try:
-                            freq = conn_freq[intType][edge] * 100
+                            freq = conn_freq[int_type][edge] * 100
                         except KeyError:
                             freq = 0.5 * 100
                         # Sidechain
@@ -489,10 +490,10 @@ class MainDialog(QWidget):
                             continue
                     else:
                         # Apply filter if selection is present
-                        if not (int_type == intType or int_type == "ALL"):
+                        if not (of_type == int_type or of_type == "ALL"):
                             continue
 
-                    interactions_per_type.setdefault(intType, [])
+                    # interactions_per_type.setdefault(int_type, [])
                     t = tuple()
                     if "," in atom1:
                         t += (atom1,)
@@ -502,25 +503,26 @@ class MainDialog(QWidget):
                         t += (atom2,)
                     else:
                         t += ("{}/{}/{}".format(node2.chain, str(node2.resi), atom2),)
-                    interactions_per_type[intType].append(t)
+                    interactions_per_type[int_type].append(t)
 
                     # Update set of possible selected nodes
-                    possible_selected_nodes.setdefault(intType, set())
-                    possible_selected_nodes[intType].add(node1.id_tuple())
-                    possible_selected_nodes[intType].add(node2.id_tuple())
+                    possible_selected_nodes.setdefault(int_type, set())
+                    possible_selected_nodes[int_type].add(node1.id_tuple())
+                    possible_selected_nodes[int_type].add(node2.id_tuple())
 
-                for intType, interactions in interactions_per_type.items():
-                    num_interaction_per_type.setdefault(intType, 0)
-                    num_interaction_per_type[intType] += len(interactions)
-                    draw_links(interactions,
-                               object_name=obj + "_" + intType + "_cgo" if not selection else selection + "_cgo",
-                               color=intTypeMap[intType],
-                               coords=stored.coords,
-                               state=state)
+                for int_type, interactions in interactions_per_type.items():
+                    num_interaction_per_type.setdefault(int_type, 0)
+                    num_interaction_per_type[int_type] += len(interactions)
+                    if len(interactions) > 0:
+                        draw_links(interactions,
+                                   object_name=obj + "_" + int_type + "_cgo" if not selection else selection + "_cgo",
+                                   color=intTypeMap[int_type],
+                                   coords=stored.coords,
+                                   state=state)
 
-            for intType, num in num_interaction_per_type.items():
+            for int_type, num in num_interaction_per_type.items():
                 if num == 0:
-                    cmd.delete("{}_cgo".format(obj + "_" + intType))
+                    cmd.delete("{}_cgo".format(obj + "_" + int_type))
 
             cmd.hide(selection="*_edges")
             if not selection:
@@ -659,8 +661,8 @@ class MainDialog(QWidget):
 
         if not os.path.exists(file_pth):
             self.log(
-                    "Before this you need to run RING on the whole object first. Select it above and press the Show button",
-                    error=True)
+                "Before this you need to run RING on the whole object first. Select it above and press the Show button",
+                error=True)
             return
 
         stored.chain_resi = set()
@@ -718,8 +720,8 @@ class MainDialog(QWidget):
             self.log("No interactions found between the two selected residues", warning=True)
 
     def inter_heatmap(self):
-        text_name_to_inter_name = {"All"      : "ALL", "H-bond": "HBOND", "π-π stack": "PIPISTACK",
-                                   "π cation" : "PICATION", "Van der Waals": "VDW", "IAC": "IAC",
+        text_name_to_inter_name = {"All": "ALL", "H-bond": "HBOND", "π-π stack": "PIPISTACK",
+                                   "π cation": "PICATION", "Van der Waals": "VDW", "IAC": "IAC",
                                    "Disulfide": "SSBOND", "Ionic": "IONIC"}
 
         try:
@@ -807,8 +809,8 @@ class MainDialog(QWidget):
         file_pth = os.path.join(self.temp_dir.name, stored.model + ".cif_ringEdges")
         if not os.path.exists(file_pth):
             self.log(
-                    "Before this you need to run RING on the object first. Select it above and press the Show button",
-                    error=True)
+                "Before this you need to run RING on the object first. Select it above and press the Show button",
+                error=True)
             raise ValueError
 
         return obj, stored.model, file_pth

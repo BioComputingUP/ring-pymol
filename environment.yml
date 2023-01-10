@@ -1,0 +1,18 @@
+name: ring-pymol-plugin
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - networkx
+  - pandas
+  - numpy
+  - biopython
+  - scipy
+  - seaborn
+  - requests
+  - pymol-open-source
+  - pip
+  - pip:
+      - qt-material
+prefix: /opt/miniconda3/envs/ring-pymol-plugin

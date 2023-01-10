@@ -265,9 +265,10 @@ def get_rmsd(args):
     sup = SVDSuperimposer()
     i, j = args
     sup.set(structure_coords[i], structure_coords[j])
-    global counter
-    with counter.get_lock():
-        counter.value += 1
+    if os.name != 'nt':
+        global counter
+        with counter.get_lock():
+            counter.value += 1
     sup.run()
     return i, j, sup.get_rms()
 
@@ -319,19 +320,25 @@ def compute_rmsd_dist_matrix(logger, pdb_id, tmp_dir):
 
     logger.log("Computing distance matrix")
 
-    counter = mp.Value('i', 0)
-    with mp.Pool(mp.cpu_count() - 1, initializer=init, initargs=(counter,)) as p:
-        results = p.map_async(get_rmsd, iterable=args, chunksize=100)
-        while not results.ready():
-            val = counter.value / len(indexes[0]) * 100
-            logger.progress(val)
-            time.sleep(1)
+    # If we are not in windows than the computation is done with multiprocessing, else without it
+    if os.name != 'nt':
+        counter = mp.Value('i', 0)
+        with mp.Pool(mp.cpu_count() - 1, initializer=init, initargs=(counter,)) as p:
+            results = p.map_async(get_rmsd, iterable=args, chunksize=100)
+            while not results.ready():
+                val = counter.value / len(indexes[0]) * 100
+                logger.progress(val)
+                time.sleep(1)
+        for i, j, v in results.get():
+            X[i, j] = v
+    else:
+        for step, (i, j, v) in enumerate(map(get_rmsd, args)):
+            X[i, j] = v
+            logger.progress(step / len(indexes[0]) * 100)
 
     logger.close_progress()
     del structure_coords
 
-    for i, j, v in results.get():
-        X[i, j] = v
     X += X.transpose()
     np.fill_diagonal(X, 0)
     np.save(mtrx_file, X)

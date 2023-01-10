@@ -55,11 +55,11 @@ class CorrelationDialog(QtWidgets.QDialog):
             tableWidget.setSortingEnabled(False)
 
             rowPosition = tableWidget.rowCount()  # necessary even when there are no rows in the table
-            df_of_interacton = pd.DataFrame(
-                    [edge1s, freqs1, inter_labels, edge2s, freqs2, corr_vals, p_vals]).transpose()
-            df = df.append(df_of_interacton)
+            df_of_interaction = pd.DataFrame(
+                [edge1s, freqs1, inter_labels, edge2s, freqs2, corr_vals, p_vals]).transpose()
+            df = pd.concat([df, df_of_interaction])
 
-            self.parent.log("{} {} interactions correlates/anti-correlates".format(len(df_of_interacton), inter))
+            self.parent.log("{} {} interactions correlates/anti-correlates".format(len(df_of_interaction), inter))
 
         df = df.sort_values([0, 3, 5], ascending=(True, True, False))
 
@@ -141,15 +141,10 @@ class CorrelationDialog(QtWidgets.QDialog):
             self.parent.log("Please select at least one row first!", error=True)
             return
 
-        sele_set = set()
-        corr_set = set()
-        anti_set = set()
         for i in range(len(selection)):
             row = selection[i].row()
             edge1 = table.item(row, 0).text()
-            inter = table.item(row, 2).text()
             edge2 = table.item(row, 3).text()
-            corr_val = float(table.item(row, 5).text())
 
             edge1 = Edge([Node(node) for node in edge1.split(' - ')])
             edge2 = Edge([Node(node) for node in edge2.split(' - ')])
@@ -159,27 +154,22 @@ class CorrelationDialog(QtWidgets.QDialog):
             cmd.select("edge1", "/{}//{}/{} or /{}//{}/{}".format(self.current_obj, edge1.node1.chain, edge1.node1.resi,
                                                                   self.current_obj, edge1.node2.chain,
                                                                   edge1.node2.resi), merge=1)
-            sele_set.add(edge1)
 
             cmd.select("edge2", "/{}//{}/{} or /{}//{}/{}".format(self.current_obj, edge2.node1.chain, edge2.node1.resi,
                                                                   self.current_obj, edge2.node2.chain,
                                                                   edge2.node2.resi), merge=1)
-            if corr_val > 0:
-                corr_set.add(edge2)
-            else:
-                anti_set.add(edge2)
 
-        self.parent.visualize(selection="edge1", int_type=inter)
-        if len(corr_set) > 0:
-            self.parent.visualize(selection="edge2", int_type=inter)
-        if len(anti_set) > 0:
-            self.parent.visualize(selection="edge2", int_type=inter)
+        inter = 'ALL' if len(selection) > 1 else table.item(selection[0].row(), 2).text()
+
+        self.parent.visualize(selection="edge1", of_type=inter)
+        self.parent.visualize(selection="edge2", of_type=inter)
+
         self.parent.log("Selection edge1 contains all the residues from the edges selected in the first column",
                         timed=False)
         self.parent.log("Selection edge2 contains all the residues from the edges selected in the second column",
                         timed=False)
         self.parent.log(
-                "CGO objects edge1_cgo and edge2_cgo are the selected edges from the first and second column respectively",
-                timed=False)
+            "CGO objects edge1_cgo and edge2_cgo are the selected edges from the first and second column respectively",
+            timed=False)
 
         self.parent.enable_window()

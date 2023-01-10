@@ -762,7 +762,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Probabilistic inter-chain residue contact map</string>
+            <string>Probabilistic interchain residue contact map</string>
            </property>
            <property name="wordWrap">
             <bool>true</bool>
@@ -3156,7 +3156,7 @@ text-align: right;
                    </property>
                    <property name="icon">
                     <iconset>
-                     <normaloff>img/restart_alt_black_24dp.svg</normaloff>img/restart_alt_black_24dp.svg</iconset>
+                     <normaloff>../../../../.designer/backup/img/restart_alt_black_24dp.svg</normaloff>../../../../.designer/backup/img/restart_alt_black_24dp.svg</iconset>
                    </property>
                    <property name="flat">
                     <bool>true</bool>
@@ -3396,7 +3396,7 @@ text-align: right;
             </size>
            </property>
            <property name="pixmap">
-            <pixmap>img/unipd800.png</pixmap>
+            <pixmap>../../../../.designer/backup/img/unipd800.png</pixmap>
            </property>
            <property name="scaledContents">
             <bool>true</bool>
@@ -3421,7 +3421,7 @@ text-align: right;
             </size>
            </property>
            <property name="pixmap">
-            <pixmap>img/biocompup.jpg</pixmap>
+            <pixmap>../../../../.designer/backup/img/biocompup.jpg</pixmap>
            </property>
            <property name="scaledContents">
             <bool>true</bool>
@@ -3663,7 +3663,7 @@ text-align: right;
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Inter-chain</string>
+             <string>Interchain</string>
             </property>
            </widget>
           </item>
@@ -3676,14 +3676,14 @@ text-align: right;
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Intra-chain</string>
+             <string>Intrachain</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QRadioButton" name="sidechain">
             <property name="text">
-             <string>Side-chain</string>
+             <string>Sidechain</string>
             </property>
            </widget>
           </item>
@@ -3853,7 +3853,7 @@ text-align: right;
         <string/>
        </property>
        <property name="pixmap">
-        <pixmap>img/ring_col.svg</pixmap>
+        <pixmap>../../../../.designer/backup/img/ring_col.svg</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>
