@@ -1,0 +1,26 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%files
+
+%post
+    export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true
+    apt update && apt install -y wget build-essential git
+
+    cd /opt || exit 1
+    wget https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh -O /opt/miniconda.sh
+    bash /opt/miniconda.sh -b -p /opt/miniconda
+    . /opt/miniconda/etc/profile.d/conda.sh
+
+    git clone https://github.com/BioComputingUP/ring-pymol ./ring-pymol
+
+    cd ring-pymol || exit 1
+    conda env create -f environment.yml
+
+    chmod 775 -R /opt
+
+%environment
+
+%help
+
+%runscript
