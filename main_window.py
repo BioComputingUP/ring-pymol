@@ -1,7 +1,6 @@
 import datetime
 import os.path
 import tempfile
-from os import environ
 from shutil import which
 
 from PyQt5 import QtCore, QtWidgets
@@ -513,15 +512,18 @@ class MainDialog(QWidget):
                     possible_selected_nodes[int_type].add(node1.id_tuple())
                     possible_selected_nodes[int_type].add(node2.id_tuple())
 
+                drawn_with_name = set()
                 for int_type, interactions in interactions_per_type.items():
                     num_interaction_per_type.setdefault(int_type, 0)
                     num_interaction_per_type[int_type] += len(interactions)
-                    if len(interactions) > 0:
+                    name = obj + "_" + int_type + "_cgo" if not selection else selection + "_cgo"
+                    if len(interactions) > 0 or name not in drawn_with_name:
                         draw_links(interactions,
-                                   object_name=obj + "_" + int_type + "_cgo" if not selection else selection + "_cgo",
+                                   object_name=name,
                                    color=intTypeMap[int_type],
                                    coords=stored.coords,
                                    state=state)
+                        drawn_with_name.add(name)
 
             for int_type, num in num_interaction_per_type.items():
                 if num == 0:
@@ -664,8 +666,8 @@ class MainDialog(QWidget):
 
         if not os.path.exists(file_pth):
             self.log(
-                    "Before this you need to run RING on the object first!",
-                    error=True)
+                "Before this you need to run RING on the object first!",
+                error=True)
             return
 
         stored.chain_resi = set()

@@ -5,7 +5,7 @@ From: ubuntu:20.04
 
 %post
     export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true
-    apt update && apt install -y wget build-essential git
+    apt update && apt install -y wget build-essential git libgl1 libsm6 libxext6 '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
 
     cd /opt || exit 1
     wget https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh -O /opt/miniconda.sh
