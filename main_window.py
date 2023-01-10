@@ -72,6 +72,9 @@ class MainDialog(QWidget):
         self.widg.radius_value.valueChanged.connect(self.slider_radius_change)
         self.widg.transp_value.valueChanged.connect(self.slider_transp_change)
 
+        self.widg.selections_list.currentTextChanged.connect(self.update_plugin_status)
+        self.widg.resi_selection.currentTextChanged.connect(self.update_plugin_status)
+
         # Residue based analysis repr
         self.widg.bttn_color_resi_freq.clicked.connect(self.inter_freq_analysis)
         self.widg.bttn_table_freq.clicked.connect(self.freq_dialog.inter_freq_table)
@@ -282,6 +285,7 @@ class MainDialog(QWidget):
             line_edit.setReadOnly(True)
 
     def closeEvent(self, event):
+        self.widg.timer.stop()
         self.temp_dir.cleanup()
         event.accept()
 
@@ -345,26 +349,44 @@ class MainDialog(QWidget):
         self.enable_window()
         self.visualize()
 
-    def refresh_sele(self):
-        self.widg.selections_list.blockSignals(True)
-        self.widg.resi_selection.blockSignals(True)
-
-        present = set(self.widg.selections_list.itemText(i) for i in range(self.widg.selections_list.count()))
-        selections = set(map(lambda x: "(" + x + ")", cmd.get_names('public_selections')))
-
-        prev_sele_num = self.widg.resi_selection.count()
-        actual_sele_num = len(cmd.get_names('public_selections'))
-
-        if prev_sele_num != actual_sele_num:
-            self.widg.resi_selection.clear()
-            self.widg.resi_selection.addItems(cmd.get_names('public_selections'))
+    def update_plugin_status(self):
+        actual_sele_num = len(cmd.get_names("public_selections"))
 
         self.widg.resi_selection.setEnabled(actual_sele_num > 0)
         self.widg.resi_plot.setEnabled(
             actual_sele_num > 0 and cmd.count_states(self.widg.resi_selection.currentText()) > 1)
 
+        current_selection = self.get_selection()
+
+        if len(current_selection) > 0 and current_selection[0] == "(" and current_selection[-1] == ")":
+            self.widg.visualize_btn.setText("Show")
+        elif current_selection in self.prev_launch_config.keys() and self.prev_launch_config[
+            current_selection] == self.get_current_run_config() \
+                and not self.widg.override_memory.isChecked():
+            self.widg.visualize_btn.setText("Show")
+        else:
+            self.widg.visualize_btn.setText("Execute RING")
+
+        # If there is only one chain in the selected object, then disable the widgets for interaction
+        if current_selection:
+            is_multi_states = cmd.count_states(current_selection) > 1
+            for widget in [self.widg.min_freq, self.widg.max_freq, self.widg.clustering, self.widg.min_presence,
+                           self.widg.max_presence, self.widg.p_thr, self.widg.coeff_thr, self.widg.calc_corr]:
+                widget.setEnabled(is_multi_states)
+            is_multi_chain = len(cmd.get_chains(current_selection)) > 1
+            for widget in [self.widg.chain_graph, self.widg.interaction_sele, self.widg.show_inter_heatmap,
+                           self.widg.interchain, self.widg.chain_graph]:
+                widget.setEnabled(is_multi_chain)
+
+    def refresh_sele(self):
+        public_selections = cmd.get_names("public_selections")
+
+        selections = set(map(lambda x: "(" + x + ")", public_selections))
+
         selections.update(list(filter(lambda x: x.split('_')[-1][-3:] != 'cgo',
                                       cmd.get_names('public_nongroup_objects'))))
+        present = set(self.widg.selections_list.itemText(i) for i in range(self.widg.selections_list.count()))
+
         not_present_anymore = present - selections
         new_selections = selections - present
 
@@ -378,33 +400,14 @@ class MainDialog(QWidget):
         for sele in new_selections:
             self.widg.selections_list.addItem(sele, self.widg.selections_list.count())
 
-        self.widg.selections_list.blockSignals(False)
+        resi_selection = set(self.widg.resi_selection.itemText(i) for i in range(self.widg.resi_selection.count()))
 
-        obj = self.widg.selections_list.currentText()
-        if len(obj) > 0 and obj[0] == "(" and obj[-1] == ")":
-            self.widg.visualize_btn.setText("Show")
-        elif obj in self.prev_launch_config.keys() and self.prev_launch_config[obj] == self.get_current_run_config() \
-                and not self.widg.override_memory.isChecked():
-            self.widg.visualize_btn.setText("Show")
-        else:
-            self.widg.visualize_btn.setText("Execute RING")
-
-        current_selection = self.widg.selections_list.currentText()
-
-        # If there is only one chain in the selected object, then disable the widgets for interaction
-        if current_selection:
-            is_multi_states = cmd.count_states(current_selection) > 1
-            for widget in [self.widg.min_freq, self.widg.max_freq, self.widg.clustering, self.widg.min_presence,
-                           self.widg.max_presence, self.widg.p_thr, self.widg.coeff_thr, self.widg.calc_corr]:
-                widget.setEnabled(is_multi_states)
-            is_multi_chain = len(cmd.get_chains(current_selection)) > 1
-            for widget in [self.widg.chain_graph, self.widg.interaction_sele, self.widg.show_inter_heatmap,
-                           self.widg.interchain, self.widg.chain_graph]:
-                widget.setEnabled(is_multi_chain)
+        if resi_selection != public_selections:
+            self.widg.resi_selection.clear()
+            self.widg.resi_selection.addItems(public_selections)
 
     def visualize(self, selection=None, of_type=None):
         from pymol import stored
-
         if selection:
             obj = selection
         else:
@@ -661,8 +664,8 @@ class MainDialog(QWidget):
 
         if not os.path.exists(file_pth):
             self.log(
-                "Before this you need to run RING on the whole object first. Select it above and press the Show button",
-                error=True)
+                    "Before this you need to run RING on the object first!",
+                    error=True)
             return
 
         stored.chain_resi = set()
