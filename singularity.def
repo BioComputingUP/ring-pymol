@@ -1,25 +1,23 @@
 Bootstrap: docker
-From: ubuntu:20.04
+From: ubuntu:22.04
 
 %files
 
 %post
     export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true
-    apt update && apt install -y wget build-essential git libgl1 libsm6 libxext6 '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
+    apt update && apt install -y wget build-essential git libgl1 libsm6 libxext6 '^libxcb.*-dev' libx11-xcb-dev \
+     libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev pymol python3-pip python3-tk
 
     cd /opt || exit 1
-    wget https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh -O /opt/miniconda.sh
-    bash /opt/miniconda.sh -b -p /opt/miniconda
-    . /opt/miniconda/etc/profile.d/conda.sh
+
+    pip install pmw networkx numpy~=1.20 scipy seaborn pandas qt-material biopython requests
 
     git clone https://github.com/BioComputingUP/ring-pymol ./ring-pymol
-
-    cd ring-pymol || exit 1
-    conda env create -f environment.yml
 
     chmod 775 -R /opt
 
 %environment
+    export DISPLAY=:0
 
 %help
 

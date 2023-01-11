@@ -1,44 +1,55 @@
 # RING PyMOL plugin
 
 <!-- TOC -->
+
 * [RING PyMOL plugin](#ring-pymol-plugin)
-  * [Install](#install)
-    * [Installation of PyMOL with apt](#installation-of-pymol-with-apt)
-    * [Installation of PyMOL with Conda (RECOMMENDED)](#installation-of-pymol-with-conda--recommended-)
-    * [NOTE](#note)
-    * [Install the RING plugin](#install-the-ring-plugin)
+    * [Install](#install)
+        * [Installation of PyMOL with apt](#installation-of-pymol-with-apt)
+        * [Installation of PyMOL with Conda (RECOMMENDED)](#installation-of-pymol-with-conda--recommended-)
+        * [NOTE](#note)
+        * [Install the RING plugin](#install-the-ring-plugin)
 * [Usage Instructions](#usage-instructions)
-  * [Configuration](#configuration)
-    * [RING](#ring)
-    * [Visualization](#visualization)
-  * [Executing RING and visualize the edges](#executing-ring-and-visualize-the-edges)
-    * [Filtering the results](#filtering-the-results)
-  * [Nodes](#nodes)
-    * [Pairwise interaction plot](#pairwise-interaction-plot)
-    * [Nodes interaction table](#nodes-interaction-table)
-    * [Color nodes by interaction frequency](#color-nodes-by-interaction-frequency)
-  * [Edges](#edges)
-    * [Interaction plots](#interaction-plots)
-      * [Chain interactions](#chain-interactions)
-      * [Secondary structure interactions](#secondary-structure-interactions)
-    * [Probabilistic interchain residue contact map](#probabilistic-interchain-residue-contact-map)
-    * [Pairwise interaction correlation analysis](#pairwise-interaction-correlation-analysis)
-  * [Clustering](#clustering)
-    * [Calculation of the hierarchical clustering](#calculation-of-the-hierarchical-clustering)
-    * [Clustering visualizations](#clustering-visualizations)
-    * [Create object](#create-object)
+    * [Configuration](#configuration)
+        * [RING](#ring)
+        * [Visualization](#visualization)
+    * [Executing RING and visualize the edges](#executing-ring-and-visualize-the-edges)
+        * [Filtering the results](#filtering-the-results)
+    * [Nodes](#nodes)
+        * [Pairwise interaction plot](#pairwise-interaction-plot)
+        * [Nodes interaction table](#nodes-interaction-table)
+        * [Color nodes by interaction frequency](#color-nodes-by-interaction-frequency)
+    * [Edges](#edges)
+        * [Interaction plots](#interaction-plots)
+            * [Chain interactions](#chain-interactions)
+            * [Secondary structure interactions](#secondary-structure-interactions)
+        * [Probabilistic interchain residue contact map](#probabilistic-interchain-residue-contact-map)
+        * [Pairwise interaction correlation analysis](#pairwise-interaction-correlation-analysis)
+    * [Clustering](#clustering)
+        * [Calculation of the hierarchical clustering](#calculation-of-the-hierarchical-clustering)
+        * [Clustering visualizations](#clustering-visualizations)
+        * [Create object](#create-object)
+
 <!-- TOC -->
 
 ## Install
 
-### Installation of PyMOL with apt
+### Installation of PyMOL and python dependencies
+
+#### Installation of PyMOL with apt
 
 - `sudo apt install pymol python3-pip python3-tk`
-- `pip install pmw networkx numpy==1.18.5 scipy seaborn pandas qt-material biopython`
+- `pip install pmw networkx numpy~=1.20 scipy seaborn pandas qt-material biopython requests`
 
-### Installation of PyMOL with Conda (RECOMMENDED)
+#### Installation of PyMOL with Conda from yml file (RECOMMENDED)
 
-- Install conda, follow the instructions on their website
+- Install conda, following the instructions on their website
+- Download the environment.yml file from this repository
+- Create the environment with `conda env create -f environment.yml`
+- Activate the environment with `conda activate ring-pymol-plugin`
+
+#### Installation of PyMOL with Conda
+
+- Install conda, following the instructions on their website
 - Create a new environment and switch to it
     - `conda create -n myenv`
     - `conda activate myenv`
@@ -62,7 +73,26 @@ conda installation.
     - Add https://ring.biocomputingup.it/plugin/
 - Click on ring-plugin.zip in the right panel and then Install
 - Set the installation directory
-- The plugin should be showing on the Plugin menu of PyMOL
+-
+- The plugin should now appear on the Plugin menu of PyMOL
+
+### Singularity container
+
+Another option for installing the plugin is to use the singularity container definition file provided in this
+repository.
+To create the image file you can follow these steps:
+
+- `sudo singularity build -F ring-pymol-plugin.sif singularity.def` (this will create the image file)
+- `singularity shell --cleanenv --writable-tmpfs -B ~/.Xauthority ring-pymol-plugin.sif` (this will open a shell in the
+  container).
+  Note that the -B option is needed to allow the container to access the X server of the host machine for displaying the
+  GUI.
+- Start PyMOL with `pymol`
+- Add a new directory where to find new plugins
+    - Plugin > Plugin Manager > Settings > Add new directory...
+    - Add `/opt`
+- Restart PyMOL
+- The plugin should now appear on the Plugin menu of PyMOL
 
 # Usage Instructions
 
@@ -167,7 +197,7 @@ The following two graphs are intended for giving a quick overview of the interac
 This graph shows the interactions occurring between the different chains of the structure. The nodes of the graph are
 the chains, while the edges are the interactions between the chains.
 
-#### Secondary structure interactions 
+#### Secondary structure interactions
 
 This graph shows the interactions occurring between the different secondary structure elements of the protein.
 The nodes of the graph are the secondary structure elements, identified with $\alpha$ helices and $\beta$ strands.
@@ -271,3 +301,22 @@ object can be used for further analysis with other features of the plugin.
 
 Clicking on this button will apply the previously selected clustering and will create a new object with only the
 clustering representative states of the original object.
+
+## Example
+
+The plugin can be tested with the following example:
+
+1. Download the multi-state structure 2H9R from PDBe-KB
+    - Type `fetch 2h9r` in the PyMOL command line
+2. Load the plugin in PyMOL
+    - `Plugin` $\rightarrow$ `Ring plugin` or type in the command line `ring_plugin`
+3. Now the plugin should be loaded, and in its top bar there should be already selected the PyMOL object 2h9r, the
+   structure that you previously loaded.
+4. Now you can execute RING with the button `Execute RING`
+    - This will run the RING executable (if present) on the selected object, or it will try to execute RING on the
+      selected structure on a web server using the APIs.
+5. Once the results are ready they will be parsed and visualized on the structure in the PyMOL interface. \
+<p style="text-align:center">
+    <img height="450" src="doc_imgs/edges.png" width="720"/>
+</p>
+
