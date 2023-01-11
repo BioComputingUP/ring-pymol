@@ -267,8 +267,8 @@ during the simulation.
 ### Calculation of the hierarchical clustering
 
 The plugin provides a simple way to perform clustering analysis on the structures loaded into PyMOL. The clustering that
-the plugin provides is a hierarchical clustering based on RMSD distances calculated between all the states ( $n\times
-n$ ). By default the clustering is done only on the C $\alpha$ atoms, so it can be faster to compute, but if it is
+the plugin provides is a hierarchical clustering based on RMSD distances calculated between all the states $(n\times n)$.
+By default the clustering is done only on the $C\alpha$ atoms, so it can be faster to compute, but if it is
 necessary one can change it taking in consideration all the atoms in the structure.
 
 The clustering method to compute the linkage matrix can be changed, and it can be one of the ones described
