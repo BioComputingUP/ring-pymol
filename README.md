@@ -317,8 +317,25 @@ The plugin can be tested with the following example:
 4. Now you can execute RING with the button `Execute RING`
     - This will run the RING executable (if present) on the selected object, or it will try to execute RING on the
       selected structure on a web server using the APIs.
-5. Once the results are ready they will be parsed and visualized on the structure in the PyMOL interface. \
+5. Once the results are ready they will be parsed and visualized on the structure in the PyMOL interface.
+
 <p style="text-align:center">
-    <img height="450" src="doc_imgs/edges.png" width="720"/>
+    <img height="400" src="doc_imgs/edges.png" width="650"/>
 </p>
 
+6. Now the edges can be filtered based on the type of interaction, frequency, and all the various tools can be used.
+   E.g. we can see the `probabilistic interchain residue contact map` of the $\pi-\pi$ stack interactions:
+
+   <p style="text-align:center">
+       <img height="400" src="doc_imgs/contact_map.png" width="650"/>
+   </p>
+
+7. Finally, we can also try to cluster a multi-state object, with a RMSD-based clustering. We can for example set a
+   threshold criterion on the RMSD value for cutting the hierarchical clustering, yielding a certain number of clusters.
+   Otherwise, one can select the exact number of clusters, and the RMSD value for the cut will be calculated
+   automatically. One example is the following, were we set a RMSD cut value of 3.5 $\AA$, yielding 5 different
+   clusters:
+
+   <p style="text-align:center">
+       <img height="400" src="doc_imgs/clusters.png" width="650"/>
+   </p>
