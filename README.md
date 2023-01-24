@@ -37,11 +37,6 @@
 
 ### Installation of PyMOL and python dependencies
 
-#### Installation of PyMOL with apt
-
-- `sudo apt install pymol python3-pip python3-tk`
-- `pip install pmw networkx numpy~=1.20 scipy seaborn pandas qt-material biopython requests`
-
 #### Installation of PyMOL with Conda from yml file (RECOMMENDED)
 
 - Install conda, following the instructions on their website
@@ -62,6 +57,11 @@
     - `conda install networkx numpy scipy seaborn pandas requests biopython`
     - `pip install qt-material` (This will be installed in the conda environment)
 
+#### Installation of PyMOL with apt (Linux Only)
+
+- `sudo apt install pymol python3-pip python3-tk`
+- `pip install pmw networkx numpy~=1.20 scipy seaborn pandas qt-material biopython requests`
+
 ### NOTE
 
 Please check that the PyMOL executable that you are running is the one for which you installed all the dependencies.
@@ -75,12 +75,11 @@ conda installation.
     - Add https://ring.biocomputingup.it/plugin/
 - Click on ring-plugin.zip in the right panel and then Install
 - Set the installation directory
--
 - The plugin should now appear on the Plugin menu of PyMOL
 
 ### Singularity container
 
-Another option for installing the plugin is to use the singularity container definition file provided in this
+Another option for installing the plugin is to use the [singularity](https://docs.sylabs.io/guides/latest/admin-guide/) container definition file provided in this
 repository.
 To create the image file you can follow these steps:
 
@@ -333,7 +332,7 @@ The plugin can be tested with the following example:
 7. Finally, we can also try to cluster a multi-state object, with a RMSD-based clustering. We can for example set a
    threshold criterion on the RMSD value for cutting the hierarchical clustering, yielding a certain number of clusters.
    Otherwise, one can select the exact number of clusters, and the RMSD value for the cut will be calculated
-   automatically. One example is the following, were we set a RMSD cut value of 3.5 $\AA$, yielding 5 different
+   automatically. One example is the following, were we set a RMSD cut value of 3.5Å, yielding 5 different
    clusters:
 
    <p align="center">
