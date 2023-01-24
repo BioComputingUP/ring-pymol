@@ -4,9 +4,7 @@
 * [RING PyMOL plugin](#ring-pymol-plugin)
   * [Install](#install)
     * [Installation of PyMOL and python dependencies](#installation-of-pymol-and-python-dependencies)
-      * [Installation of PyMOL with apt](#installation-of-pymol-with-apt)
-      * [Installation of PyMOL with Conda from yml file (RECOMMENDED)](#installation-of-pymol-with-conda-from-yml-file--recommended-)
-      * [Installation of PyMOL with Conda](#installation-of-pymol-with-conda)
+
     * [NOTE](#note)
     * [Install the RING plugin](#install-the-ring-plugin)
     * [Singularity container](#singularity-container)
