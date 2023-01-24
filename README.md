@@ -32,42 +32,52 @@
 <!-- TOC -->
 
 ## Install
+In order to work, Ring-PyMOL requires PyMOL and some Python packages. To simplify 
+installation you can use the Singularity container provided below and skip completely
+the manual install section.
 
-### Installation of PyMOL and python dependencies
+### Manual install (HARD)
+#### Dependencies 
+We provide three diffent solutions to insatll PyMOL and RING-PyMOL dependecies. The two using Conda gives the same result,
+the one using Apt works only for Linux users and might give different results depending on the operating system.
 
-#### Installation of PyMOL with Conda from yml file (RECOMMENDED)
+**NOTE**
+Sometimes PyMOL comes with a custom Python, please make sure you install the
+dependencies for the correct PyMOL executable. 
+In Linux you can type `which pymol` to see the path of the PyMOL executable. 
+If installed with Conda, the command should return something like `/opt/miniconda3/envs/myenv/bin/pymol`
 
-- Install conda, following the instructions on their website
+##### Conda from yml file (RECOMMENDED)
+
+- Install [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) or [miniconda](https://docs.conda.io/en/latest/miniconda.html)
 - Download the environment.yml file from this repository
-- Create the environment with `conda env create -f environment.yml`
-- Activate the environment with `conda activate ring-pymol-plugin`
+- Create the environment `conda env create -f environment.yml`
+- Activate the environment `conda activate ring-pymol-plugin`
 
-#### Installation of PyMOL with Conda
+##### Conda commands
+Same as before but with all commands issued explicitly
 
-- Install conda, following the instructions on their website
-- Create a new environment and switch to it
+- Install [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) or [miniconda](https://docs.conda.io/en/latest/miniconda.html)
+- Create a new environment and activate it
     - `conda create -n myenv`
     - `conda activate myenv`
-- Install PyMOL in the new environment
+- Install PyMOL
     - `conda install -c conda-forge -c schrodinger pymol-bundle` (shrodinger version)
     - `conda install -c conda-forge pymol-open-source` (open-source version)
-- Install python dependencies for the plugin
+- Install Python dependencies
     - `conda install networkx numpy scipy seaborn pandas requests biopython`
-    - `pip install qt-material` (This will be installed in the conda environment)
+    - `pip install qt-material` (This will install qt-material in the conda environment)
 
-#### Installation of PyMOL with apt (Linux Only)
+##### Apt commands (Linux only)
+This will use system environment. 
+The version of PyMOL and Python packages depend on the version and distribution of your operating system (OS).
+RING-PyMOL might not work with an obsolete OS.
 
 - `sudo apt install pymol python3-pip python3-tk`
 - `pip install pmw networkx numpy~=1.20 scipy seaborn pandas qt-material biopython requests`
 
-### NOTE
-
-Please check that the PyMOL executable that you are running is the one for which you installed all the dependencies.
-E.g.
-`which pymol` should return something like `/opt/miniconda3/envs/myenv/bin/pymol` if installed with the recommended
-conda installation.
-
-### Install the RING plugin
+#### RING-PyMOL plugin
+Once you have installed PyMOL and all the RING-PyMOL dependencies you have to install the RING-PyMOL plugin. 
 
 - Open PyMOL and go to Plugin > Plugin Manager > Install New Plugin > Install from Repository > Add..
     - Add https://ring.biocomputingup.it/plugin/
@@ -75,7 +85,7 @@ conda installation.
 - Set the installation directory
 - The plugin should now appear on the Plugin menu of PyMOL
 
-### Singularity container
+### Install container (EASY)
 
 Another option for installing the plugin is to use the [singularity](https://docs.sylabs.io/guides/latest/admin-guide/) container definition file provided in this
 repository.
@@ -93,7 +103,7 @@ To create the image file you can follow these steps:
 - Restart PyMOL
 - The plugin should now appear on the Plugin menu of PyMOL
 
-# Usage Instructions
+# Usage
 
 ## Configuration
 
