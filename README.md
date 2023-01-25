@@ -37,7 +37,7 @@ If installed with Conda, the command should return something like `/opt/minicond
 #### Conda YAML (RECOMMENDED)
 
 - Install [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) or [miniconda](https://docs.conda.io/en/latest/miniconda.html)
-- Download the [environment.yml](environment.yml) YAML file from this repository
+- Download the [environment.yml](environment.yml "download") YAML file from this repository
 - Create the environment `conda env create -f environment.yml`
 - Activate the environment `conda activate ring-pymol-plugin`
 
