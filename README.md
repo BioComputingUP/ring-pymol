@@ -11,8 +11,8 @@ RING-PyMOL features
 - Generates a number of interactive plots and output files for use with external tools
 
 References
-- RING 3.0: fast generation of probabilistic residue interaction networks from structural ensembles /
-Clementel D, Del Conte A, Monzon AM, Camagni GF, Minervini G, Piovesan D and Tosatto SCE /
+- RING 3.0: fast generation of probabilistic residue interaction networks from structural ensembles.
+Clementel D, Del Conte A, Monzon AM, Camagni GF, Minervini G, Piovesan D and Tosatto SCE.
 (2022) Nucleic Acids Research [https://doi.org/10.1093/nar/gkac365]
 
 # Install
