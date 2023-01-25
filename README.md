@@ -16,25 +16,28 @@ Clementel D, Del Conte A, Monzon AM, Camagni GF, Minervini G, Piovesan D and Tos
 (2022) Nucleic Acids Research [https://doi.org/10.1093/nar/gkac365]
 
 # Install
-In order to work, Ring-PyMOL requires PyMOL and some Python packages. If you don't want to go through 
-all the commands or you have problems with versions you can use a pre-built Singularity container, 
+In order to work, Ring-PyMOL requires PyMOL and some Python packages. 
+
+If you don't want to go through 
+all the commands or you have problems with your PyMOL/Python version you can use a pre-built **Singularity container**, 
 instructions are provided at the end of this document [here](#singularity-container).
 
 ## Manual install
 ### Dependencies 
 We provide three diffent solutions to insatll PyMOL and RING-PyMOL dependecies. The two using Conda gives the same result,
-the one using Apt works only for Linux users and might give different results depending on the operating system.
+the one using APT works only for Linux users and might give different results depending on the version and distribution of your operating system.
 
 **NOTE**
-Sometimes PyMOL comes with a custom Python, please make sure you install the
-dependencies for the correct PyMOL executable. 
-In Linux you can type `which pymol` to see the path of the PyMOL executable. 
-If installed with Conda, the command should return something like `/opt/miniconda3/envs/myenv/bin/pymol`
+Sometimes PyMOL uses a Python executable (and relative Python packages) which is different from the one 
+in your current environment. 
+Please make sure you install Python pakages for the correct PyMOL executable. 
+In Linux you can type `which pymol` and `which python` to see the path of the PyMOL and Python executables. 
+If installed with Conda, the command should return something like `/opt/miniconda3/envs/myenv/bin/pymol` and `/opt/miniconda3/envs/myenv/bin/python`
 
 #### Conda YAML (RECOMMENDED)
 
 - Install [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) or [miniconda](https://docs.conda.io/en/latest/miniconda.html)
-- Download the environment.yml file from this repository
+- Download the [environment.yml](environment.yml) YAML file from this repository
 - Create the environment `conda env create -f environment.yml`
 - Activate the environment `conda activate ring-pymol-plugin`
 
