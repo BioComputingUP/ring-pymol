@@ -1,7 +1,7 @@
 # RING-PyMOL
 RING-PyMOL is a plugin for [PyMOL](https://pymol.org/) providing a set of analysis tools for structural ensembles and molecular dynamic (MD) simulations. RING-PyMOL combines residue interaction networks, as provided by the **RING software** ([RING source](https://biocomputingup.it/download), [RING webserver](https://ring.biocomputingup.it/)), with structural clustering to enhance the analysis and visualization of the conformational complexity. RING software has been improved extensively. It is ten times faster, can process mmCIF files and it identifies typed interactions also for nucleic acids.
 
-Go to the [Wiki](https://github.com/BioComputingUP/ring-pymol/wiki) for the full documentation.
+Go to the [Wiki](https://github.com/BioComputingUP/ring-pymol/wiki) for the full documentation and usage examples.
 
 
 RING-PyMOL features
