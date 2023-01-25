@@ -16,11 +16,11 @@ Clementel D, Del Conte A, Monzon AM, Camagni GF, Minervini G, Piovesan D and Tos
 (2022) Nucleic Acids Research [https://doi.org/10.1093/nar/gkac365]
 
 # Install
-In order to work, Ring-PyMOL requires PyMOL and some Python packages. To simplify 
-installation you can use the Singularity container provided below and skip completely
-the manual install section.
+In order to work, Ring-PyMOL requires PyMOL and some Python packages. If you don't want to go through 
+all the commands or you have problems with versions you can use a pre-built Singularity container, 
+instructions are provided at the end of this document [here](#singularity-container).
 
-## Manual install (HARD)
+## Manual install
 ### Dependencies 
 We provide three diffent solutions to insatll PyMOL and RING-PyMOL dependecies. The two using Conda gives the same result,
 the one using Apt works only for Linux users and might give different results depending on the operating system.
@@ -31,14 +31,14 @@ dependencies for the correct PyMOL executable.
 In Linux you can type `which pymol` to see the path of the PyMOL executable. 
 If installed with Conda, the command should return something like `/opt/miniconda3/envs/myenv/bin/pymol`
 
-#### Conda from yml file (RECOMMENDED)
+#### Conda YAML (RECOMMENDED)
 
 - Install [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) or [miniconda](https://docs.conda.io/en/latest/miniconda.html)
 - Download the environment.yml file from this repository
 - Create the environment `conda env create -f environment.yml`
 - Activate the environment `conda activate ring-pymol-plugin`
 
-#### Conda commands
+#### Conda
 Same as before but with all commands issued explicitly
 
 - Install [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) or [miniconda](https://docs.conda.io/en/latest/miniconda.html)
@@ -52,7 +52,7 @@ Same as before but with all commands issued explicitly
     - `conda install networkx numpy scipy seaborn pandas requests biopython`
     - `pip install qt-material` (This will install qt-material in the conda environment)
 
-#### Apt commands (Linux only)
+#### APT (Linux only)
 This will use system environment. 
 The version of PyMOL and Python packages depend on the version and distribution of your operating system (OS).
 RING-PyMOL might not work with an obsolete OS.
@@ -69,7 +69,7 @@ Once you have installed PyMOL and all the RING-PyMOL dependencies you have to in
 - Set the installation directory
 - The plugin should now appear on the Plugin menu of PyMOL
 
-## Install container (EASY)
+## Singularity container
 
 Another option for installing the plugin is to use the [singularity](https://docs.sylabs.io/guides/latest/admin-guide/) container definition file provided in this
 repository.
