@@ -51,7 +51,7 @@ Same as before but with all commands issued explicitly
     - `conda install -c conda-forge pymol-open-source` (open-source version)
 - Install Python dependencies
     - `conda install networkx numpy scipy seaborn pandas requests biopython`
-    - `pip install qt-material` (This will install qt-material in the conda environment)
+    - `pip install qt-material` (install qt-material in the conda environment)
 
 #### APT (Linux only)
 This will use system environment. 
@@ -78,14 +78,14 @@ Another option for installing the RING-PyMOL is to use a [Singularity](https://d
 
 To create the image file you can follow these steps:
 - Install [Singularity](https://docs.sylabs.io/guides/latest/admin-guide/)
-- `sudo singularity build -F ring-pymol-plugin.sif singularity.def` (this will create the image file)
-- `singularity shell --cleanenv --writable-tmpfs -B ~/.Xauthority ring-pymol-plugin.sif` (this will open a shell in the
+- `sudo singularity build -F ring-pymol-plugin.sif singularity.def` (create the image file)
+- `singularity shell --cleanenv --writable-tmpfs -B ~/.Xauthority ring-pymol-plugin.sif` (open a shell in the
   container).
   Note that the -B option is needed to allow the container to access the X server of the host machine for displaying the
   GUI.
 - Start PyMOL with `pymol`
 - Add a new directory where to find new plugins
-    - Plugin > Plugin Manager > Settings > Add new directory...
+    - `Plugin > Plugin Manager > Settings > Add new directory...`
     - Add `/opt`
 - Restart PyMOL
 - The plugin should now appear on the Plugin menu of PyMOL
