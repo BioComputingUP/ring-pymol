@@ -24,12 +24,10 @@ instructions are provided at the end of this document [here](#singularity-contai
 
 ## Manual install
 ### Dependencies 
-We provide three diffent solutions to insatll PyMOL and RING-PyMOL dependecies. The two using Conda gives the same result,
-the one using APT works only for Linux users and might give different results depending on the version and distribution of your operating system.
+We provide three diffent solutions to insatll PyMOL and RING-PyMOL dependecies. The first two use Conda and gives the same result.
+The isntallation with APT works only for Linux users and might give different results depending on the version and distribution of your operating system.
 
 **NOTE**
-Sometimes PyMOL uses a Python executable (and relative Python packages) that is different from the one 
-of your current environment. 
 Please make sure you install Python pakages for the correct PyMOL executable. 
 In Linux you can type `which pymol` and `which python` to see the path of the PyMOL and Python executables. 
 If installed with Conda, the command should return something like `/opt/miniconda3/envs/myenv/bin/pymol` and `/opt/miniconda3/envs/myenv/bin/python`
@@ -76,10 +74,10 @@ If you need to update the plugin with a newer version, just remove and reinstall
 
 ## Singularity container
 
-Another option for installing the plugin is to use the [singularity](https://docs.sylabs.io/guides/latest/admin-guide/) container definition file provided in this
-repository.
-To create the image file you can follow these steps:
+Another option for installing the RING-PyMOL is to use a [Singularity](https://docs.sylabs.io/guides/latest/admin-guide/) container. We provide the definition file that yuou can use to build the corresponding image.
 
+To create the image file you can follow these steps:
+- Install [Singularity](https://docs.sylabs.io/guides/latest/admin-guide/)
 - `sudo singularity build -F ring-pymol-plugin.sif singularity.def` (this will create the image file)
 - `singularity shell --cleanenv --writable-tmpfs -B ~/.Xauthority ring-pymol-plugin.sif` (this will open a shell in the
   container).
