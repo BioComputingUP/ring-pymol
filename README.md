@@ -28,8 +28,8 @@ We provide three diffent solutions to insatll PyMOL and RING-PyMOL dependecies. 
 the one using APT works only for Linux users and might give different results depending on the version and distribution of your operating system.
 
 **NOTE**
-Sometimes PyMOL uses a Python executable (and relative Python packages) which is different from the one 
-in your current environment. 
+Sometimes PyMOL uses a Python executable (and relative Python packages) that is different from the one 
+of your current environment. 
 Please make sure you install Python pakages for the correct PyMOL executable. 
 In Linux you can type `which pymol` and `which python` to see the path of the PyMOL and Python executables. 
 If installed with Conda, the command should return something like `/opt/miniconda3/envs/myenv/bin/pymol` and `/opt/miniconda3/envs/myenv/bin/python`
