@@ -113,7 +113,7 @@ class MainDialog(QWidget):
         # Misc
         self.init_colors(original=True)
         self.widg.timer = QtCore.QTimer()
-        self.widg.timer.timeout.connect(self.refresh_sele)
+        self.widg.timer.timeout.connect(lambda : async_(self.refresh_sele))
         self.widg.timer.start(1500)
         self.close_progress()
         self.center_qcombobox()
@@ -378,6 +378,7 @@ class MainDialog(QWidget):
                 widget.setEnabled(is_multi_chain)
 
     def refresh_sele(self):
+        # self.log("Refreshing selections ...")
         public_selections = cmd.get_names("public_selections")
 
         selections = set(map(lambda x: "(" + x + ")", public_selections))
@@ -401,7 +402,7 @@ class MainDialog(QWidget):
 
         resi_selection = set(self.widg.resi_selection.itemText(i) for i in range(self.widg.resi_selection.count()))
 
-        if resi_selection != public_selections:
+        if resi_selection != set(public_selections):
             self.widg.resi_selection.clear()
             self.widg.resi_selection.addItems(public_selections)
 
@@ -578,6 +579,9 @@ class MainDialog(QWidget):
             self.log("Please provide a selection", error=True)
             return
 
+        stored.model = ""
+        cmd.iterate(obj, 'stored.model = model')
+
         self.disable_window()
 
         inter = ""
@@ -596,7 +600,7 @@ class MainDialog(QWidget):
         if self.widg.iac.isChecked():
             inter = "IAC"
 
-        conn_freq = get_freq_combined(obj, inter, self.temp_dir.name, interchain=self.widg.interchain.isChecked(),
+        conn_freq = get_freq_combined(stored.model, inter, self.temp_dir.name, interchain=self.widg.interchain.isChecked(),
                                       intrachain=self.widg.intrachain.isChecked(), key_string=True)
 
         if conn_freq is not None:
@@ -1026,7 +1030,10 @@ class MainDialog(QWidget):
         if cmd.count_states(obj) < 3:
             self.log("Please select a structure with at least 3 states", error=True)
             return None
-        method, n_cluster, obj, rmsd_val = self.init_clustering()
+        try:
+            method, n_cluster, obj, rmsd_val = self.init_clustering()
+        except ValueError:
+            return None
         hierarchy_cut_plot(self, obj, method, self.temp_dir.name, rmsd_val, n_cluster)
 
     def cluster_plot_fn(self):
@@ -1034,16 +1041,23 @@ class MainDialog(QWidget):
         if cmd.count_states(obj) < 3:
             self.log("Please select a structure with at least 3 states", error=True)
             return None
-        method, n_cluster, obj, rmsd_val = self.init_clustering()
+        try:
+            method, n_cluster, obj, rmsd_val = self.init_clustering()
+        except ValueError:
+            return None
         cluster_distribution_heatmap(self, obj, method, self.temp_dir.name, rmsd_val, n_cluster)
 
     def create_cluster_obj(self):
-        method, n_cluster, obj, rmsd_val = self.init_clustering()
+        try:
+            method, n_cluster, obj, rmsd_val = self.init_clustering()
+        except ValueError:
+            return None
         cluster_states_obj(self, obj, method, self.temp_dir.name, rmsd_val, n_cluster)
 
     def init_colors(self, original):
         for i in intTypeMap.keys():
             self.set_inter_colors(i, original)
+            intTypeMap[i] = originalIntTypeMap[i]
 
     def pick_color(self, type):
         color = QtWidgets.QColorDialog.getColor()

@@ -1,6 +1,7 @@
 import json
 import math
 import os.path
+import threading
 from json import JSONEncoder
 from typing import Dict, List, Union
 
@@ -8,9 +9,11 @@ import matplotlib.cm as cm
 import networkx as nx
 import numpy as np
 import pandas as pd
+import pymol
 from PyQt5.QtGui import QColor
 from matplotlib.colors import ListedColormap
 from pymol.cgo import *
+from pymol.wizard.message import Message
 from scipy.stats import pearsonr
 
 intTypeMap = {
@@ -471,6 +474,51 @@ def export_network_graph(model, tmp_dir, log_f, disable_f, enable_f):
 
     log_f("Cytoscape network format saved as {}/{}.json".format(os.getcwd(), model))
 
+
+async_threads = []
+
+def async_(func, *args, **kwargs):
+    '''
+DESCRIPTION
+
+Run function threaded and show "please wait..." message.
+    '''
+    from pymol.wizard.message import Message
+
+    _self = kwargs.pop('_self', cmd)
+
+    wiz = Message([], dismiss=0, _self=_self)
+
+    try:
+        _self.set_wizard(wiz)
+    except:
+        wiz = None
+
+    if isinstance(func, str):
+        func = _self.keyword[func][0]
+
+    def wrapper():
+        async_threads.append(t)
+        try:
+            func(*args, **kwargs)
+        except (pymol.CmdException, cmd.QuietException) as e:
+            if e.args:
+                print(e)
+        finally:
+            if wiz is not None:
+                try:
+                    _self.set_wizard_stack([w
+                                            for w in _self.get_wizard_stack() if w != wiz])
+                except:
+                    _self.do('_ wizard')
+                else:
+                    _self.refresh_wizard()
+
+            async_threads.remove(t)
+
+    t = threading.Thread(target=wrapper)
+    t.setDaemon(1)
+    t.start()
 
 if __name__ == '__main__':
     # export_network_graph('2h9r')

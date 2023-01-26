@@ -2,7 +2,6 @@
 # executed on PyMOL's startup. Only import such modules inside functions.
 import os
 import sys
-import time
 from pathlib import Path
 
 from pymol import cmd
