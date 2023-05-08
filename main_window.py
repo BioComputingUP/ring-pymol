@@ -324,8 +324,25 @@ class MainDialog(QWidget):
         file_pth = os.path.join(self.temp_dir.name, obj_name + ".cif")
 
         self.log("Exporting pymol object {} in cif format ({})".format(obj_name, file_pth))
-
-        cmd.save(filename=file_pth, selection=obj_name, state=0)
+        cifdata=[]
+        len_traj = cmd.count_states(obj_name)
+        for i in range(1, len_traj + 1):
+            file_pth = os.path.join(self.temp_dir.name, obj_name + "_" + str(i) + ".cif")
+            cmd.save(filename=file_pth, selection=obj_name, state=i)
+            tmpcif=open(file_pth, "r")
+            if i == 1:
+                for line in tmpcif:
+                    cifdata.append(line)
+            else:
+                for line in tmpcif:
+                    tmpline=line.split()
+                    if tmpline[0] == 'ATOM':
+                        cifdata.append(line)
+            os.remove(file_pth)
+        file_pth = os.path.join(self.temp_dir.name, obj_name + ".cif")
+        with open('{}'.format(file_pth), 'w') as f:
+            for line in cifdata:
+                f.write(f"{line}\n")
         self.log("Exporting done")
 
         if self.widg.ring_locally.isChecked():
