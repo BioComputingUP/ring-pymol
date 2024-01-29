@@ -68,7 +68,7 @@ RING-PyMOL might not work with an obsolete OS.
 Once you have installed PyMOL and all the RING-PyMOL dependencies you have to install the RING-PyMOL plugin. 
 
 - Open PyMOL and go to `Plugin > Plugin Manager > Install New Plugin > Install from Repository > Add..`
-- Add `https://ring.biocomputingup.it/plugin/`
+- Add `https://old.ring.biocomputingup.it/plugin/`
 - Click on `ring-plugin.zip` in the right panel and then click `Install`
 - Set the installation directory
 - The plugin should now appear on the Plugin menu of PyMOL
