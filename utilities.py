@@ -1,8 +1,10 @@
 import json
 import math
 import os.path
+import pathlib
 import threading
 from json import JSONEncoder
+from os.path import exists
 from typing import Dict, List, Union
 
 import matplotlib.cm as cm
@@ -17,23 +19,29 @@ from pymol.wizard.message import Message
 from scipy.stats import pearsonr
 
 intTypeMap = {
-        "IONIC"    : (0.0, 0.0, 1.0),
-        "SSBOND"   : (1.0, 1.0, 0.0),
-        "PIPISTACK": (1.0, 0.5, 0.0),
-        "PICATION" : (1.0, 0.0, 0.0),
-        "HBOND"    : (0.0, 1.0, 1.0),
-        "VDW"      : (0.5050504803657532, 0.5050504803657532, 0.5050504803657532),
-        "IAC"      : (1.0, 1.0, 1.0)
+    "IONIC": (0.0, 0.0, 1.0),
+    "METAL_ION": (1.0, 0.0, 1.0),
+    "SSBOND": (1.0, 1.0, 0.0),
+    "PIPISTACK": (1.0, 0.5, 0.0),
+    "PICATION": (1.0, 0.0, 0.0),
+    "PIHBOND": (0.0, 1.0, 0.0),
+    "HBOND": (0.0, 1.0, 1.0),
+    "HALOGEN": (1.0, 105 / 255, 180 / 255),
+    "VDW": (0.5050504803657532, 0.5050504803657532, 0.5050504803657532),
+    "IAC": (1.0, 1.0, 1.0)
 }
 
 originalIntTypeMap = {
-        "IONIC"    : (0.0, 0.0, 1.0),
-        "SSBOND"   : (1.0, 1.0, 0.0),
-        "PIPISTACK": (1.0, 0.5, 0.0),
-        "PICATION" : (1.0, 0.0, 0.0),
-        "HBOND"    : (0.0, 1.0, 1.0),
-        "VDW"      : (0.5050504803657532, 0.5050504803657532, 0.5050504803657532),
-        "IAC"      : (1.0, 1.0, 1.0)
+    "IONIC": (0.0, 0.0, 1.0),
+    "METAL_ION": (1.0, 0.0, 1.0),
+    "SSBOND": (1.0, 1.0, 0.0),
+    "PIPISTACK": (1.0, 0.5, 0.0),
+    "PICATION": (1.0, 0.0, 0.0),
+    "PIHBOND": (0.0, 1.0, 0.0),
+    "HBOND": (0.0, 1.0, 1.0),
+    "HALOGEN": (1.0, 105 / 255, 180 / 255),
+    "VDW": (0.5050504803657532, 0.5050504803657532, 0.5050504803657532),
+    "IAC": (1.0, 1.0, 1.0)
 }
 
 
@@ -172,19 +180,21 @@ def get_freq(obj, tmp_dir, interchain=False, intrachain=False) -> Dict[str, Dict
     conn_freq = dict()
     for inter in intTypeMap.keys():
         conn_freq.setdefault(inter, dict())
-        with open(tmp_dir + "/md/{}.gfreq_{}".format(obj, inter), 'r') as f:
-            for line in f:
-                node1, _, node2, perc = line.split('\t')
-                node1 = Node(node1)
-                node2 = Node(node2)
-                edge = Edge(node1, node2)
+        gfreq_file = tmp_dir + "/md/{}.gfreq_{}".format(obj, inter)
+        if exists(gfreq_file):
+            with open(gfreq_file, 'r') as f:
+                for line in f:
+                    node1, _, node2, perc = line.split('\t')
+                    node1 = Node(node1)
+                    node2 = Node(node2)
+                    edge = Edge(node1, node2)
 
-                if intrachain and node1.chain != node2.chain:
-                    continue
-                if interchain and node1.chain == node2.chain:
-                    continue
+                    if intrachain and node1.chain != node2.chain:
+                        continue
+                    if interchain and node1.chain == node2.chain:
+                        continue
 
-                conn_freq[inter].setdefault(edge, float(perc))
+                    conn_freq[inter].setdefault(edge, float(perc))
     return conn_freq
 
 
@@ -209,6 +219,7 @@ def get_freq_combined(obj, bond, tmp_dir, interchain=False, intrachain=False, ke
 
     except FileNotFoundError:
         raise FileNotFoundError
+
     for k, v in conn_freq.items():
         conn_freq[k] = 1 - math.prod([(1 - x) for x in v])
 
@@ -360,11 +371,11 @@ def generate_colormap(number_of_distinct_colors: int = 80):
 
     number_of_shades = 7
     number_of_distinct_colors_with_multiply_of_shades = int(
-            math.ceil(number_of_distinct_colors_min / number_of_shades) * number_of_shades)
+        math.ceil(number_of_distinct_colors_min / number_of_shades) * number_of_shades)
 
     # Create an array with uniformly drawn floats taken from <0, 1) partition
     linearly_distributed_nums = np.arange(
-            number_of_distinct_colors_with_multiply_of_shades) / number_of_distinct_colors_with_multiply_of_shades
+        number_of_distinct_colors_with_multiply_of_shades) / number_of_distinct_colors_with_multiply_of_shades
 
     # We are going to reorganise monotonically growing numbers in such way that there will be single array with saw-like pattern
     #     but each saw tooth is slightly higher than the one before
@@ -477,6 +488,7 @@ def export_network_graph(model, tmp_dir, log_f, disable_f, enable_f):
 
 async_threads = []
 
+
 def async_(func, *args, **kwargs):
     '''
 DESCRIPTION
@@ -519,7 +531,3 @@ Run function threaded and show "please wait..." message.
     t = threading.Thread(target=wrapper)
     t.setDaemon(1)
     t.start()
-
-if __name__ == '__main__':
-    # export_network_graph('2h9r')
-    calculate_correlation("trj_cl", 20)

@@ -1,8 +1,12 @@
 import datetime
 import os.path
+import pickle
+import subprocess
 import tempfile
 from shutil import which
 
+import matplotlib.pyplot as plt
+import networkx as nx
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QCursor
@@ -10,6 +14,7 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.uic import loadUi
 from networkx import MultiGraph, draw_networkx_labels, draw_networkx_nodes, kamada_kawai_layout
 from pandas import read_csv
+from pandas.errors import EmptyDataError
 from pymol import stored
 
 from correlation_window import CorrelationDialog
@@ -29,6 +34,22 @@ extra = {
     'pyside6': False,
     'linux': True,
 }
+
+MIN_RING_VERSION = 4.0
+
+
+def load_config(config_file):
+    if not os.path.exists(config_file):
+        return dict()
+
+    with open(config_file) as file:
+        config = json.load(file)
+    return config
+
+
+def update_config(config_file, config):
+    with open(config_file, "w") as f:
+        json.dump(config, f)
 
 
 class MainDialog(QWidget):
@@ -51,12 +72,25 @@ class MainDialog(QWidget):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.log("Setting temp directory {}".format(self.temp_dir.name))
 
-        if os.path.exists("{}/.ring/bin/ring".format(os.path.expanduser("~"))):
-            self.widg.ring_path.setText("{}/.ring/bin/ring".format(os.path.expanduser("~")))
-        elif which('ring') is not None:
-            self.widg.ring_path.setText(str(which('ring')))
+        self.config_file = os.path.join(os.path.dirname(__file__), 'config.json')
+        self.config = load_config(self.config_file)
+        # Cycle through all the config options and set them
+        for key, value in self.config.items():
+            if key in extra:
+                continue
+            if key in self.widg.__dict__:
+                self.widg.__dict__[key].setText(str(value))
+            else:
+                self.log("Config option {} not found in GUI".format(key), warning=True)
+
+        if self.widg.ring_path.text() != "":
+            if not self.check_ring_version(self.widg.ring_path.text()):
+                # Remove entry from config file
+                self.config.pop("ring_path")
+                update_config(self.config_file, self.config)
+                self.widg.ring_path.setText("")
         else:
-            self.log("RING path not found in current directory, please set it manually", warning=True)
+            self.set_ring_exec_path()
 
         # Execute Ring
         self.widg.visualize_btn.clicked.connect(self.run)
@@ -103,17 +137,32 @@ class MainDialog(QWidget):
         self.widg.b_color_pica.clicked.connect(lambda: self.pick_color("PICATION"))
         self.widg.b_color_vdw.clicked.connect(lambda: self.pick_color("VDW"))
         self.widg.b_color_iac.clicked.connect(lambda: self.pick_color("IAC"))
+        self.widg.pih_color.clicked.connect(lambda: self.pick_color("PIHBOND"))
+        self.widg.metallic_color.clicked.connect(lambda: self.pick_color("METAL_ION"))
+        self.widg.halogen_color.clicked.connect(lambda: self.pick_color("HALOGEN"))
 
         self.widg.strict.toggled.connect(lambda: self.distances(type="strict"))
         self.widg.relaxed.toggled.connect(lambda: self.distances(type="relaxed"))
         self.widg.manual.toggled.connect(lambda: self.distances(type="manual"))
 
-        # self.widg.colormap.clicked.connect(lambda : print("colormap"))
+        # Unpickle hetero_dict
+        # TODO: exception in case of missing file
+        self.hetero_dict_keys = pickle.load(
+            open(os.path.join(os.path.dirname(__file__), "assets", "hetero_dict_keys.pkl"), "rb"))
+
+        self.hetero_dict = None
+
+        # Set elements in the combo box
+        self.widg.standard_molecule_select.addItems(self.hetero_dict_keys)
+        self.widg.button_view_standard.clicked.connect(
+            lambda: self.standard_atom_connections_graph(self.widg.standard_molecule_select.currentText()))
+
+        self.widg.button_view_selected.clicked.connect(self.selected_atom_connections_graph)
 
         # Misc
         self.init_colors(original=True)
         self.widg.timer = QtCore.QTimer()
-        self.widg.timer.timeout.connect(lambda : async_(self.refresh_sele))
+        self.widg.timer.timeout.connect(lambda: async_(self.refresh_sele))
         self.widg.timer.start(1500)
         self.close_progress()
         self.center_qcombobox()
@@ -134,7 +183,52 @@ class MainDialog(QWidget):
             child.setGraphicsEffect(shadow)
 
         self.widg.main.tabBar().setCursor(QtCore.Qt.PointingHandCursor)
-        self.widg.config.tabBar().setCursor(QtCore.Qt.PointingHandCursor)
+        self.widg.config_pane.tabBar().setCursor(QtCore.Qt.PointingHandCursor)
+
+
+
+    def check_ring_version(self, path):
+        try:
+            subprocess.check_output([path, "-h"], universal_newlines=True)
+        except (subprocess.CalledProcessError, PermissionError, FileNotFoundError) as e:
+            self.log(f"An error occurred while checking the RING version: {e}", error=True)
+            return False
+
+        try:
+            subprocess.check_output([path, "--version"], universal_newlines=True)
+        except subprocess.CalledProcessError as e:
+            self.log(
+                f"RING version is too old, you might have RING v3, please update to at least version {MIN_RING_VERSION}",
+                error=True)
+            return False
+
+        try:
+            version = subprocess.check_output([path, "--version"], universal_newlines=True)
+            version_total = version.split()[1]
+            version_num = float(version.split()[1].split('-')[0][1:])
+            if version_num < MIN_RING_VERSION:
+                self.log(f"RING version is too old, please update to at least version {MIN_RING_VERSION}",
+                         error=True)
+            self.log(f"RING version is {version_total}")
+            return True
+        except Exception as e:
+            self.log(f"RING version is too old, please update to at least version {MIN_RING_VERSION}",
+                     error=True)
+            return False
+
+    def set_ring_exec_path(self):
+        if os.path.exists("{}/.ring/bin/ring".format(os.path.expanduser("~"))):
+            path = f"{os.path.expanduser('~')}/.ring/bin/ring"
+            if self.check_ring_version(path):
+                self.widg.ring_path.setText(path)
+
+        elif which('ring') is not None:
+            path = str(which('ring'))
+            if self.check_ring_version(path):
+                self.widg.ring_path.setText(path)
+        else:
+            self.log("RING path cannot be determined automatically, please set it manually in configuration tab",
+                     error=True)
 
     # Helper functions
     def get_selection(self):
@@ -156,8 +250,14 @@ class MainDialog(QWidget):
         out_s += s
 
         nestedLabel = QtWidgets.QLabel(out_s)
+        nestedLabel.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        nestedLabel.setWordWrap(True)
+        size = 24
+        if len(out_s) > 100:
+            size *= math.ceil(len(out_s) / 100) * 0.85
+
         item = QtWidgets.QListWidgetItem()
-        item.setSizeHint(QSize(0, 24))
+        item.setSizeHint(QSize(0, int(size)))
         self.widg.console_log.insertItem(0, item)
 
         if error:
@@ -185,7 +285,7 @@ class MainDialog(QWidget):
             self.widg.len_hbond.setValue(5.5)
             self.widg.len_ss.setValue(3.0)
             self.widg.len_salt.setValue(5.0)
-            self.widg.len_vdw.setValue(0.8)
+            self.widg.len_vdw.setValue(0.03)
         else:
             for widget in widgets:
                 widget.setEnabled(False)
@@ -194,7 +294,7 @@ class MainDialog(QWidget):
             self.widg.len_hbond.setValue(3.5)
             self.widg.len_ss.setValue(2.5)
             self.widg.len_salt.setValue(4.0)
-            self.widg.len_vdw.setValue(0.5)
+            self.widg.len_vdw.setValue(0.01)
 
     def progress(self, p):
         if not self.widg.progress_bar.isVisible():
@@ -237,14 +337,169 @@ class MainDialog(QWidget):
         value = self.widg.transp_value.value() / 100
         cmd.set("cgo_transparency", value)
 
+    def draw_connections_graph(self, G, highlight=None):
+        atom_colors = {'C': 'limegreen', 'H': 'white', 'O': 'red', 'N': 'royalblue', 'S': 'yellow', 'P': 'orange',
+                       'FE': 'crimson', 'CL': 'springgreen', 'BR': 'darkorange', 'F': 'mediumturquoise',
+                       'I': 'darkviolet', 'NA': 'dodgerblue', 'ZN': 'darkgray',
+                       'MG': 'darkolivegreen', 'MN': 'darkslateblue', 'SN': 'gray'}
+
+        def extract_element(atom_name):
+            # The element are the first letters of the atom name, that are not numbers or other symbols
+            element = ""
+            for c in atom_name:
+                if c.isalpha():
+                    element += c
+                else:
+                    break
+                if element == 'H' or element == 'O':
+                    break
+            if element not in atom_colors:
+                element = atom_name[0]
+
+            return element
+
+        node_colors = {atom: atom_colors[extract_element(atom)] if extract_element(atom) in atom_colors else 'sienna'
+                       for atom in G.nodes}
+        nx.set_node_attributes(G, node_colors, 'color')
+
+        # Retrieve node colors
+        colors = nx.get_node_attributes(G, 'color')
+
+        plt.figure(facecolor='gainsboro', figsize=(7, 8))
+
+        edgecolors = np.array(list(colors.values()))
+        if highlight is not None and len(highlight) > 0:
+            print(highlight)
+            edgecolors[highlight] = 'black'
+
+        # Visualize the graph
+        pos = nx.kamada_kawai_layout(G, weight=None)
+
+        nx.draw_networkx_nodes(G, pos, node_color=list(colors.values()), node_size=500, edgecolors=edgecolors)
+        nx.draw_networkx_edges(G, pos)
+
+        labelcolors = np.array(['black'] * len(G.nodes))
+        if highlight is not None and len(highlight) > 0:
+            labelcolors[highlight] = 'gold'
+
+        for node, color in zip(G.nodes, labelcolors):
+            nx.draw_networkx_labels(G, pos, labels={node: node}, font_color=color, font_size=9,
+                                    font_family='sans-serif', font_weight='bold')
+
+        plt.axis('off')
+
+    def get_standard_connection_graph(self, molecule):
+        # Check if we already loaded the hetero_dict, if not, load it
+        if self.hetero_dict is None:
+            path = os.path.join(os.path.dirname(__file__), "assets", "hetero_dict.pkl")
+            self.log(f"Loading {path}")
+            try:
+                self.hetero_dict = pickle.load(open(path, "rb"))
+                self.log(f"Loaded standard atom connections")
+            except FileNotFoundError:
+                self.log(f"Could not find {path}, atom connections cannot be shown", error=True)
+                return
+
+        # Create a graph of the molecule using networkx
+        G = nx.Graph()
+        if len(self.hetero_dict[molecule]) == 0:
+            G.add_node(molecule)
+
+        # All amino acids list
+        amino_acids = ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'GLN', 'GLU', 'GLY', 'HIS',
+                       'ILE', 'LEU', 'LYS', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP',
+                       'TYR', 'VAL']
+
+        for atom, neighbors in self.hetero_dict[molecule]:
+            if molecule not in amino_acids or (atom not in ['OXT', 'HXT'] and atom != 'H2'):
+                G.add_node(atom)
+                for neighbor in neighbors:
+                    if molecule not in amino_acids or (neighbor not in ['OXT', 'HXT'] and neighbor != 'H2'):
+                        G.add_edge(atom, neighbor)
+        return G
+
+    def standard_atom_connections_graph(self, molecule):
+        G = self.get_standard_connection_graph(molecule)
+
+        self.draw_connections_graph(G)
+
+        plt.get_current_fig_manager().set_window_title(f"Standard atoms and connections of {molecule}")
+        plt.title(f"Standard atoms and connections for residue {molecule}", fontsize=12)
+        plt.show()
+
+    def selected_atom_connections_graph(self):
+        obj_name = self.widg.selections_list.currentText()
+
+        if len(obj_name) == 0:
+            self.log("No object selected", error=True)
+            return
+
+        if not is_selection(obj_name):
+            self.log("Please select a selection, not an object", error=True)
+            return
+
+        # Check that the selection is a single residue
+        stored.chain_resi = set()
+        cmd.iterate(obj_name, 'stored.chain_resi.add((chain, resi, resn))')
+        if len(stored.chain_resi) != 1:
+            self.log("You need to create a selection with exactly two residues to use this feature", error=True)
+            return
+
+        selected = next(iter(stored.chain_resi))
+        chain, resi, resn = selected
+
+        # Iterate over the atoms in the selection and store the atom names and atom indices
+        atoms_of_selection = cmd.get_model(obj_name, 1).atom
+
+        if len(atoms_of_selection) == 0:
+            self.log("No atoms found in the selection", error=True)
+            return
+
+        # For each atom, find the neighbors and put them into a graph
+        G = nx.Graph()
+        for atom in atoms_of_selection:
+            G.add_node(atom.name)
+            neighbors = cmd.get_model(f"nbr. idx. {atom.index} & resi {resi}").atom
+            for neighbor in neighbors:
+                if neighbor.resi == resi:
+                    G.add_edge(atom.name, neighbor.name)
+
+        highlight = None
+        try:
+            G2 = self.get_standard_connection_graph(resn)
+            diff = set(G.nodes) - set(G2.nodes)
+            highlight = []
+            nodes_list = np.array(list(G.nodes()))
+            for node in diff:
+                self.log(f"Atom {node} is not a standard atom in {resn}", warning=True)
+                highlight.append(np.where(nodes_list == node)[0][0])
+            # Set highlight as an array of length node_list with None everywhere except the indexes of the non-standard atoms
+        except KeyError:
+            self.log(f"Could not find standard connections for {resn}", error=True)
+
+        self.draw_connections_graph(G, highlight=highlight)
+
+        plt.get_current_fig_manager().set_window_title(f"Atoms connections of {resn}-{resi} in chain {chain}")
+        plt.title(f"Atoms connections of {resn}-{resi} in chain {chain}", fontsize=12)
+
+        plt.show()
+
     def get_current_run_config(self):
         edge_policy = ""
         if self.widg.one_edge.isChecked():
             edge_policy = "--best_edge"
         if self.widg.multi_edge.isChecked():
-            edge_policy = "--multi_edge"
+            edge_policy = ""
         if self.widg.all_edge.isChecked():
             edge_policy = "--all_edges"
+
+        water = ""
+        if self.widg.include_water.isChecked():
+            water = "--water"
+
+        add_h = ""
+        if self.widg.no_add_h.isChecked():
+            add_h = "--no_add_H"
 
         seq_sep = str(self.widg.seq_separation.value())
 
@@ -262,13 +517,22 @@ class MainDialog(QWidget):
                 "-a": len_pica,
                 "-b": len_hbond,
                 "-w": len_vdw,
+                "water": water,
+                "add_h": add_h,
                 "edges": edge_policy}
 
     def browse_ring_exe(self):
         filename = QtWidgets.QFileDialog.getOpenFileNames(self, "Select Ring executable")
 
         if len(filename[0]) > 0:
-            self.widg.ring_path.setText(filename[0][0])
+            ring_path = filename[0][0]
+
+            if self.check_ring_version(ring_path):
+                self.widg.ring_path.setText(filename[0][0])
+                # Store the path in the config file
+                with open(self.config_file, "w") as f:
+                    self.config["ring_path"] = filename[0][0]
+                    json.dump(self.config, f)
 
     def center_qcombobox(self):
         for item in [self.widg.interaction_sele, self.widg.clustering_method]:
@@ -330,8 +594,15 @@ class MainDialog(QWidget):
 
         if self.widg.ring_locally.isChecked():
             if os.path.exists(self.widg.ring_path.text()):
-                run_ring_local(self.widg.ring_path.text(), file_pth, obj_name, current_run_config, self.temp_dir.name,
-                               self.log, self.progress)
+                try:
+                    run_ring_local(self.widg.ring_path.text(), file_pth, obj_name, current_run_config,
+                                   self.temp_dir.name,
+                                   self.log, self.progress, self.widg.verbose.isChecked())
+                except Exception as e:
+                    self.log("Error while running RING: {}".format(e), error=True)
+                    self.close_progress()
+                    self.enable_window()
+                    return
             else:
                 self.log("Ring executable not found, running with the remote APIs ...", warning=True)
                 self.widg.ring_locally.setChecked(False)
@@ -498,11 +769,11 @@ class MainDialog(QWidget):
 
                     # interactions_per_type.setdefault(int_type, [])
                     t = tuple()
-                    if "," in atom1:
+                    if "," in str(atom1):
                         t += (atom1,)
                     else:
                         t += ("{}/{}/{}".format(node1.chain, str(node1.resi), atom1),)
-                    if "," in atom2:
+                    if "," in str(atom2):
                         t += (atom2,)
                     else:
                         t += ("{}/{}/{}".format(node2.chain, str(node2.resi), atom2),)
@@ -538,12 +809,15 @@ class MainDialog(QWidget):
             self.slider_radius_change()
             self.slider_transp_change()
 
-        if selection is None:
-            cmd.async_(draw)
-            self.log("Created group {} for interaction edges".format(obj + "_edges"), timed=False)
-            self.log("Created group {} for interaction nodes".format(obj + "_nodes"), timed=False)
-        else:
-            draw()
+        try:
+            if selection is None:
+                cmd.async_(draw)
+                self.log("Created group {} for interaction edges".format(obj + "_edges"), timed=False)
+                self.log("Created group {} for interaction nodes".format(obj + "_nodes"), timed=False)
+            else:
+                draw()
+        except EmptyDataError:
+            self.log("No interactions found in the object", warning=True)
 
     def create_node_edges_sele(self, possible_selected_nodes, model_name, is_sele, obj):
         members = ""
@@ -599,18 +873,29 @@ class MainDialog(QWidget):
             inter = "SSBOND"
         if self.widg.iac.isChecked():
             inter = "IAC"
+        if self.widg.halogen.isChecked():
+            inter = "HALOGEN"
+        if self.widg.pihydrogen.isChecked():
+            inter = "PIHBOND"
+        if self.widg.metallic.isChecked():
+            inter = "METAL_ION"
 
-        conn_freq = get_freq_combined(stored.model, inter, self.temp_dir.name, interchain=self.widg.interchain.isChecked(),
-                                      intrachain=self.widg.intrachain.isChecked(), key_string=True)
+        try:
+            conn_freq = get_freq_combined(stored.model, inter, self.temp_dir.name,
+                                          interchain=self.widg.interchain.isChecked(),
+                                          intrachain=self.widg.intrachain.isChecked(), key_string=True)
 
-        if conn_freq is not None:
-            myspace = {'dict_freq': conn_freq}
-            express = "b=dict_freq['{}/{}/{}'.format(chain,resi,resn)] if '{}/{}/{}'.format(chain,resi,resn) " \
-                      "in dict_freq.keys() else 0.001"
-            cmd.alter_state(-1, obj, expression=express, space=myspace)
-            cmd.spectrum("b", "white lightblue marine blue", obj, minimum=0.001, maximum=1.0)
+            if conn_freq is not None:
+                myspace = {'dict_freq': conn_freq}
+                express = "b=dict_freq['{}/{}/{}'.format(chain,resi,resn)] if '{}/{}/{}'.format(chain,resi,resn) " \
+                          "in dict_freq.keys() else 0.001"
+                cmd.alter_state(-1, obj, expression=express, space=myspace)
+                cmd.spectrum("b", "white lightblue marine blue", obj, minimum=0.001, maximum=1.0)
 
-        self.log("Residues with interaction of type {} colored based on the frequency of contact".format(inter))
+            self.log("Residues with interaction of type {} colored based on the frequency of contact".format(inter))
+        except FileNotFoundError:
+            self.log("No frequency file found for {}, run RING first".format(inter), error=True)
+
         self.enable_window()
 
     def correlation_obj(self):
@@ -731,7 +1016,9 @@ class MainDialog(QWidget):
     def inter_heatmap(self):
         text_name_to_inter_name = {"All": "ALL", "H-bond": "HBOND", "π-π stack": "PIPISTACK",
                                    "π cation": "PICATION", "Van der Waals": "VDW", "IAC": "IAC",
-                                   "Disulfide": "SSBOND", "Ionic": "IONIC"}
+                                   "Disulfide": "SSBOND", "Ionic": "IONIC", 'Metal Ion': 'METAL_ION',
+                                   "π-Hydrogen": "PIHBOND",
+                                   "Halogen": "HALOGEN"}
 
         try:
             obj, model, _ = self.get_values_from_input()
@@ -1084,3 +1371,9 @@ class MainDialog(QWidget):
             self.widg.color_vdw.setStyleSheet(style_sheet)
         if type == "IAC":
             self.widg.color_iac.setStyleSheet(style_sheet)
+        if type == "HALOGEN":
+            self.widg.color_halogen.setStyleSheet(style_sheet)
+        if type == "METAL_ION":
+            self.widg.color_metallic.setStyleSheet(style_sheet)
+        if type == "PIHBOND":
+            self.widg.color_pih.setStyleSheet(style_sheet)

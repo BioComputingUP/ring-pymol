@@ -52,15 +52,15 @@ class FreqDialog(QtWidgets.QWidget):
         for bondType, freqs in freq_bond.items():
             all_resi.update(set(freqs.keys()))
 
-        mtr = np.zeros((len(all_resi), 7))
+        mtr = np.zeros((len(all_resi), len(intTypeMap.keys())))
         for i, resi in enumerate(all_resi):
-            for j, bondType in enumerate(["PIPISTACK", "PICATION", "IONIC", "HBOND", "SSBOND", "VDW", "IAC"]):
+            for j, bondType in enumerate(intTypeMap.keys()):
                 try:
                     mtr[i, j] = freq_bond[bondType][resi] * 100
                 except KeyError:
                     pass
 
-        right = pd.DataFrame(mtr, columns=["PIPISTACK", "PICATION", "IONIC", "HBOND", "SSBOND", "VDW", "IAC"])
+        right = pd.DataFrame(mtr, columns=intTypeMap.keys())
         center = pd.DataFrame([[x for x in all_resi]]).transpose()
         df = pd.concat([center, right], axis=1)
         tableWidget = self.freqTable

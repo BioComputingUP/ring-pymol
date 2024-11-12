@@ -81,7 +81,7 @@ def check_for_job(task):
         job_url = "{}/{}".format(list_task_url, task.uuid)
 
         while not task.is_finished():
-            response = requests.get(job_url, timeout=5)
+            response = requests.get(job_url, timeout=500)
             response.raise_for_status()
             task.status = response.json()["status"]
             if not task.is_finished():
@@ -95,7 +95,7 @@ def post_job(task, file_pth, params):
     try:
         files = {'input_file': open(file_pth, 'rb')}
 
-        response = requests.post(list_task_url, files=files, data=params, timeout=5)
+        response = requests.post(list_task_url, files=files, data=params, timeout=10000)
         response.raise_for_status()
         task.uuid = response.json()["uuid"]
         task.status = response.json()["status"]

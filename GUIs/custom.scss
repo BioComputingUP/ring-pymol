@@ -8,6 +8,12 @@
     min-height: 24px;
 }}
 
+.QTabWidget::pane {{
+    border: 0 solid white;
+    margin-top: -13px;
+    margin-bottom: -13px;
+}}
+
 .QPushButton:disabled {{
     color: rgba(83, 98, 104, 0.38);
     text-transform: none;

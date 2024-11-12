@@ -40,14 +40,15 @@
 #### Installation of PyMOL with apt
 
 - `sudo apt install pymol python3-pip python3-tk`
-- `pip install pmw networkx numpy~=1.20 scipy seaborn pandas qt-material biopython requests`
+- `pip install pmw networkx numpy scipy seaborn pandas qt-material biopython requests tqdm`
 
 #### Installation of PyMOL with Conda from yml file (RECOMMENDED)
 
 - Install conda, following the instructions on their website
 - Download the environment.yml file from this repository
-- Create the environment with `conda env create -f environment.yml`
-- Activate the environment with `conda activate ring-pymol-plugin`
+- Create the environment with `conda env create -f environment-open-source.yml`
+  - To install the schrodinger version of PyMOL use the `environment-schrodinger.yml` file
+- Activate the environment with `conda activate ring-pymol`
 
 #### Installation of PyMOL with Conda
 
@@ -56,10 +57,10 @@
     - `conda create -n myenv`
     - `conda activate myenv`
 - Install PyMOL in the new environment
-    - `conda install -c conda-forge -c schrodinger pymol-bundle` (shrodinger version)
+    - `conda install -c conda-forge -c schrodinger pymol-bundle` (schrodinger version)
     - `conda install -c conda-forge pymol-open-source` (open-source version)
 - Install python dependencies for the plugin
-    - `conda install networkx numpy scipy seaborn pandas requests biopython`
+    - `conda install networkx numpy scipy seaborn pandas requests biopython tqdm`
     - `pip install qt-material` (This will be installed in the conda environment)
 
 ### NOTE
@@ -72,7 +73,7 @@ conda installation.
 ### Install the RING plugin
 
 - Open PyMOL and go to Plugin > Plugin Manager > Install New Plugin > Install from Repository > Add..
-    - Add https://ring.biocomputingup.it/plugin/
+    - Add https://biocomputingup.it/shared/ring-plugin/
 - Click on ring-plugin.zip in the right panel and then Install
 - Set the installation directory
 -

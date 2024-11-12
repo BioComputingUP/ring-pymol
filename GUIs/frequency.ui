@@ -71,6 +71,21 @@
         </column>
         <column>
          <property name="text">
+          <string>Ionic</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Metal Ion</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>SS bond</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
           <string>π-π stack</string>
          </property>
         </column>
@@ -81,7 +96,7 @@
         </column>
         <column>
          <property name="text">
-          <string>Ionic</string>
+          <string>π-Hydrogen</string>
          </property>
         </column>
         <column>
@@ -91,7 +106,7 @@
         </column>
         <column>
          <property name="text">
-          <string>SS bond</string>
+          <string>Halogen</string>
          </property>
         </column>
         <column>

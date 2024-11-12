@@ -1,0 +1,19 @@
+name: biotest
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - pymol-open-source
+  - pandas
+  - seaborn
+  - requests
+  - networkx==3.3
+  - pip
+  - scipy
+  - biopython
+  - numpy
+  - tqdm
+  - pip:
+      - qt-material
+prefix: /opt/miniconda3/envs/bio24
