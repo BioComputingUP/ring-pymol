@@ -369,7 +369,6 @@ class MainDialog(QWidget):
 
         edgecolors = np.array(list(colors.values()))
         if highlight is not None and len(highlight) > 0:
-            print(highlight)
             edgecolors[highlight] = 'black'
 
         # Visualize the graph
@@ -577,7 +576,7 @@ class MainDialog(QWidget):
 
         current_run_config = self.get_current_run_config()
 
-        # If Ring has already been run on that obj and the run config didn't changed then just visualize results
+        # If Ring has already been run on that obj and the run config didn't change then just visualize results
         if obj_name in self.prev_launch_config.keys() and self.prev_launch_config[obj_name] == current_run_config \
                 and not self.widg.override_memory.isChecked():
             self.visualize()
@@ -709,9 +708,9 @@ class MainDialog(QWidget):
         stored.chain_resi = set()
         cmd.iterate(obj, 'stored.chain_resi.add((chain, resi))')
         conn_freq = get_freq(stored.model, self.temp_dir.name)
-
         def draw():
             interactions_per_state = pd.read_csv(file_pth, sep='\t')
+
 
             if len(interactions_per_state) == 0:
                 self.log("No interactions found in the object", warning=True)
@@ -734,7 +733,8 @@ class MainDialog(QWidget):
                 for int_type in intTypeMap.keys():
                     interactions_per_type.setdefault(int_type, list())
 
-                for (nodeId1, interaction, nodeId2, _, _, _, atom1, atom2, *_) in df.itertuples(index=False):
+
+                for (nodeId1, interaction, nodeId2, _, _, atom1, atom2, *_) in df.itertuples(index=False):
                     int_type, intRegion = interaction.split(":")
                     node1 = Node(nodeId1)
                     node2 = Node(nodeId2)
@@ -773,10 +773,12 @@ class MainDialog(QWidget):
                         t += (atom1,)
                     else:
                         t += ("{}/{}/{}".format(node1.chain, str(node1.resi), atom1),)
+
                     if "," in str(atom2):
                         t += (atom2,)
                     else:
                         t += ("{}/{}/{}".format(node2.chain, str(node2.resi), atom2),)
+
                     interactions_per_type[int_type].append(t)
 
                     # Update set of possible selected nodes

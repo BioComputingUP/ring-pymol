@@ -262,7 +262,7 @@ def get_node_names_ordered(obj, tmp_dir):
 
 def draw_links(interactions, color, object_name, coords, state):
     from pymol import cmd
-
+    # print(coords)
     tup_color = []
     if type(color) is str:
         try:
@@ -274,6 +274,7 @@ def draw_links(interactions, color, object_name, coords, state):
 
     obj = [BEGIN, LINES, COLOR] + tup_color
     for interaction in interactions:
+        # print(interaction)
         valid = True
         if "," in interaction[0]:
             coord1 = ([float(x) for x in interaction[0].split(',')],)
@@ -294,7 +295,9 @@ def draw_links(interactions, color, object_name, coords, state):
         if valid:
             for x, y in zip(coord1, coord2):
                 obj.extend([VERTEX] + x + [VERTEX] + y)
+            # print(interaction, coord1, coord2)
     obj.append(END)
+    # print(obj)
     cmd.load_cgo(obj, object_name, state=state, zoom=False)
 
 

@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     pymol.finish_launching()
     cmd.set("defer_builds_mode", 3)
-    cmd.load("/home/alessio/projects/ring-victor/assets/samples/test.cif")
+    cmd.load("1JSU.cif")
     cmd.dss()
     # cmd.show_as("cartoon")
     cmd.util.cbc()

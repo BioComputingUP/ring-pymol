@@ -152,6 +152,7 @@ def run_ring_api(file_pth, run_config, tmp_dir, log_f, progress_f):
     job: Job = Job()
 
     file_name = os.path.basename(file_pth)
+
     _log_f(file_pth, file_name)
 
     parameters = {"task": "ring-plugin-api",
@@ -184,6 +185,7 @@ def run_ring_api(file_pth, run_config, tmp_dir, log_f, progress_f):
         prev_progress = (prev_progress + 0.00001)
 
     if job.status == "success":
+        # TODO check the job has not generated an error
         _log_f("Computation terminated, downloading results")
     else:
         _log_f("Error in the execution of RING, please retry later or launch locally", error=True)
