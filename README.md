@@ -48,7 +48,7 @@
 - Download the environment.yml file from this repository
 - Create the environment with `conda env create -f environment-open-source.yml`
   - To install the schrodinger version of PyMOL use the `environment-schrodinger.yml` file
-- Activate the environment with `conda activate ring-pymol`
+- Activate the environment with `conda activate pymol`
 
 #### Installation of PyMOL with Conda
 
@@ -74,7 +74,7 @@ conda installation.
 
 - Open PyMOL and go to Plugin > Plugin Manager > Install New Plugin > Install from Repository > Add..
     - Add https://biocomputingup.it/shared/ring-plugin/
-- Click on ring-plugin.zip in the right panel and then Install
+- Click on ring-pymol-<release>.zip in the right panel and then Install, where <release> is the version you want to download
 - Set the installation directory
 -
 - The plugin should now appear on the Plugin menu of PyMOL
